@@ -168,6 +168,12 @@ export class FirebaseEngine implements Engine {
   }
 
   private async onDevice<T>(step: string, model: GenerativeModel, prompt: Parameters<GenerativeModel['generateContent']>[0], parse: (t: string) => T): Promise<{ result: T; entry: LedgerEntry }> {
+    // Guard BEFORE calling the SDK: when Chrome has no LanguageModel API, the
+    // SDK creates no on-device adapter and sends even ONLY_ON_DEVICE requests
+    // to the cloud. For the raw letter that would be a leak, so we stop here.
+    if ((await this.deviceAvailability()) === 'unavailable') {
+      throw new Error(`Gemini Nano is not available on this device, so "${step}" did not run on-device. Nothing was sent.`);
+    }
     const t0 = performance.now();
     const { value, requests } = await watchGeminiRequests(() => model.generateContent(prompt));
     const source = value.response.inferenceSource;
@@ -215,6 +221,11 @@ export class FirebaseEngine implements Engine {
     const gate = checkEgress(req.prompt, req.vault);
     if (!gate.allowed) throw new EgressBlockedError(gate.findings);
 
+    // Same SDK caveat as onDevice(): without the LanguageModel API, "stay
+    // offline" would quietly go to the cloud. Honour the user's choice.
+    if (opts.preferDevice && (await this.deviceAvailability()) === 'unavailable') {
+      throw new Error('Gemini Nano is not available on this device, so the offline draft did not run. Nothing was sent.');
+    }
     const mode = opts.preferDevice ? InferenceMode.ONLY_ON_DEVICE : InferenceMode.PREFER_IN_CLOUD;
     const model = getGenerativeModel(this.ai, {
       mode,

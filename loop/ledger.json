@@ -6,6 +6,12 @@
    "finding": "F1",
    "action": "signal-scored guessPlanType; ambiguous -> unknown; 4 tests",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F8",
+   "action": "pre-call availability guard for ONLY_ON_DEVICE steps and offline draft; engine tests with mocked SDK",
+   "outcome": "success"
   }
  ]
 }
