@@ -1,0 +1,198 @@
+{
+  "label": "Rules only, held-out set (8 letters; written after tuning, run without changes)",
+  "cases": 8,
+  "identifiers": 34,
+  "leakedBaseline": 34,
+  "leaked": 7,
+  "casesWithLeak": 6,
+  "keepTotal": 23,
+  "lost": 0,
+  "gateBlocked": 0,
+  "deadlineOk": 8,
+  "categoryOk": 7,
+  "results": [
+    {
+      "id": "H01",
+      "title": "Employer plan, sleep study denied (prior auth)",
+      "leaked": [
+        "Marcus Feldman"
+      ],
+      "identifiers": 5,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2026-12-31",
+        "got": "2026-12-31",
+        "ok": true
+      },
+      "category": {
+        "expected": "prior_authorization",
+        "got": "prior_authorization",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    },
+    {
+      "id": "H02",
+      "title": "Marketplace plan, ambulance out of network",
+      "leaked": [
+        "Nadia Haddad"
+      ],
+      "identifiers": 7,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-13",
+        "got": "2027-05-13",
+        "ok": true
+      },
+      "category": {
+        "expected": "out_of_network",
+        "got": "out_of_network",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 1
+    },
+    {
+      "id": "H03",
+      "title": "Medicare Advantage, cataract surgery lens upgrade",
+      "leaked": [
+        "Carla Benedetti"
+      ],
+      "identifiers": 4,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-01-16",
+        "got": "2027-01-16",
+        "ok": true
+      },
+      "category": {
+        "expected": "not_covered",
+        "got": "not_covered",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    },
+    {
+      "id": "H04",
+      "title": "Employer plan, IVIG infusion experimental",
+      "leaked": [],
+      "identifiers": 3,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-02-08",
+        "got": "2027-02-08",
+        "ok": true
+      },
+      "category": {
+        "expected": "experimental",
+        "got": "experimental",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    },
+    {
+      "id": "H05",
+      "title": "Medicaid, dental extraction not covered for adults",
+      "leaked": [
+        "Tremaine Joubert",
+        "Joubert"
+      ],
+      "identifiers": 5,
+      "lost": [],
+      "keep": 2,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-01-14",
+        "got": "2027-01-14",
+        "ok": true
+      },
+      "category": {
+        "expected": "not_covered",
+        "got": "not_covered",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    },
+    {
+      "id": "H06",
+      "title": "Hospital bill, upcoding dispute (unknown plan)",
+      "leaked": [
+        "Ana Lucia Ferreira"
+      ],
+      "identifiers": 3,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": null,
+        "got": null,
+        "ok": true
+      },
+      "category": {
+        "expected": "coding_or_billing",
+        "got": "other",
+        "ok": false
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    },
+    {
+      "id": "H07",
+      "title": "Marketplace plan, GLP-1 drug denied (medical necessity)",
+      "leaked": [
+        "Yusuf Abernathy"
+      ],
+      "identifiers": 4,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-16",
+        "got": "2027-05-16",
+        "ok": true
+      },
+      "category": {
+        "expected": "medical_necessity",
+        "got": "medical_necessity",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 1
+    },
+    {
+      "id": "H08",
+      "title": "Employer plan, chiropractic visits over limit, with fax and website",
+      "leaked": [],
+      "identifiers": 3,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-17",
+        "got": "2027-05-17",
+        "ok": true
+      },
+      "category": {
+        "expected": "not_covered",
+        "got": "not_covered",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    }
+  ],
+  "ranAt": "2026-11-20T21:54:08.017Z",
+  "environment": "node v22.23.5"
+}

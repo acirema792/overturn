@@ -1,0 +1,364 @@
+{
+  "label": "Rules only, tuning set (16 letters; rules were adjusted on these)",
+  "cases": 16,
+  "identifiers": 95,
+  "leakedBaseline": 95,
+  "leaked": 6,
+  "casesWithLeak": 5,
+  "keepTotal": 57,
+  "lost": 0,
+  "gateBlocked": 0,
+  "deadlineOk": 16,
+  "categoryOk": 16,
+  "results": [
+    {
+      "id": "C01",
+      "title": "Employer plan, MRI denied as not medically necessary",
+      "leaked": [],
+      "identifiers": 10,
+      "lost": [],
+      "keep": 5,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-04-26",
+        "got": "2027-04-26",
+        "ok": true
+      },
+      "category": {
+        "expected": "medical_necessity",
+        "got": "medical_necessity",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 8
+    },
+    {
+      "id": "C02",
+      "title": "Marketplace plan, specialty drug needs step therapy",
+      "leaked": [],
+      "identifiers": 6,
+      "lost": [],
+      "keep": 4,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-01",
+        "got": "2027-05-01",
+        "ok": true
+      },
+      "category": {
+        "expected": "step_therapy",
+        "got": "step_therapy",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 1
+    },
+    {
+      "id": "C03",
+      "title": "Medicare Advantage, skilled nursing days cut short",
+      "leaked": [],
+      "identifiers": 8,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-01-10",
+        "got": "2027-01-10",
+        "ok": true
+      },
+      "category": {
+        "expected": "medical_necessity",
+        "got": "medical_necessity",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 3
+    },
+    {
+      "id": "C04",
+      "title": "Medicaid managed care, out-of-network surgeon",
+      "leaked": [],
+      "identifiers": 7,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2026-12-29",
+        "got": "2026-12-29",
+        "ok": true
+      },
+      "category": {
+        "expected": "out_of_network",
+        "got": "out_of_network",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 1
+    },
+    {
+      "id": "C05",
+      "title": "Employer plan, no prior authorization for ER follow-up",
+      "leaked": [],
+      "identifiers": 7,
+      "lost": [],
+      "keep": 4,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-08",
+        "got": "2027-05-08",
+        "ok": true
+      },
+      "category": {
+        "expected": "prior_authorization",
+        "got": "prior_authorization",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 1
+    },
+    {
+      "id": "C06",
+      "title": "Marketplace plan, experimental cancer test",
+      "leaked": [],
+      "identifiers": 7,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-11",
+        "got": "2027-05-11",
+        "ok": true
+      },
+      "category": {
+        "expected": "experimental",
+        "got": "experimental",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 1
+    },
+    {
+      "id": "C07",
+      "title": "Employer plan, physical therapy visit limit",
+      "leaked": [
+        "alexei petrov"
+      ],
+      "identifiers": 3,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-04",
+        "got": "2027-05-04",
+        "ok": true
+      },
+      "category": {
+        "expected": "not_covered",
+        "got": "not_covered",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    },
+    {
+      "id": "C08",
+      "title": "Hospital bill, coding error",
+      "leaked": [],
+      "identifiers": 7,
+      "lost": [],
+      "keep": 4,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-04-29",
+        "got": "2027-04-29",
+        "ok": true
+      },
+      "category": {
+        "expected": "coding_or_billing",
+        "got": "coding_or_billing",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 1
+    },
+    {
+      "id": "C09",
+      "title": "Medicare Advantage, wheelchair with stated 65-day window",
+      "leaked": [
+        "Beatrice",
+        "Okonkwo-Lindqvist"
+      ],
+      "identifiers": 4,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-01-07",
+        "got": "2027-01-07",
+        "ok": true
+      },
+      "category": {
+        "expected": "medical_necessity",
+        "got": "medical_necessity",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    },
+    {
+      "id": "C10",
+      "title": "Employer plan, out-of-network anesthesiologist (surprise bill)",
+      "leaked": [
+        "Halvorsen Ridge Brewing Co."
+      ],
+      "identifiers": 8,
+      "lost": [],
+      "keep": 4,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-09",
+        "got": "2027-05-09",
+        "ok": true
+      },
+      "category": {
+        "expected": "out_of_network",
+        "got": "out_of_network",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    },
+    {
+      "id": "C11",
+      "title": "Marketplace plan, fertility medication excluded",
+      "leaked": [
+        "Hope Rivers"
+      ],
+      "identifiers": 3,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-12",
+        "got": "2027-05-12",
+        "ok": true
+      },
+      "category": {
+        "expected": "not_covered",
+        "got": "not_covered",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 2
+    },
+    {
+      "id": "C12",
+      "title": "Medicaid, prior auth for insulin pump",
+      "leaked": [],
+      "identifiers": 5,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-01-01",
+        "got": "2027-01-01",
+        "ok": true
+      },
+      "category": {
+        "expected": "prior_authorization",
+        "got": "prior_authorization",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 1
+    },
+    {
+      "id": "C13",
+      "title": "Unknown plan type, no window: must say \"inconclusive\"",
+      "leaked": [],
+      "identifiers": 3,
+      "lost": [],
+      "keep": 3,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": null,
+        "got": null,
+        "ok": true
+      },
+      "category": {
+        "expected": "medical_necessity",
+        "got": "medical_necessity",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    },
+    {
+      "id": "C14",
+      "title": "Employer plan, bariatric surgery: long letter with many names",
+      "leaked": [],
+      "identifiers": 9,
+      "lost": [],
+      "keep": 4,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-04-24",
+        "got": "2027-04-24",
+        "ok": true
+      },
+      "category": {
+        "expected": "medical_necessity",
+        "got": "medical_necessity",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 1
+    },
+    {
+      "id": "C15",
+      "title": "Marketplace plan, mental health residential treatment",
+      "leaked": [
+        "Destiny Harper-Cole"
+      ],
+      "identifiers": 5,
+      "lost": [],
+      "keep": 4,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-08",
+        "got": "2027-05-08",
+        "ok": true
+      },
+      "category": {
+        "expected": "medical_necessity",
+        "got": "medical_necessity",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    },
+    {
+      "id": "C16",
+      "title": "Employer plan, hearing aids not covered",
+      "leaked": [],
+      "identifiers": 3,
+      "lost": [],
+      "keep": 4,
+      "gateAllowed": true,
+      "deadline": {
+        "expected": "2027-05-10",
+        "got": "2027-05-10",
+        "ok": true
+      },
+      "category": {
+        "expected": "not_covered",
+        "got": "not_covered",
+        "ok": true
+      },
+      "entitySource": "rules only",
+      "ms": 0
+    }
+  ],
+  "ranAt": "2026-11-20T21:54:08.012Z",
+  "environment": "node v22.23.5"
+}
