@@ -2,7 +2,7 @@
 
 **Appeal a health insurance denial. Your identity stays on your device.**
 
-![tests](https://img.shields.io/badge/tests-22%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
+![tests](https://img.shields.io/badge/tests-61%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
 
 Overturn is a web app for #BuildHybridAI 2026 built on **Firebase AI Logic hybrid inference**.
 Gemini Nano reads the denial letter **in Chrome, on the patient's device**. Code removes every
@@ -10,7 +10,7 @@ name, member ID, address and date. **Only the de-identified text goes to Gemini 
 which writes the appeal. The real details are filled back in on the device.
 
 - **Live app:** _added at deploy_ · **Demo video:** _added at submission_
-- **Review in five minutes:** [JUDGES.md](JUDGES.md) · **Measured results:** [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md)
+- **Review in five minutes:** [JUDGES.md](JUDGES.md) · **Measured results:** [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md) · **Claims and evidence:** [CLAIMS.md](CLAIMS.md) · **SDK feedback:** [FEEDBACK.md](FEEDBACK.md)
 
 ## Why
 
@@ -26,7 +26,7 @@ That split is exactly what hybrid inference is for.
 
 | Step | Where | Firebase AI Logic mode | Why this mode |
 |---|---|---|---|
-| 1. Read the letter (or a photo of it): find every person, ID, address, contact; read the denial reason | Gemini Nano in Chrome | `ONLY_ON_DEVICE` | `PREFER_ON_DEVICE` would silently fall back to the cloud when Nano isn't ready, which would upload the raw letter. We read the SDK source to confirm this and chose to fail closed. |
+| 1. Read the letter (or a photo of it): find every person, ID, address, contact; read the denial reason | Gemini Nano in Chrome | `ONLY_ON_DEVICE` + our own availability check first | `PREFER_ON_DEVICE` would silently fall back to the cloud when Nano isn't ready, which would upload the raw letter. And in SDK 13.4.0, even `ONLY_ON_DEVICE` goes to the cloud when Chrome lacks the Prompt API ([FEEDBACK.md](FEEDBACK.md)), so we check first and fail closed. |
 | 2. Replace identifiers with placeholders (`[PERSON_1]`, `[MEMBER_ID_1]`); compute the appeal deadline | Plain code on the device | none | Deterministic rules for 13 identifier kinds, plus every value Nano found, everywhere it appears. Deadlines come from the letter or federal minimums (ERISA 180 days, Medicare Advantage 65, Medicaid 60), never from a model. |
 | 3. Egress gate + the patient's approval | Plain code on the device | none | The request is blocked if any known identifier (even reformatted) or any detectable new one is in the outgoing text. The patient sees the exact text and approves it. |
 | 4. Write the explanation, arguments and appeal letter | Gemini in the cloud | `PREFER_IN_CLOUD` | The stronger model does the hard writing from de-identified text. If the network fails, the SDK falls back to Gemini Nano. |
@@ -60,8 +60,9 @@ in your own Chrome). Letters are synthetic; expected answers were written before
 
 The rules-only numbers are the floor for browsers without Gemini Nano. The remaining misses are
 names in places no rule can label (a bare address block, "for Nadia Haddad"), which is the job of
-the on-device model and of the review screen. Full tables, the tuning set and the Gemini Nano
-runs: [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md).
+the on-device model and of the review screen. Full tables and the tuning set:
+[BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md). The Gemini Nano run is not recorded yet; you can run
+it yourself in the app's Benchmark tab in desktop Chrome.
 
 ## Honest limits
 
@@ -75,7 +76,7 @@ runs: [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md).
 
 ```bash
 npm ci
-npm test          # 22 unit and pipeline tests
+npm test          # 61 unit, pipeline, engine (SDK mocked) and adversarial tests
 npm run eval      # rules-only benchmark → eval_results/
 npm run dev       # needs .env.local (see .env.example) for real models
 ```
