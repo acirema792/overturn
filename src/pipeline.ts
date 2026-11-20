@@ -12,7 +12,7 @@ import {
   type DeadlineResult,
   type PlanType,
 } from './core/deadline';
-import type { IdKind } from './core/detectors';
+import { detect, type IdKind } from './core/detectors';
 import { redact, type FoundEntity, type Redaction } from './core/redact';
 import { findSuspects } from './core/suspects';
 import { insurerFromLetter } from './core/template';
@@ -79,7 +79,7 @@ function mergeFacts(raw: string, model?: FactsResult): Facts {
   // Code wins whenever it found something; the model fills the gaps.
   const planType: PlanType = rulesPlan !== 'unknown' ? rulesPlan : (model?.planType ?? 'unknown');
   return {
-    insurer: model?.insurer || insurerFromLetter(raw),
+    insurer: model?.insurer || insurerFromLetter(raw, detect(raw).filter((d) => d.kind === 'PERSON').map((d) => d.text)),
     serviceDenied: model?.serviceDenied ?? '',
     reasonInPlainWords: model?.reasonInPlainWords ?? '',
     category: model?.denialCategory ?? rulesCategory,

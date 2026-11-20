@@ -135,10 +135,12 @@ const NUMBER_WORDS: Record<string, number> = {
 };
 
 /** "within 180 days", "within one hundred eighty (180) calendar days", "65 days from the date". */
-// Sentences about the PLAN's own deadline ("We will decide within 30 days of
-// receiving your appeal") are not the patient's appeal window.
+// Sentences where the PLAN is the subject of a deadline ("We will decide
+// within 30 days of receiving your appeal") are not the patient's window.
+// Only a plan subject counts: "you may appeal this decision within 180 days"
+// is the patient's window and must be kept.
 const PLAN_OBLIGATION =
-  /\b(?:we|the plan|our (?:team|reviewers?))\b[^.]{0,40}\b(?:will|must|shall|have to)\s+(?:make|decide|respond|notify|send|tell|answer|review|give|issue)\b|\b(?:decide|decision|respond|response|answer|notify you)\b[^.]{0,30}\bwithin\b/i;
+  /\b(?:we|the plan|our (?:team|reviewers?|plan))\b[^.]{0,40}\b(?:will|must|shall|have to|are required to)\s+(?:make|decide|respond|notify|send you|tell you|answer|issue)\b/i;
 
 export function findWindowDays(text: string): number | null {
   const t = text
@@ -196,31 +198,44 @@ export function toISODate(s: string): string | null {
 const DATE_IN_TEXT =
   /\b(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?,?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2})\b/g;
 
-// Lines whose dates are about the patient or the care, never the notice.
-const NOT_NOTICE_LINE = /\b(?:birth|dob|d\.o\.b|born|service|dos|admission|admitted|discharge|treatment|received|presented|visit|procedure|surgery)\b/i;
+// A date directly after a birth/service label is about the patient or the
+// care, never the notice. Only the label right before the date counts, so
+// "Customer Service   Date: 11/02/2026" keeps its notice date.
+const NOT_NOTICE_BEFORE =
+  /\b(?:birth|dob|d\.o\.b|born|service|dos|admission|admitted|discharge|treatment|visit|procedure|surgery|received|presented)\b\.?(?: date| on)?[ :]{0,2}$/i;
 const NOTICE_LABEL =
-  /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date|date issued|issue date|\bissued\b(?: on)?|statement date|\bsent\b|^\s*date\s*:)\s*[:-]?\s*/i;
+  /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date|date issued|issue date|\bissued\b(?: on)?|statement date|\bsent\b|(?:^|\s{2,}|\|\s*)date\s*:)\s*[:-]?\s*/i;
+
+/** ISO dates on a line, from `from` onwards, skipping birth/service dates. */
+function noticeDatesIn(line: string, from = 0): string[] {
+  const out: string[] = [];
+  const re = new RegExp(DATE_IN_TEXT.source, 'g');
+  re.lastIndex = from;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(line))) {
+    if (NOT_NOTICE_BEFORE.test(line.slice(Math.max(0, m.index - 24), m.index))) continue;
+    const iso = toISODate(m[0]);
+    if (iso) out.push(iso);
+  }
+  return out;
+}
 
 /**
- * The notice date: a date on a line labelled as the notice/letter date, or
- * else the first date in the first few lines (the dateline). Lines about a
- * birth date or a date of service are skipped in both passes.
+ * The notice date: the first date after a notice/letter-date label, or else
+ * the first date in the first few lines (the dateline). Birth and service
+ * dates are skipped date by date, not line by line.
  */
 export function findNoticeDate(text: string): string | null {
   const lines = text.split('\n');
   for (const line of lines) {
-    if (NOT_NOTICE_LINE.test(line)) continue;
     const m = line.match(NOTICE_LABEL);
     if (!m || m.index === undefined) continue;
-    const inner = line.slice(m.index + m[0].length).match(DATE_IN_TEXT);
-    const iso = inner ? toISODate(inner[0]) : null;
-    if (iso) return iso;
+    const [first] = noticeDatesIn(line, m.index + m[0].length);
+    if (first) return first;
   }
   for (const line of lines.slice(0, 8)) {
-    if (NOT_NOTICE_LINE.test(line)) continue;
-    const first = line.match(DATE_IN_TEXT);
-    const iso = first ? toISODate(first[0]) : null;
-    if (iso) return iso;
+    const [first] = noticeDatesIn(line);
+    if (first) return first;
   }
   return null;
 }

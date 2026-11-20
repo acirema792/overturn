@@ -85,6 +85,58 @@
    "finding": "F14",
    "action": "Playwright e2e smoke (sim engine): flow, hide/undo, no-Nano template, 390px; engine tests added under F8/F9",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F1",
+   "action": "verifier REJECT: build red at 6d07a50 (unused test imports); fixed by later commit f754427; logic approved",
+   "outcome": "failure",
+   "error": "build red at intermediate commit"
+  },
+  {
+   "round": 1,
+   "finding": "F2",
+   "action": "verifier REJECT: whole-line skip lost labelled notice dates",
+   "outcome": "failure",
+   "error": "regression"
+  },
+  {
+   "round": 1,
+   "finding": "F3",
+   "action": "verifier REJECT: bare decision...within branch dropped patient windows",
+   "outcome": "failure",
+   "error": "regression"
+  },
+  {
+   "round": 1,
+   "finding": "F6",
+   "action": "verifier REJECT: colon requirement leaked 'Patient Name<TAB>X'; insurer guess could return patient",
+   "outcome": "failure",
+   "error": "privacy regression"
+  },
+  {
+   "round": 1,
+   "finding": "F2",
+   "action": "date-level skip of birth/service dates; 'Date:' label after wide gap",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F3",
+   "action": "plan-subject-only obligation filter; 5 verifier probes as tests",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F6",
+   "action": "optional colon restored, NOT_A_NAME expanded; insurer guess handles From: and skips known people",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F4",
+   "action": "follow-up: run-together names blocked; min word length 3",
+   "outcome": "success"
   }
  ]
 }

@@ -15,11 +15,18 @@ export interface TemplateInput {
   urgent: boolean;
 }
 
-/** First line that looks like an organisation name, not a dateline or a field. */
-export function insurerFromLetter(letter: string): string {
+/**
+ * First line that looks like an organisation name, not a dateline, a field or
+ * a person (`people`: names already found in the letter).
+ */
+export function insurerFromLetter(letter: string, people: string[] = []): string {
+  const known = new Set(people.map((p) => p.toLowerCase().trim()));
   for (const raw of letter.split('\n')) {
-    const line = raw.split('|')[0].trim();
+    let line = raw.split('|')[0].trim();
+    const from = line.match(/^from\s*:\s*(.+)$/i);
+    if (from) line = from[1].trim();
     if (!line || /\d/.test(line) || /:/.test(line) || line.length > 70) continue;
+    if (known.has(line.toLowerCase())) continue;
     return line;
   }
   return '';

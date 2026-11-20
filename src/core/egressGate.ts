@@ -46,8 +46,10 @@ export function checkEgress(payload: string, vault: Record<string, string>): Gat
       if (v.length >= 4 && squashedPayload.includes(v)) findings.push({ reason: 'vault-value', excerpt: mask(value) });
     } else {
       // Names and words: whole-word match, so "Pat" doesn't match "patient".
+      // A multi-word name is also caught run together ("mariagonzalez").
       const v = words(value);
-      if (v.length >= 2 && wordsPayload.includes(` ${v} `)) findings.push({ reason: 'vault-value', excerpt: mask(value) });
+      const runTogether = v.includes(' ') && squash(value).length >= 8 && squashedPayload.includes(squash(value));
+      if ((v.length >= 3 && wordsPayload.includes(` ${v} `)) || runTogether) findings.push({ reason: 'vault-value', excerpt: mask(value) });
     }
   }
 

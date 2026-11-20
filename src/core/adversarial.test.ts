@@ -110,3 +110,36 @@ describe('F5 rules-only floor: formats the auditor found', () => {
   it('spaced SSNs', () => expect(hidden('SSN 219 55 0143', '219 55 0143')).toBe(true));
   it('the egress gate catches a spaced SSN in outgoing text', () => expect(checkEgress('ssn 219 55 0143', {}).allowed).toBe(false));
 });
+
+describe('verifier round 1: regressions in F2/F3/F4/F6 fixes', () => {
+  it.each([
+    ['You have the right to appeal this decision within 180 days of the date of this notice.', 180],
+    ['If you disagree with our decision, you may appeal within 60 days of this notice.', 60],
+    ['You may request a review of this decision within 180 days.', 180],
+    ['To appeal this decision, send your request within 65 days of the date of this notice.', 65],
+    ['We will review your appeal if you send it within 60 days of this notice.', 60],
+  ])('F3: patient window kept: %s', (text, days) => expect(findWindowDays(text)).toBe(days));
+
+  it('F2: a labelled notice date on a line that also mentions service', () => {
+    expect(findNoticeDate('Notice date: 11/02/2026 (date of service 10/01/2026)')).toBe('2026-11-02');
+    expect(findNoticeDate('Acme Health Customer Service   Date: 11/02/2026')).toBe('2026-11-02');
+  });
+
+  it('F6: names after labels without a colon are still redacted', () => {
+    for (const t of ['Patient Name Grace Achterberg', 'Patient Name\tGrace Achterberg', 'Member Grace Achterberg   ID 5', 'Patient, Grace Achterberg, was seen']) {
+      expect(redact(t).redacted, t).not.toContain('Achterberg');
+    }
+  });
+
+  it('F6: insurer guess handles "From:" and never returns a known person', () => {
+    expect(insurerFromLetter('From: Acme Health\nMaria Gonzalez\n12 Main St')).toBe('Acme Health');
+    expect(insurerFromLetter('Maria Gonzalez\nAcme Health', ['Maria Gonzalez'])).toBe('Acme Health');
+  });
+
+  it('F4: a hidden full name written without spaces is still blocked', () => {
+    expect(checkEgress('appeal for mariagonzalez', { '[PERSON_1]': 'Maria Gonzalez' }).allowed).toBe(false);
+  });
+  it('F4: a two-letter hidden word does not block common text', () => {
+    expect(checkEgress('Smith et al reported', { '[PERSON_1]': 'Al' }).allowed).toBe(true);
+  });
+});

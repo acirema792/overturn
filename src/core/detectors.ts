@@ -46,6 +46,7 @@ const NOT_A_NAME = new Set(
     'policyholder', 'enrollee', 'beneficiary', 'appeals', 'appeal', 'team', 'department',
     'notice', 'of', 'denial', 'determination', 'information', 'benefits', 'benefit', 'claim', 'account',
     'number', 'no', 'date', 'statement', 'trust', 'service', 'coverage', 'adverse', 'explanation',
+    'services', 'id', 'portal', 'support', 'relations', 'advocate', 'handbook', 'guide', 'rights',
     'claims', 'services', 'the', 'valued', 'health', 'plan', 'insured', 'name', 'id',
   ].map((w) => w.toLowerCase()),
 );
@@ -134,10 +135,10 @@ const RULES: Rule[] = [
   // Names after a salutation, a label, a relationship word or a title.
   {
     kind: 'PERSON',
-    // Field labels ("Patient:", "Member Name:") need a colon, so "Patient
-    // Account No." and "Employee Benefits Trust" are not taken as names.
-    // Salutations and routing words ("Dear", "To", "cc") don't.
-    re: /\b(?:(?:(?:Patient|Member|Subscriber|Insured|Enrollee|Beneficiary|Participant|Employee)(?: [Nn]ame)?|Name|Dependent|Guardian|Parent\/Guardian|Representative)[ \t]*:|(?:Dear|Attn|Attention|To|cc|Signed)[ \t]*[:,]?)[ \t]+((?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?[A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*(?:[ ][A-Z]\.)?(?:[ ][A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*){1,2})/g,
+    // EOBs often use "Patient Name<TAB>Grace Achterberg" with no colon, so the
+    // colon stays optional. Label words that are not names ("Patient Account
+    // No.", "Employee Benefits Trust") are rejected by acceptName/NOT_A_NAME.
+    re: /\b(?:Dear|Patient(?: [Nn]ame)?|Member(?: [Nn]ame)?|Subscriber(?: [Nn]ame)?|Insured(?: [Nn]ame)?|Enrollee(?: [Nn]ame)?|Beneficiary(?: [Nn]ame)?|Participant(?: [Nn]ame)?|Employee(?: [Nn]ame)?|Name|Attn|Attention|To|Dependent|Guardian|Parent\/Guardian|cc|Signed|Representative)[ \t]*[:,]?[ \t]+((?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?[A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*(?:[ ][A-Z]\.)?(?:[ ][A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*){1,2})/g,
     group: 1,
     accept: acceptName,
   },
