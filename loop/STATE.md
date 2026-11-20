@@ -1,6 +1,6 @@
 # Audit loop state
 
-Round: 1 (fixes made, verification in progress)
+Round: 2 (audit in progress; round-1 follow-ups in verification)
 Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 
 ## Baseline tripwires (2026-11-20)
@@ -14,10 +14,12 @@ Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 | 1 | 6.9 | 6.5 | 7.0 | 6.5 | 7.5 |
 
 ## Open findings
-- Round 1 fixes awaiting verification: F1 6d07a50 · F8 16bd200 · F2+F3 f754427 · F4 148fa4a · F6 3106a84 (batch 1); F9 ebf62e8 · F11+F12 c9ea4bd · F10 9f3dfbd · F5 4fd2a9d · F7 ca0eb7f · F14 244edfc (batch 2)
+- Round 1: verifier batch 1 approved F8, F4; rejected F1 (build red at intermediate commit only), F2/F3, F6. Batch 2 approved F11/F12, F9; rejected F10, F5, F7, F14. All rejections have follow-up commits: c204abe (F2/F3/F6/F4), c65b656 (F5, F14 dep), 782c90b (F10/F12/F9), 43f49fe (F7). Awaiting verification of these four.
+- F13: escalated (protected path).
 
 ## Escalations (for the person)
 - F13 (protected: scripts/eval.ts): `npm run eval` overwrites the committed eval_results/ on every run (timestamps and ms change). Recommendation: write to eval_results/ only with `--write`, print otherwise. Needs your OK because it touches the script behind published numbers.
+- Published wording (README, BENCHMARK-RESULTS, CLAIMS, EVIDENCE, FEEDBACK) was corrected by the loop after the verifier found overclaims; please read and approve the final claims before submission.
 - Live-only checks (need your Firebase project and a Chrome with Gemini Nano): App Check with reCAPTCHA, Remote Config fetch, real ONLY_ON_DEVICE runs and JSON output, cloud appeal quality, PREFER_IN_CLOUD → Nano fallback, Resource Timing counts, the Nano benchmark row.
 
 ## Rulings
