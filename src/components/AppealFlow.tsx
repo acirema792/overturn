@@ -116,6 +116,11 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
     window.getSelection()?.removeAllRanges();
   }
 
+  function unhide(value: string) {
+    if (!analysis) return;
+    setAnalysis(finishAnalysis({ ...analysis, userEntities: analysis.userEntities.filter((u) => u.text !== value) }));
+  }
+
   async function draft(preferDevice: boolean) {
     if (!analysis) return;
     setError(null);
@@ -289,7 +294,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
               <div className={`gate ${gate.allowed ? 'gate-ok' : 'gate-bad'}`} role="status">
                 {gate.allowed
                   ? `Egress check passed: no known or detectable identifiers in ${gate.bytes.toLocaleString()} bytes.`
-                  : `Egress check blocked: ${gate.findings.length} identifier(s) still present.`}
+                  : `Egress check blocked: ${gate.findings.length} identifier(s) still present (${gate.findings.map((f) => f.excerpt).join(', ')}). Hide them on the left.`}
               </div>
             </div>
             <div className="legend small">
@@ -316,6 +321,16 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                 <RedactedText text={analysis.redaction.redacted} />
               </div>
             </div>
+            {analysis.userEntities.length > 0 && (
+              <div className="suspects user-hides">
+                <span className="small">Hidden by you:</span>
+                {analysis.userEntities.map((u) => (
+                  <button key={u.text} className="chip" onClick={() => unhide(u.text)} aria-label={`Show “${u.text}” again`}>
+                    “{u.text}” ✕
+                  </button>
+                ))}
+              </div>
+            )}
             {analysis.suspects.length > 0 && (
               <div className="suspects">
                 <span className="small">Possible names still visible. Hide any that are people:</span>

@@ -1,6 +1,7 @@
 // Adversarial inputs found by the round-1 audit (loop/audits/round-1.md).
 import { describe, expect, it } from 'vitest';
 import { computeDeadline, findNoticeDate, findWindowDays, guessPlanType } from './deadline';
+import { checkEgress } from './egressGate';
 
 describe('F1 plan type is not fooled by a passing mention', () => {
   it('a Medicaid letter that mentions Medicare is Medicaid', () => {
@@ -45,5 +46,19 @@ describe('F3 the plan’s own response time is not the appeal window', () => {
   });
   it('"we must receive your request within 60 days" is the patient window', () => {
     expect(findWindowDays('We must receive your appeal request within 60 days of the date of this notice.')).toBe(60);
+  });
+});
+
+describe('F4 egress gate matches names as whole words', () => {
+  it('a short hidden name does not match inside another word', () => {
+    expect(checkEgress('The patient asked for a review.', { '[PERSON_1]': 'Pat' }).allowed).toBe(true);
+    expect(checkEgress('Tomorrow the samples arrive.', { '[PERSON_1]': 'Tom', '[PERSON_2]': 'Sam' }).allowed).toBe(true);
+  });
+  it('still blocks the name itself, in any case or spacing', () => {
+    expect(checkEgress('Appeal for MARIA   gonzalez', { '[PERSON_1]': 'Maria Gonzalez' }).allowed).toBe(false);
+    expect(checkEgress('Ask Pat about it', { '[PERSON_1]': 'Pat' }).allowed).toBe(false);
+  });
+  it('still blocks reformatted IDs', () => {
+    expect(checkEgress('member nwh-4488-12901', { '[MEMBER_ID_1]': 'NWH448812901' }).allowed).toBe(false);
   });
 });

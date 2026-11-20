@@ -24,6 +24,12 @@
    "finding": "F3",
    "action": "drop plan-obligation sentences before window extraction; 3 tests",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F4",
+   "action": "whole-word gate for names, squash for digit values; masked findings shown; undo user hides; 3 tests",
+   "outcome": "success"
   }
  ]
 }
