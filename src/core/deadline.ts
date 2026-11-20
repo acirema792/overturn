@@ -204,11 +204,26 @@ export function findNoticeDate(text: string): string | null {
   return first ? toISODate(first[0]) : null;
 }
 
+const PLAN_SIGNALS: Record<Exclude<PlanType, 'unknown'>, RegExp[]> = {
+  medicare_advantage: [/medicare advantage/, /\bpart c\b/, /independent review entity/, /medicare (?:number|id)\b/, /\bmbi\b/, /integrated denial notice/, /notice of denial of (?:medical coverage|payment)/],
+  medicaid: [/medicaid/, /medi-cal/, /state fair hearing/, /\bchip\b/, /managed care organization/],
+  employer: [/\berisa\b/, /employer/, /group health plan/, /plan administrator/, /section 502\(a\)/, /summary plan description/, /employee (?:health|benefits?)/],
+  marketplace: [/marketplace/, /healthcare\.gov/, /affordable care act/, /individual (?:health )?plans?\b/, /covered california/],
+};
+
+/**
+ * Plan type from strong signals only. A passing mention ("if you also have
+ * Medicare") must not decide a legal deadline, so a type wins only if it has
+ * clearly more distinct signals than any other; otherwise "unknown", and the
+ * on-device model (or the user) decides.
+ */
 export function guessPlanType(text: string): PlanType {
   const t = text.toLowerCase();
-  if (/medicare advantage|part c|reconsideration|independent review entity|\bmedicare\b/.test(t)) return 'medicare_advantage';
-  if (/medicaid|medi-cal|state fair hearing|managed care organization|\bchip\b/.test(t)) return 'medicaid';
-  if (/erisa|employer|group health plan|plan administrator|section 502\(a\)/.test(t)) return 'employer';
-  if (/marketplace|healthcare\.gov|affordable care act|individual (?:health )?plan|covered california/.test(t)) return 'marketplace';
+  const scores = (Object.keys(PLAN_SIGNALS) as Exclude<PlanType, 'unknown'>[])
+    .map((type) => ({ type, n: PLAN_SIGNALS[type].filter((re) => re.test(t)).length }))
+    .sort((a, b) => b.n - a.n);
+  const [first, second] = scores;
+  if (first.n === 0) return 'unknown';
+  if (second.n === 0 || first.n - second.n >= 2) return first.type;
   return 'unknown';
 }

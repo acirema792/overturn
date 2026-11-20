@@ -1,1 +1,11 @@
-{"goal":"OVERALL_SCORE >= 9.0 on the #BuildHybridAI rubric without changing published numbers","attempts":[]}
+{
+ "goal": "OVERALL_SCORE >= 9.0 on the #BuildHybridAI rubric without changing published numbers",
+ "attempts": [
+  {
+   "round": 1,
+   "finding": "F1",
+   "action": "signal-scored guessPlanType; ambiguous -> unknown; 4 tests",
+   "outcome": "success"
+  }
+ ]
+}
