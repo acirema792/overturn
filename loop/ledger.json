@@ -61,6 +61,12 @@
    "finding": "F9",
    "action": "App Check works with debug token only; mode exposed and shown in header/footer; 2 tests",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F10",
+   "action": "ledger: 'no part of your letter' wording + config-request note; keep photo row; deadline card names fact sources; fallback note on attempted bytes",
+   "outcome": "success"
   }
  ]
 }

@@ -17,8 +17,8 @@ export function Ledger({ entries }: { entries: LedgerEntry[] }) {
         <h3 id="ledger-h">Privacy ledger</h3>
         <p>
           {cloudSteps === 0
-            ? 'Nothing has left this device.'
-            : `${cloudSteps} step sent ${bytes.toLocaleString()} bytes of de-identified text to the cloud. Everything else stayed here.`}
+            ? 'No part of your letter has left this device.'
+            : `${cloudSteps} step sent ${bytes.toLocaleString()} bytes of de-identified text to the cloud. Your letter itself stayed here.`}
         </p>
       </div>
       <div className="table-wrap">
@@ -56,7 +56,8 @@ export function Ledger({ entries }: { entries: LedgerEntry[] }) {
       </div>
       <p className="muted small">
         "Ran" comes from Firebase AI Logic's <code>inferenceSource</code> on each response. "Gemini requests seen" counts
-        requests to Gemini endpoints recorded by your browser (Resource Timing) while the step ran.
+        requests to Gemini endpoints recorded by your browser (Resource Timing) while the step ran. Separately, the app talks to
+        Firebase for App Check and Remote Config when it loads; those requests carry no letter content.
       </p>
     </section>
   );

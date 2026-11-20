@@ -68,7 +68,8 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
 
   async function read(raw: string) {
     setError(null);
-    setExtraLedger([]);
+    // Keep the photo-reading row: it is part of this letter's history.
+    setExtraLedger((l) => l.filter((e) => e.step === 'Read the photo'));
     setStage('reading');
     try {
       if (deviceOk) {
@@ -455,7 +456,10 @@ function DeadlineCard({ analysis }: { analysis: Analysis }) {
           <p className="small">{d.explanation}</p>
         </>
       )}
-      <div className="muted small">Computed by code on this device, not by a model.</div>
+      <div className="muted small">
+        Notice date from {analysis.facts.noticeDateSource}; appeal window from{' '}
+        {d.basis === 'default-rule' ? 'the legal default' : analysis.facts.windowSource}. The date arithmetic is plain code on this device.
+      </div>
     </div>
   );
 }

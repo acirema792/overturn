@@ -268,7 +268,10 @@ export class FirebaseEngine implements Engine {
         geminiRequests: requests,
         ms: Math.round(performance.now() - t0),
         model: onDevice ? 'Gemini Nano (Chrome)' : this.cloudModel,
-        note: onDevice && !opts.preferDevice ? 'Cloud unreachable: the SDK fell back to Gemini Nano.' : undefined,
+        note:
+          onDevice && !opts.preferDevice
+            ? `The cloud request failed, so the SDK fell back to Gemini Nano. The ${gate.bytes.toLocaleString()}-byte de-identified prompt was attempted; it may or may not have reached the server.`
+            : undefined,
       }),
     };
   }
