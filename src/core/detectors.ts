@@ -50,6 +50,7 @@ const NOT_A_NAME = new Set(
     'services', 'id', 'portal', 'support', 'relations', 'advocate', 'handbook', 'guide', 'rights',
     'healthcare', 'insurance', 'company', 'cross', 'shield', 'blue', 'life', 'mutual', 'care', 'inc',
     'corp', 'corporation', 'group', 'enclosed', 'see', 'attached', 'unknown', 'sir', 'madam', 'customer',
+    'doctor', 'colleague', 'participant', 'caregiver', 'applicant', 'friend', 'physician',
     'claims', 'services', 'the', 'valued', 'health', 'plan', 'insured', 'name', 'id',
   ].map((w) => w.toLowerCase()),
 );
@@ -86,7 +87,14 @@ const NW = String.raw`\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.|(?=['’]))(?:['’-
 const CW = String.raw`\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*`; // ALL-CAPS word
 const CI = String.raw`(?:${CW}|\p{Lu}\.?)`; // ALL-CAPS word or initial
 const TITLE = String.raw`(?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?`;
-const FIELD = String.raw`(?:(?:Patient|Member|Subscriber|Insured|Enrollee|Beneficiary|Participant|Employee|PATIENT|MEMBER|SUBSCRIBER|ENROLLEE)(?: [Nn]ame| NAME)?|Name|NAME|Dependent|Guardian)[ \t]*:`;
+// "Name:" alone counts only at the start of a field, so "Drug Name:" and "SERVICE NAME:" don't.
+const BARE_NAME = String.raw`(?:(?<=^|[\n\t|]| {2})(?:Name|NAME))`;
+// Labels that always introduce a person.
+const PERSON_LABELS = String.raw`(?:Patient|Insured|Enrollee|Beneficiary|Participant|PATIENT|INSURED|ENROLLEE|BENEFICIARY|PARTICIPANT)(?: [Nn]ame| NAME)?|(?:Member|Subscriber|Employee|MEMBER|SUBSCRIBER|EMPLOYEE)(?: [Nn]ame| NAME)|${BARE_NAME}|Dependent|Guardian`;
+// Labels that may also introduce an organisation ("Member: KAISER PERMANENTE").
+const AMBIGUOUS_LABELS = String.raw`Member|Subscriber|Employee|MEMBER|SUBSCRIBER|EMPLOYEE`;
+const PERSON_FIELD = String.raw`(?:${PERSON_LABELS})[ \t]*:`;
+const FIELD = String.raw`(?:${PERSON_LABELS}|${AMBIGUOUS_LABELS})[ \t]*:`;
 
 const RULES: Rule[] = [
   { kind: 'EMAIL', re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g },
@@ -107,7 +115,7 @@ const RULES: Rule[] = [
   { kind: 'DATE', re: /(?<![\w.])(?:0?[1-9]|1[0-2])\.(?:0?[1-9]|[12]\d|3[01])\.(?:19|20)\d{2}(?![.\d])/g },
   { kind: 'DATE', re: /\b(?:19|20)\d{2}\/(?:0?[1-9]|1[0-2])\/(?:0?[1-9]|[12]\d|3[01])\b/g },
   // Ages over 89 are identifiers under Safe Harbor; younger ages are not.
-  { kind: 'AGE', re: /\b(?:age|aged)[ :]+(9\d|1[01]\d)\b/gi, group: 1 },
+  { kind: 'AGE', re: /\b(?:age|aged)[ :]+(9\d|1[01]\d)\b(?!\s*(?:days?|months?|weeks?|percent|percentile|%))/gi, group: 1 },
   { kind: 'AGE', re: /\b(9\d|1[01]\d)[- ]?(?:year|yr)s?[- ]old\b/gi, group: 1 },
   { kind: 'DATE', re: new RegExp(`\\b(?:${MONTHS})\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?,?\\s+\\d{4}\\b`, 'g') },
   { kind: 'DATE', re: new RegExp(`\\b\\d{1,2}\\s+(?:${MONTHS})\\.?,?\\s+\\d{4}\\b`, 'g') },
@@ -122,7 +130,7 @@ const RULES: Rule[] = [
   // the label says it's an identifier, so spaced groups and code-like values count.
   {
     kind: 'ID',
-    re: /\b([Mm]ember|MEMBER|[Ss]ubscriber|SUBSCRIBER|[Pp]olicy|POLICY|[Gg]roup|GROUP|Medicare|MEDICARE|Medicaid|MEDICAID|[Cc]laim|CLAIM|[Aa]ccount|ACCOUNT|[Rr]eference|REFERENCE)[ \t]*(?:ID|Id|No\.?|NO\.?|Number|NUMBER|#)[ \t]*[:#]?[ \t]*([A-Z0-9]{2,}(?:[ -][A-Z0-9]{2,}){0,4})(?![a-z])/g,
+    re: /\b([Mm]ember|MEMBER|[Ss]ubscriber|SUBSCRIBER|[Pp]olicy|POLICY|[Gg]roup|GROUP|Medicare|MEDICARE|Medicaid|MEDICAID|[Cc]laim|CLAIM|[Aa]ccount|ACCOUNT|[Rr]eference|REFERENCE|Medical Record|MEDICAL RECORD)[ \t]*(?:ID|Id|No\.?|NO\.?|Number|NUMBER|#)[ \t]*[:#]?[ \t]*([A-Z0-9]{2,}(?:[ -](?=[A-Z0-9]*\d)[A-Z0-9]{2,}){0,4})(?![a-z])/g,
     group: 2,
     accept: (v) => (v.match(/\d/g) || []).length >= 4,
   },
@@ -153,7 +161,7 @@ const RULES: Rule[] = [
     // EOBs often use "Patient Name<TAB>Grace Achterberg" with no colon, so the
     // colon stays optional. Label words that are not names ("Patient Account
     // No.", "Employee Benefits Trust") are rejected by acceptName/NOT_A_NAME.
-    re: /\b(?:Dear|Patient(?: [Nn]ame)?|Member(?: [Nn]ame)?|Subscriber(?: [Nn]ame)?|Insured(?: [Nn]ame)?|Enrollee(?: [Nn]ame)?|Beneficiary(?: [Nn]ame)?|Participant(?: [Nn]ame)?|Employee(?: [Nn]ame)?|Name|Attn|Attention|To|Dependent|Guardian|Parent\/Guardian|cc|Signed|Representative)[ \t]*[:,]?[ \t]+((?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?[A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*(?:[ ][A-Z]\.)?(?:[ ][A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*){1,2})/g,
+    re: /\b(?:Dear|Patient(?: [Nn]ame)?|Member(?: [Nn]ame)?|Subscriber(?: [Nn]ame)?|Insured(?: [Nn]ame)?|Enrollee(?: [Nn]ame)?|Beneficiary(?: [Nn]ame)?|Participant(?: [Nn]ame)?|Employee(?: [Nn]ame)?|(?<=^|[\n\t|]| {2})Name|Attn|Attention|To|Dependent|Guardian|Parent\/Guardian|cc|Signed|Representative)[ \t]*[:,]?[ \t]+((?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?[A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*(?:[ ][A-Z]\.)?(?:[ ][A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*){1,2})/g,
     group: 1,
     accept: acceptName,
   },
@@ -180,9 +188,16 @@ const RULES: Rule[] = [
   { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR|Attn|To|cc)[ \\t]*[:,]?)[ \\t]+(${TITLE}(?:${NW},[ ]?${NW}(?:[ ]${NW})?|${NW}(?:[ ]${NW}){1,3}))`, 'gu'), group: 1, accept: acceptName },
   // ALL-CAPS names, only after a patient field label or "Dear" ("MEMBER NAME: JOHN Q
   // PUBLIC", "Member: DE LA CRUZ, ANA"); "To: CIGNA HEALTHCARE" is an insurer, not a person.
-  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR)[ \\t]*[:,]?)[ \\t]+(${CW}(?:[ ]${CW}){0,2},[ ]?${CW}(?:[ ]${CI})?|${CW}(?:[ ]${CI})?(?:[ ]${CW}){1,2})`, 'gu'), group: 1, accept: acceptName },
+  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR)[ \\t]*[:,]?)[ \\t]+(${CW}(?:[ ]${CW}){0,2},[ ]?${CW}(?:[ ]${CI})?)`, 'gu'), group: 1, accept: acceptName },
+  // "First Last" in capitals only after a label that always means a person
+  // ("PATIENT NAME: JOHN Q PUBLIC"), never after "Member:" or "To:" (often an insurer).
+  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${PERSON_FIELD}|(?:Dear|DEAR)[ \\t]*[:,]?)[ \\t]+(${CW}(?:[ ]${CI})?(?:[ ]${CW}){1,2})`, 'gu'), group: 1, accept: acceptName },
+  // Titles before any name form, including initials ("Dr. J. R. Okafor").
+  { kind: 'PERSON', re: new RegExp(`\\b(?:Dr|Mr|Mrs|Ms|Miss|DR|MR|MRS|MS)\\.?[ ]+(${NW}(?:[ ]${NW}){0,3}|${CW}(?:[ ]${CW}){0,2})`, 'gu'), group: 1, accept: acceptName },
   // A single surname after "Dear" ("Dear Okonkwo,").
-  { kind: 'PERSON', re: new RegExp(`\\b(?:Dear|DEAR)[ \\t]+${TITLE}(${NW}|${CW}),`, 'gu'), group: 1, accept: acceptName },
+  { kind: 'PERSON', re: new RegExp(`\\b(?:Dear|DEAR)[ \\t]+${TITLE}(${NW}),`, 'gu'), group: 1, accept: acceptName },
+  // "Dear MS. GONZALEZ," — a capitals surname only with a title ("Dear AETNA," is not a person).
+  { kind: 'PERSON', re: new RegExp(`\\b(?:Dear|DEAR)[ \\t]+(?:Mr|Mrs|Ms|Miss|Dr|MR|MRS|MS|DR)\\.?[ ]+(${CW}),`, 'gu'), group: 1, accept: acceptName },
 ];
 
 function labelOf(match: RegExpExecArray): string {

@@ -194,6 +194,57 @@
    "finding": "F7",
    "action": "corrected wording; counts updated (89 tests, 14 kinds); formats listed only as tested; FEEDBACK debug note marked unverified",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F3",
+   "action": "verifier REJECT (attempt 2): plan decision times read as patient window",
+   "outcome": "failure",
+   "error": "regression"
+  },
+  {
+   "round": 1,
+   "finding": "F3",
+   "action": "attempt 3: classify each N-days mention by clause (patient vs plan actor), first patient window wins; 13 probes",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F2",
+   "action": "verifier: service dates in dateline fallback (DOS, ranges, plural); widened label tail + range skip; 6 tests",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F6",
+   "action": "verifier REJECT (attempt 2): insurer guess returned patient and hid hint",
+   "outcome": "failure",
+   "error": "regression"
+  },
+  {
+   "round": 1,
+   "finding": "F6",
+   "action": "attempt 3: insurer = org part of first line; skip known people/titles; only model-named insurer suppresses hints",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F5",
+   "action": "verifier REJECT (attempt 2): SERVICE NAME/labelled-ID/Dear X/age over-redaction",
+   "outcome": "failure",
+   "error": "over-redaction"
+  },
+  {
+   "round": 1,
+   "finding": "F5",
+   "action": "attempt 3: bare Name only at field start; caps First Last only after person labels; IDs' later groups need a digit; title rule with initials; Dear caps needs title; age not before days/percent; caps hints skip clinical words",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F7",
+   "action": "verifier minor: scope over-redaction claims; README held-out wording",
+   "outcome": "success"
   }
  ]
 }

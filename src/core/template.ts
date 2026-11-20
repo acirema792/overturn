@@ -20,13 +20,18 @@ export interface TemplateInput {
  * a person (`people`: names already found in the letter).
  */
 export function insurerFromLetter(letter: string, people: string[] = []): string {
-  const known = new Set(people.map((p) => p.toLowerCase().trim()));
+  const known = people.map((p) => p.toLowerCase().trim()).filter(Boolean);
   for (const raw of letter.split('\n')) {
-    let line = raw.split('|')[0].trim();
+    let line = raw.trim();
     const from = line.match(/^from\s*:\s*(.+)$/i);
     if (from) line = from[1].trim();
-    if (!line || /\d/.test(line) || /:/.test(line) || line.length > 70) continue;
-    if (known.has(line.toLowerCase())) continue;
+    // Keep the part before an address, phone, separator or bracket:
+    // "Northwind Health Plan, P.O. Box 44120…" → "Northwind Health Plan".
+    line = line.split(/,|\||·|\(|\s[-–]\s|\d/)[0].trim();
+    if (line.length < 3 || /:/.test(line) || line.length > 70 || !/\p{L}{2}/u.test(line)) continue;
+    const lower = line.toLowerCase();
+    if (known.some((k) => lower.includes(k))) continue;
+    if (/^(?:dr|mr|mrs|ms|miss)\.?\s/i.test(line)) continue;
     return line;
   }
   return '';

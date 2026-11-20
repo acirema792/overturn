@@ -92,7 +92,8 @@ describe('F12 days left uses the local calendar date', () => {
     try {
       expect(localToday(new Date('2026-11-21T04:00:00Z'))).toBe('2026-11-20');
     } finally {
-      process.env.TZ = before;
+      if (before === undefined) delete process.env.TZ;
+      else process.env.TZ = before;
     }
   });
 });
@@ -180,7 +181,71 @@ describe('verifier round 1 batch 2: F5 leaks and over-redaction', () => {
   });
 
   it('possible-name hints include all-caps and accented names', () => {
-    expect(findSuspects('Note from MARCUS FELDMAN about the claim.')).toContain('MARCUS FELDMAN');
+    expect(findSuspects('Note from BRANDON ESPOSITO about the claim.')).toContain('BRANDON ESPOSITO');
     expect(findSuspects('Note from Zoë Ångström about the claim.')).toContain('Zoë Ångström');
+  });
+});
+
+describe('verifier round 1 follow-ups (attempt 3)', () => {
+  // F3: classify each "within N days" by the clause it sits in.
+  it.each([
+    ['You must file your appeal within 60 days. A decision will be made within 90 days of receipt of your request.', 60],
+    ['You may file an appeal within 180 days. A decision will be made within 30 days of receipt of your appeal.', 180],
+    ['You may appeal within 180 days of this notice. We will give you a decision within 30 days.', 180],
+    ['We will let you know our decision within 30 days. You can appeal within 60 days of this notice.', 60],
+    ['The reviewer will make a decision within 30 days. You may request an appeal within 180 days.', 180],
+    ['You will be notified of the decision within 30 days. Your appeal must be received within 65 days.', 65],
+    ['We will review your request within 30 days. You have 180 days from receipt of this letter to request an appeal.', 180],
+    ['We will mail you a written decision within 30 days.', null],
+    ['We will decide within 30 days of receiving your appeal.', null],
+    ['You have the right to appeal this decision within 180 days of the date of this notice.', 180],
+    ['We will review your appeal if you send it within 60 days of this notice.', 60],
+    ['We must receive your appeal request within 60 days of the date of this notice.', 60],
+    ['You have 30 days to pay this balance.', null],
+  ])('F3 window: %s', (text, days) => expect(findWindowDays(text)).toBe(days));
+
+  // F2: service dates in the dateline fallback.
+  it.each([
+    'Date of Service (DOS): 10/01/2026\nNovember 2, 2026',
+    'DOS 10/01/2026 - 10/03/2026\nNovember 2, 2026',
+    'Dates of service: 10/01/2026 to 10/03/2026\nNovember 2, 2026',
+    'Service Date | 10/01/2026\nNovember 2, 2026',
+    'Treatment dates 10/01/2026 and 10/03/2026\nNovember 2, 2026',
+    'Claim for services on 10/01/2026\nNovember 2, 2026',
+  ])('F2 dateline skips service dates: %s', (text) => expect(findNoticeDate(text)).toBe('2026-11-02'));
+
+  // F6: insurer guess.
+  it('insurer guess takes the organisation before the address on the first line', () => {
+    expect(insurerFromLetter('Northwind Health Plan, P.O. Box 44120, Tacoma, WA 98401\nOctober 28, 2026\n\nHope Rivers\n1842 Alder Creek Rd')).toBe('Northwind Health Plan');
+    expect(insurerFromLetter('NORTHWIND HEALTH PLAN · 1-800-555-0100\nHope Rivers')).toBe('NORTHWIND HEALTH PLAN');
+    expect(insurerFromLetter('From: Dr. Hannah Lee\nAcme Health', ['Hannah Lee'])).toBe('Acme Health');
+  });
+
+  // F5: over-redaction.
+  it.each([
+    ['SERVICE NAME: MRI LUMBAR SPINE', 'MRI LUMBAR SPINE'],
+    ['PROCEDURE NAME: TOTAL KNEE ARTHROPLASTY', 'TOTAL KNEE ARTHROPLASTY'],
+    ['Drug Name: Ozempic Pen', 'Ozempic Pen'],
+    ['PLAN NAME: GOLD PPO', 'GOLD PPO'],
+    ['Reference #: 88812345 CPT 72148', 'CPT 72148'],
+    ['CLAIM NUMBER: 2026041277 MRI LUMBAR SPINE DENIED', 'MRI LUMBAR SPINE DENIED'],
+    ['MEMBER ID: W123456789 PPO GOLD PLAN', 'PPO GOLD PLAN'],
+    ['Dear Doctor,', 'Doctor'],
+    ['Dear Colleague,', 'Colleague'],
+    ['Dear AETNA,', 'AETNA'],
+    ['MEMBER: KAISER PERMANENTE', 'KAISER PERMANENTE'],
+    ['Claims aged 90 days are closed.', '90'],
+  ])('F5 keeps %s', (text, value) => expect(redact(text).redacted).toContain(value));
+
+  it.each([
+    ['Dear MS. GONZALEZ,', 'GONZALEZ'],
+    ['Requesting provider: Dr. J. R. Okafor', 'Okafor'],
+    ['Medical Record Number: MRN 0044 1823', '0044 1823'],
+    ['Patient: MARIA GONZALEZ', 'GONZALEZ'],
+  ])('F5 hides %s', (text, value) => expect(redact(text).redacted).not.toContain(value));
+
+  it('caps hints skip clinical headers', () => {
+    const s = findSuspects('MRI LUMBAR SPINE WITHOUT CONTRAST\nTOTAL KNEE ARTHROPLASTY\nTHIS IS NOT A BILL. WHAT YOU CAN DO');
+    expect(s).toEqual([]);
   });
 });

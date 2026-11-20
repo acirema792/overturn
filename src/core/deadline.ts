@@ -135,35 +135,50 @@ const NUMBER_WORDS: Record<string, number> = {
 };
 
 /** "within 180 days", "within one hundred eighty (180) calendar days", "65 days from the date". */
-// Sentences where the PLAN is the subject of a deadline ("We will decide
-// within 30 days of receiving your appeal") are not the patient's window.
-// Only a plan subject counts: "you may appeal this decision within 180 days"
-// is the patient's window and must be kept.
-const PLAN_OBLIGATION =
-  /\b(?:we|the plan|our (?:team|reviewers?|plan))\b[^.]{0,40}\b(?:will|must|shall|have to|are required to)\s+(?:make|decide|respond|notify|send you|tell you|answer|issue)\b/i;
+// Appeal window extraction. A letter usually states two kinds of deadline:
+// the PATIENT's ("you may appeal within 180 days") and the PLAN's ("a decision
+// will be made within 30 days"). Each "N days" mention is classified by the
+// clause it sits in (who has to act), and the first patient deadline wins.
+
+const NUMBER_WORD = String.raw`thirty|sixty(?:[ -]five)?|ninety|one hundred(?: and)? (?:twenty|eighty)`;
+// "within one hundred eighty (180) days", "within 60 days", "have 180 days", "65 days from the date".
+const DAYS_MENTION = new RegExp(
+  String.raw`\b(?:(?:within|in|have|up to|no later than)\s+(?:(${NUMBER_WORD})\s+)?\(?(\d{2,3})?\)?\s*(?:calendar\s+)?days?\b|(\d{2,3})\s+(?:calendar\s+)?days?\s+(?:from|after|of)\b)`,
+  'gi',
+);
+
+// The patient acts: "you may/can/must…", "if you send it", "your appeal must be received", "we must receive your…".
+const PATIENT_CLAUSE =
+  /\byou\s+(?:may|can|must|should|have|need)\b|\b(?:if|when|once)\s+you\b|\bmust be (?:received|filed|submitted|postmarked|sent)\b|\bwe must (?:receive|get|have)\b/i;
+// The plan acts: "we will…", "the reviewer will…", "a decision will be made…", "you will be notified…".
+const PLAN_CLAUSE =
+  /\b(?:we|the plan|our (?:plan|team|reviewers?)|the reviewer|reviewers?|they)\s+(?:will|shall|must|are required to|have to)\b|\b(?:will|shall) be (?:made|decided|notified|sent|reviewed|mailed|issued)\b|\byou will (?:be notified|receive|get|hear)\b/i;
+// The sentence must be about appealing ("…within 180 days of the date of this
+// notice" counts), not about paying a bill.
+const APPEAL_TOPIC = /\b(?:appeal|reconsider|reconsideration|review|dispute|grievance|hearing|request)/i;
+const NOTICE_TOPIC = /\b(?:notice|letter|determination)\b/i;
+const PAYMENT_TOPIC = /\b(?:pay|payment|balance|bill)\b/i;
+const isAppealSentence = (s: string) => APPEAL_TOPIC.test(s) || (NOTICE_TOPIC.test(s) && !PAYMENT_TOPIC.test(s));
 
 export function findWindowDays(text: string): number | null {
-  const t = text
-    .split(/(?<=[.!?])\s+|\n+/)
-    .filter((sentence) => !PLAN_OBLIGATION.test(sentence))
-    .join(' ')
-    .replace(/\s+/g, ' ');
-  const patterns = [
-    /(?:within|no later than|in|have|up to)\s+(?:[a-z -]+\s+)?\(?(\d{2,3})\)?\s+(?:calendar\s+)?days?\b[^.]{0,80}?\b(?:appeal|request|reconsideration|review|date of (?:this|the) (?:notice|letter))/i,
-    /(?:appeal|request|reconsideration)[^.]{0,80}?\bwithin\s+(?:[a-z -]+\s+)?\(?(\d{2,3})\)?\s+(?:calendar\s+)?days?/i,
-    /\b(\d{2,3})\s+(?:calendar\s+)?days?\s+(?:from|after|of)\s+(?:the\s+)?(?:date|receipt)/i,
-  ];
-  for (const re of patterns) {
-    const m = t.match(re);
-    if (m) {
-      const n = Number(m[1]);
-      if (n >= 10 && n <= 400) return n;
+  const sentences = text.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/);
+  for (const sentence of sentences) {
+    if (!isAppealSentence(sentence)) continue;
+    DAYS_MENTION.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = DAYS_MENTION.exec(sentence))) {
+      const n = m[2] ? Number(m[2]) : m[3] ? Number(m[3]) : m[1] ? NUMBER_WORDS[m[1].toLowerCase()] : NaN;
+      if (!n || n < 10 || n > 400) continue;
+      // The clause: from the last clause break (comma, semicolon, "if", "and") before the number.
+      const before = sentence.slice(0, m.index);
+      const breaks = [...before.matchAll(/[,;]|\b(?:if|and|but|or)\b/gi)];
+      const clauseStart = breaks.length ? breaks[breaks.length - 1].index! : 0;
+      const clause = sentence.slice(clauseStart, m.index + m[0].length);
+      const patient = PATIENT_CLAUSE.test(clause);
+      const plan = PLAN_CLAUSE.test(clause);
+      if (patient || !plan) return n;
     }
   }
-  const words = t.match(
-    /within\s+(thirty|sixty(?:[ -]five)?|ninety|one hundred(?: and)? (?:twenty|eighty))\s+(?:calendar\s+)?days/i,
-  );
-  if (words) return NUMBER_WORDS[words[1].toLowerCase()] ?? null;
   return null;
 }
 
@@ -202,7 +217,9 @@ const DATE_IN_TEXT =
 // care, never the notice. Only the label right before the date counts, so
 // "Customer Service   Date: 11/02/2026" keeps its notice date.
 const NOT_NOTICE_BEFORE =
-  /\b(?:birth|dob|d\.o\.b|born|service|dos|admission|admitted|discharge|treatment|visit|procedure|surgery|received|presented)\b\.?(?: date| on)?[ :]{0,2}$/i;
+  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
+// "10/01/2026 - 10/03/2026": the second date of a skipped range is skipped too.
+const RANGE_JOINER = /^\s*(?:-|–|to|through|thru|and|,)\s*$/i;
 const NOTICE_LABEL =
   /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date|date issued|issue date|\bissued\b(?: on)?|statement date|\bsent\b|(?:^|\s{2,}|\|\s*)date\s*:)\s*[:-]?\s*/i;
 
@@ -212,8 +229,14 @@ function noticeDatesIn(line: string, from = 0): string[] {
   const re = new RegExp(DATE_IN_TEXT.source, 'g');
   re.lastIndex = from;
   let m: RegExpExecArray | null;
+  let lastSkippedEnd = -1;
   while ((m = re.exec(line))) {
-    if (NOT_NOTICE_BEFORE.test(line.slice(Math.max(0, m.index - 24), m.index))) continue;
+    const continuesSkippedRange = lastSkippedEnd >= 0 && RANGE_JOINER.test(line.slice(lastSkippedEnd, m.index));
+    if (continuesSkippedRange || NOT_NOTICE_BEFORE.test(line.slice(Math.max(0, m.index - 24), m.index))) {
+      lastSkippedEnd = m.index + m[0].length;
+      continue;
+    }
+    lastSkippedEnd = -1;
     const iso = toISODate(m[0]);
     if (iso) out.push(iso);
   }

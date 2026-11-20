@@ -59,13 +59,14 @@ added here with the Chrome version and hardware. Until then, we make no claim ab
 - spaced IDs, and labelled IDs that look like procedure codes;
 - dotted and yyyy/mm/dd dates, labelled spaced SSNs, and ages over 89 (Safe Harbor).
 
-**Over-redaction guarded by tests:** insurer names in capitals, CPT/HCPCS/ICD-10 codes, dollar
+**Over-redaction guarded by tests** (in the tested forms only): insurer names in capitals after "To:", "Member:" or "Dear", field values like "SERVICE NAME: MRI LUMBAR SPINE", text after a labelled ID ("Reference #: 88812345 CPT 72148"), CPT/HCPCS/ICD-10 codes, dollar
 amounts, a medical-policy reference ("Medical Policy MP-204"), section and version numbers ("Section 4.1.12"), drug doses and ages under 90 survive. (A value after an explicit ID label, such as "Policy No. MP-204", is redacted on purpose.)
 
 **Traps now handled correctly:**
 - a Medicaid letter that mentions Medicare;
 - a date of birth on the first line;
-- "we will decide within 30 days";
+- the plan's own timelines ("a decision will be made within 90 days") next to the patient's window;
+- service-date ranges in the letterhead;
 - short names inside other words ("Pat" in "patient").
 
 ## History

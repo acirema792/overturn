@@ -21,6 +21,8 @@ export type FactSource = 'letter text (code)' | 'Gemini Nano' | 'legal default' 
 
 export interface Facts {
   insurer: string;
+  /** True when Gemini Nano named the insurer; a guess from the letterhead is not trusted to suppress name hints. */
+  insurerFromModel: boolean;
   serviceDenied: string;
   reasonInPlainWords: string;
   category: DenialCategory;
@@ -80,6 +82,7 @@ function mergeFacts(raw: string, model?: FactsResult): Facts {
   const planType: PlanType = rulesPlan !== 'unknown' ? rulesPlan : (model?.planType ?? 'unknown');
   return {
     insurer: model?.insurer || insurerFromLetter(raw, detect(raw).filter((d) => d.kind === 'PERSON').map((d) => d.text)),
+    insurerFromModel: Boolean(model?.insurer),
     serviceDenied: model?.serviceDenied ?? '',
     reasonInPlainWords: model?.reasonInPlainWords ?? '',
     category: model?.denialCategory ?? rulesCategory,
@@ -103,7 +106,7 @@ export function finishAnalysis(base: Omit<Analysis, 'redaction' | 'deadline' | '
     planType: base.facts.planType,
     today,
   });
-  const suspects = findSuspects(redaction.redacted, [base.facts.insurer]);
+  const suspects = findSuspects(redaction.redacted, base.facts.insurerFromModel ? [base.facts.insurer] : []);
   const codeEntry = ledgerEntry({
     step: 'Hide personal details + compute deadline',
     where: 'code',

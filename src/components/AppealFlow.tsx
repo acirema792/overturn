@@ -240,6 +240,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
               setSampleId(null);
               if (!e.target.value.trim()) setExtraLedger([]);
             }}
+            onPaste={() => setExtraLedger([])} // a pasted letter replaces any photo-read text
             placeholder="Paste the text of the letter from your insurer, or an Explanation of Benefits, here…"
             rows={14}
           />
