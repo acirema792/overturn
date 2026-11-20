@@ -55,6 +55,12 @@
    "finding": "F12",
    "action": "localToday() for days-left; test passes in UTC and America/Los_Angeles",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F9",
+   "action": "App Check works with debug token only; mode exposed and shown in header/footer; 2 tests",
+   "outcome": "success"
   }
  ]
 }

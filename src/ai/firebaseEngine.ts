@@ -91,6 +91,7 @@ declare global {
 export class FirebaseEngine implements Engine {
   readonly kind = 'firebase' as const;
   cloudModel = RC_DEFAULTS.cloud_model;
+  appCheck: 'reCAPTCHA Enterprise' | 'reCAPTCHA v3' | 'debug token' | 'off' = 'off';
   private app: FirebaseApp;
   private temperature = RC_DEFAULTS.appeal_temperature;
   private ai;
@@ -109,14 +110,26 @@ export class FirebaseEngine implements Engine {
       storageBucket: s.storageBucket,
     });
 
-    // App Check is required by Firebase AI Logic. Debug tokens are for local
-    // development and judging builds only; production uses reCAPTCHA.
-    if (s.appCheckDebug) self.FIREBASE_APPCHECK_DEBUG_TOKEN = s.appCheckDebug === 'true' ? true : s.appCheckDebug;
-    const provider = s.recaptchaEnterpriseKey
-      ? new ReCaptchaEnterpriseProvider(s.recaptchaEnterpriseKey)
-      : s.recaptchaV3Key
-        ? new ReCaptchaV3Provider(s.recaptchaV3Key)
-        : null;
+    // App Check is required by Firebase AI Logic. Production uses reCAPTCHA;
+    // local development uses a registered debug token. In debug mode the SDK
+    // exchanges the debug token and never asks the provider for an
+    // attestation, so a placeholder v3 provider is enough there.
+    if (s.appCheckDebug) (globalThis as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string }).FIREBASE_APPCHECK_DEBUG_TOKEN =
+      s.appCheckDebug === 'true' ? true : s.appCheckDebug;
+    let provider: ReCaptchaEnterpriseProvider | ReCaptchaV3Provider | null = null;
+    if (s.recaptchaEnterpriseKey) {
+      provider = new ReCaptchaEnterpriseProvider(s.recaptchaEnterpriseKey);
+      this.appCheck = s.appCheckDebug ? 'debug token' : 'reCAPTCHA Enterprise';
+    } else if (s.recaptchaV3Key) {
+      provider = new ReCaptchaV3Provider(s.recaptchaV3Key);
+      this.appCheck = s.appCheckDebug ? 'debug token' : 'reCAPTCHA v3';
+    } else if (s.appCheckDebug) {
+      provider = new ReCaptchaV3Provider('debug-mode-placeholder');
+      this.appCheck = 'debug token';
+    } else {
+      this.appCheck = 'off';
+      console.warn('App Check is not configured: Firebase AI Logic will reject cloud requests. Set VITE_RECAPTCHA_ENTERPRISE_KEY or VITE_APPCHECK_DEBUG.');
+    }
     if (provider) initializeAppCheck(this.app, { provider, isTokenAutoRefreshEnabled: true });
 
     this.ai = getAI(this.app, { backend: new GoogleAIBackend() });

@@ -73,6 +73,11 @@ export default function App() {
             {DEVICE_LABEL[device]}
           </span>
           <span className={`pill ${online ? 'pill-cloud' : 'pill-off'}`}>{online ? `Cloud: ${choice.engine?.cloudModel ?? 'not set up'}` : 'Offline'}</span>
+          {choice.engine?.appCheck === 'off' && (
+            <span className="pill pill-wait" title="Firebase AI Logic requires App Check; cloud requests will be rejected">
+              App Check not configured
+            </span>
+          )}
         </div>
       </header>
       <main>
@@ -97,7 +102,8 @@ export default function App() {
       </main>
       <footer>
         <span>
-          Built with Firebase AI Logic hybrid inference · Open source (Apache-2.0) · Not legal or medical advice · Sample letters are synthetic
+          Built with Firebase AI Logic hybrid inference · App Check: {choice.engine?.appCheck ?? 'n/a'} · Open source (Apache-2.0) · Not legal or
+          medical advice · Sample letters are synthetic
         </span>
       </footer>
     </>

@@ -38,6 +38,8 @@ export class EgressBlockedError extends Error {
 export interface Engine {
   readonly kind: 'firebase' | 'simulated';
   readonly cloudModel: string;
+  /** How this build proves itself to Firebase (App Check). */
+  readonly appCheck: string;
   deviceAvailability(): Promise<DeviceAvailability>;
   /** Must be called from a user gesture (Chrome's user-activation rule). */
   prepareDevice(onProgress?: (fraction: number) => void): Promise<void>;

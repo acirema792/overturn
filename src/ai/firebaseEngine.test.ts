@@ -31,6 +31,7 @@ vi.mock('firebase/ai', () => ({
 }));
 
 import { FirebaseEngine } from './firebaseEngine';
+import { initializeAppCheck } from 'firebase/app-check';
 import { EgressBlockedError } from './engine';
 
 const settings = { apiKey: 'k', projectId: 'p', appId: 'a' };
@@ -76,6 +77,22 @@ describe('FirebaseEngine', () => {
       e.draftAppeal({ prompt: 'Appeal for [PERSON_1]', vault: { '[PERSON_1]': 'Maria Gonzalez' } }, { preferDevice: true }),
     ).rejects.toThrow(/offline draft did not run/);
     expect(calls).toEqual([]);
+  });
+
+  it('initialises App Check with only a debug token configured (F9)', () => {
+    vi.mocked(initializeAppCheck).mockClear();
+    const e = new FirebaseEngine({ ...settings, appCheckDebug: 'true' });
+    expect(initializeAppCheck).toHaveBeenCalledTimes(1);
+    expect(e.appCheck).toBe('debug token');
+  });
+
+  it('reports App Check as off when nothing is configured (F9)', () => {
+    vi.mocked(initializeAppCheck).mockClear();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const e = new FirebaseEngine(settings);
+    expect(initializeAppCheck).not.toHaveBeenCalled();
+    expect(e.appCheck).toBe('off');
+    warn.mockRestore();
   });
 
   it('sends a clean appeal prompt with PREFER_IN_CLOUD', async () => {

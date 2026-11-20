@@ -16,6 +16,7 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export class SimEngine implements Engine {
   readonly kind = 'simulated' as const;
   readonly cloudModel = 'simulated';
+  readonly appCheck = 'not used (simulated)';
   private device: DeviceAvailability;
   constructor(device: DeviceAvailability = 'available') {
     this.device = device;
