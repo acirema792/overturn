@@ -137,14 +137,14 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
         setStage('review');
       } else {
         setError(`The model couldn't write the appeal (${e instanceof Error ? e.message : String(e)}). Here is a template letter instead; nothing was guessed.`);
-        useTemplate();
+        applyTemplate();
       }
     } finally {
       setProgress('');
     }
   }
 
-  function useTemplate() {
+  function applyTemplate() {
     if (!analysis) return;
     const t0 = performance.now();
     const result = templateAppeal({
@@ -352,7 +352,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
               <button className="secondary" disabled={device !== 'available' || stage === 'drafting'} onClick={() => draft(true)} title={device !== 'available' ? 'Needs Gemini Nano in Chrome' : ''}>
                 Stay offline: draft on this device
               </button>
-              <button className="link" disabled={stage === 'drafting'} onClick={useTemplate}>
+              <button className="link" disabled={stage === 'drafting'} onClick={applyTemplate}>
                 Use a template letter (no AI)
               </button>
               <button className="link" onClick={reset}>

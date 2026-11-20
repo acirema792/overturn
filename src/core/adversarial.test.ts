@@ -1,6 +1,6 @@
 // Adversarial inputs found by the round-1 audit (loop/audits/round-1.md).
 import { describe, expect, it } from 'vitest';
-import { computeDeadline, findNoticeDate, findWindowDays, guessPlanType } from './deadline';
+import { computeDeadline, findNoticeDate, findWindowDays, guessPlanType, localToday } from './deadline';
 import { checkEgress } from './egressGate';
 import { redact } from './redact';
 import { insurerFromLetter, templateAppeal } from './template';
@@ -81,5 +81,14 @@ describe('F6 labels are not names; template never guesses the patient', () => {
   });
   it('the template skips a dateline when guessing the insurer', () => {
     expect(insurerFromLetter('Statement date: Oct 31, 2026\n\nMercy Ridge Medical Center | Patient Account No. 1')).toBe('Mercy Ridge Medical Center');
+  });
+});
+
+describe('F12 days left uses the local calendar date', () => {
+  it('8 pm on Nov 20 in a UTC-8 zone is still Nov 20', () => {
+    // 2026-11-21T04:00Z is 8 pm on Nov 20 in Los Angeles.
+    const at = new Date('2026-11-21T04:00:00Z');
+    const local = localToday(at);
+    expect(local).toBe(`${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(at.getDate()).padStart(2, '0')}`);
   });
 });

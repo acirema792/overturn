@@ -43,6 +43,18 @@
    "finding": "F6",
    "action": "field labels need a colon; template leaves patient blank unless Nano labelled one; insurer from first org-like line; 4 tests",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F11",
+   "action": "rename useTemplate->applyTemplate; drop useless escape; lint ignores worktrees",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F12",
+   "action": "localToday() for days-left; test passes in UTC and America/Los_Angeles",
+   "outcome": "success"
   }
  ]
 }

@@ -68,11 +68,14 @@ export function parseISO(iso: string | null | undefined): Date | null {
 }
 
 const toISO = (d: Date) => d.toISOString().slice(0, 10);
+/** Today's date where the user is, not in UTC (an evening in the US is already "tomorrow" in UTC). */
+export const localToday = (now = new Date()) =>
+  `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 const DAY = 86_400_000;
 
 export function computeDeadline(input: DeadlineInput): DeadlineResult {
   const notice = parseISO(input.noticeDate);
-  const today = parseISO(input.today ?? toISO(new Date())) as Date;
+  const today = parseISO(input.today ?? localToday()) as Date;
   const external = EXTERNAL_REVIEW[input.planType];
 
   let windowDays: number | null = null;
@@ -196,7 +199,7 @@ const DATE_IN_TEXT =
 // Lines whose dates are about the patient or the care, never the notice.
 const NOT_NOTICE_LINE = /\b(?:birth|dob|d\.o\.b|born|service|dos|admission|admitted|discharge|treatment|received|presented|visit|procedure|surgery)\b/i;
 const NOTICE_LABEL =
-  /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date|date issued|issue date|\bissued\b(?: on)?|statement date|\bsent\b|^\s*date\s*:)\s*[:\-]?\s*/i;
+  /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date|date issued|issue date|\bissued\b(?: on)?|statement date|\bsent\b|^\s*date\s*:)\s*[:-]?\s*/i;
 
 /**
  * The notice date: a date on a line labelled as the notice/letter date, or
