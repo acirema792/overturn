@@ -22,7 +22,7 @@ export function HowItWorks() {
             <div className="how-tag">On this device · plain code</div>
             <h3>2. Hide and decide</h3>
             <p>
-              Code replaces each identifier with a placeholder like <span className="ph">[PERSON_1]</span>, adds rule-based checks for 13 kinds of
+              Code replaces each identifier with a placeholder like <span className="ph">[PERSON_1]</span>, adds rule-based checks for 14 kinds of
               identifier, and computes the appeal deadline from the letter and federal rules. An <strong>egress gate</strong> blocks the
               request if any known identifier is still in the outgoing text. You see that text and approve it.
             </p>
@@ -50,7 +50,7 @@ export function HowItWorks() {
           <tbody>
             <tr>
               <td>Firebase AI Logic (hybrid)</td>
-              <td>Three inference modes, each chosen for a reason: ONLY_ON_DEVICE for raw text and photos, PREFER_IN_CLOUD for the redacted appeal, ONLY_ON_DEVICE for "stay offline". Every response's <code>inferenceSource</code> is logged in the privacy ledger.</td>
+              <td>Two inference modes, each where it fits: ONLY_ON_DEVICE for the raw letter, photos and "stay offline"; PREFER_IN_CLOUD for the redacted appeal. Every response's <code>inferenceSource</code> is logged in the privacy ledger.</td>
             </tr>
             <tr>
               <td>App Check</td>

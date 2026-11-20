@@ -181,6 +181,19 @@
    "finding": "F14",
    "action": "verifier REJECT: playwright not in package.json; pinned playwright 1.63.0 (c65b656); e2e passes without NODE_PATH",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F7",
+   "action": "verifier REJECT: '13 leaks all names' false; formats overclaimed; 'three modes' is two; debug App Check unverified",
+   "outcome": "failure",
+   "error": "overclaims"
+  },
+  {
+   "round": 1,
+   "finding": "F7",
+   "action": "corrected wording; counts updated (89 tests, 14 kinds); formats listed only as tested; FEEDBACK debug note marked unverified",
+   "outcome": "success"
   }
  ]
 }

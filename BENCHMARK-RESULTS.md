@@ -26,7 +26,7 @@ This is the floor for browsers without Gemini Nano. Recorded run: `eval_results/
 | Appeal deadline correct (code-computed) | n/a | 16/16 | **8/8** |
 | Denial reason correct | n/a | 16/16 | 7/8 |
 
-**The misses, explained.** All 13 leaked identifiers are people's names in positions no rule labels:
+**The misses, explained.** Of the 13 leaked identifiers, 12 are people's names and 1 is the patient's employer, all in positions no rule labels:
 - a bare recipient block ("Hope Rivers");
 - a lowercase name ("alexei petrov");
 - "for Nadia Haddad", "Hello Marcus Feldman", "your niece, Carla Benedetti";
@@ -53,10 +53,14 @@ added here with the Chrome version and hardware. Until then, we make no claim ab
 
 `src/core/adversarial.test.ts` pins the formats found in the independent audit (`loop/audits/`).
 
-**Identity formats now caught:**
-- accented, all-caps, "Last, First", Mc/Mac and initial-style names;
+**Identity formats now caught** (each pinned by a test; formats outside these tests may still slip through):
+- after a label or "Dear": accented names (José Ñúñez-García), "Last, First" (Gonzalez, Maria; O’Brien, Siobhán),
+  Mc/Mac names, initials (M. L. Gonzalez), and ALL-CAPS names (JOHN Q PUBLIC, DE LA CRUZ, ANA);
 - spaced IDs, and labelled IDs that look like procedure codes;
-- dotted dates and spaced SSNs.
+- dotted and yyyy/mm/dd dates, labelled spaced SSNs, and ages over 89 (Safe Harbor).
+
+**Over-redaction guarded by tests:** insurer names in capitals, CPT/HCPCS/ICD-10 codes, dollar
+amounts, a medical-policy reference ("Medical Policy MP-204"), section and version numbers ("Section 4.1.12"), drug doses and ages under 90 survive. (A value after an explicit ID label, such as "Policy No. MP-204", is redacted on purpose.)
 
 **Traps now handled correctly:**
 - a Medicaid letter that mentions Medicare;
@@ -69,4 +73,4 @@ added here with the Chrome version and hardware. Until then, we make no claim ab
 | Date | Change | Held-out leaked |
 |---|---|---|
 | 2026-11-20 | First frozen run | 7/34 |
-| 2026-11-20 | Audit fixes F1–F12 (none derived from held-out cases) | 7/34 (unchanged) |
+| 2026-11-20 | Audit round-1 fixes and verifier follow-ups (none derived from held-out cases) | 7/34 (unchanged) |

@@ -2,7 +2,7 @@
 
 **Appeal a health insurance denial. Your identity stays on your device.**
 
-![tests](https://img.shields.io/badge/tests-61%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
+![tests](https://img.shields.io/badge/tests-89%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
 
 Overturn is a web app for #BuildHybridAI 2026 built on **Firebase AI Logic hybrid inference**.
 Gemini Nano reads the denial letter **in Chrome, on the patient's device**. Code removes every
@@ -27,7 +27,7 @@ That split is exactly what hybrid inference is for.
 | Step | Where | Firebase AI Logic mode | Why this mode |
 |---|---|---|---|
 | 1. Read the letter (or a photo of it): find every person, ID, address, contact; read the denial reason | Gemini Nano in Chrome | `ONLY_ON_DEVICE` + our own availability check first | `PREFER_ON_DEVICE` would silently fall back to the cloud when Nano isn't ready, which would upload the raw letter. And in SDK 13.4.0, even `ONLY_ON_DEVICE` goes to the cloud when Chrome lacks the Prompt API ([FEEDBACK.md](FEEDBACK.md)), so we check first and fail closed. |
-| 2. Replace identifiers with placeholders (`[PERSON_1]`, `[MEMBER_ID_1]`); compute the appeal deadline | Plain code on the device | none | Deterministic rules for 13 identifier kinds, plus every value Nano found, everywhere it appears. Deadlines come from the letter or federal minimums (ERISA 180 days, Medicare Advantage 65, Medicaid 60), never from a model. |
+| 2. Replace identifiers with placeholders (`[PERSON_1]`, `[MEMBER_ID_1]`); compute the appeal deadline | Plain code on the device | none | Deterministic rules for 14 identifier kinds, plus every value Nano found, everywhere it appears. Deadlines come from the letter or federal minimums (ERISA 180 days, Medicare Advantage 65, Medicaid 60), never from a model. |
 | 3. Egress gate + the patient's approval | Plain code on the device | none | The request is blocked if any known identifier (even reformatted) or any detectable new one is in the outgoing text. The patient sees the exact text and approves it. |
 | 4. Write the explanation, arguments and appeal letter | Gemini in the cloud | `PREFER_IN_CLOUD` | The stronger model does the hard writing from de-identified text. If the network fails, the SDK falls back to Gemini Nano. |
 | 4b. "Stay offline" | Gemini Nano | `ONLY_ON_DEVICE` | The patient can keep everything local. |
@@ -41,7 +41,7 @@ recorded during the step.
 
 | Product | Job in Overturn |
 |---|---|
-| **Firebase AI Logic** (Web SDK, hybrid) | Three inference modes, chosen per step: `ONLY_ON_DEVICE` (raw letter, photo, offline draft) and `PREFER_IN_CLOUD` (redacted appeal). Structured JSON output on both paths from one schema (`responseConstraint` on device, `responseJsonSchema` in the cloud). |
+| **Firebase AI Logic** (Web SDK, hybrid) | Two inference modes, chosen per step: `ONLY_ON_DEVICE` (raw letter, photo, offline draft) and `PREFER_IN_CLOUD` (redacted appeal). Structured JSON output on both paths from one schema (`responseConstraint` on device, `responseJsonSchema` in the cloud). |
 | **Gemini Nano in Chrome** (via AI Logic) | Finds identities, reads the denial, transcribes photos, drafts offline. |
 | **Gemini Developer API** (via AI Logic) | Writes the appeal from de-identified text. |
 | **App Check** | Required by AI Logic: only this app can call Gemini through the project. |
@@ -76,7 +76,8 @@ it yourself in the app's Benchmark tab in desktop Chrome.
 
 ```bash
 npm ci
-npm test          # 61 unit, pipeline, engine (SDK mocked) and adversarial tests
+npm test          # 89 unit, pipeline, engine (SDK mocked) and adversarial tests
+npm run build && npm run e2e   # Playwright UI smoke test (simulated engine; run `npx playwright install chromium` once)
 npm run eval      # rules-only benchmark → eval_results/
 npm run dev       # needs .env.local (see .env.example) for real models
 ```

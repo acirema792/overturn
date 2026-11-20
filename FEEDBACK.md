@@ -33,5 +33,6 @@ if the docs said in one line: "for data that must not leave the device, use `ONL
 
 - `OnDeviceParams.createOptions` types don't include `temperature`/`topK`; we pass them with a cast.
   It isn't clear whether web pages may set them, or whether Chrome ignores them there.
-- App Check debug mode works with a placeholder provider, since the provider isn't asked for an
-  attestation in debug mode. Documenting that would save local-dev confusion.
+- From the App Check source: in debug mode the SDK exchanges the debug token and never asks the provider
+  for a token, but `initializeAppCheck` still needs a provider (we pass a refusing `CustomProvider`).
+  Not yet exercised against a live project. A documented "debug only" provider would save local-dev confusion.

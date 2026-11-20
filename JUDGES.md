@@ -19,11 +19,12 @@ still shows the whole flow, with the rules as the on-device layer.
 |---|---|
 | Raw letter and photo only ever go to the on-device model | `src/ai/firebaseEngine.ts`: `onDevice()` uses `InferenceMode.ONLY_ON_DEVICE`, checks availability **before** calling the SDK (see FEEDBACK.md for why), and refuses any response whose `inferenceSource` isn't `on_device`. |
 | Cloud gets de-identified text only | `src/ai/firebaseEngine.ts` `draftAppeal()` runs `checkEgress()` before the request; `src/core/egressGate.ts`. |
-| Identifiers are replaced everywhere, consistently | `src/core/redact.ts` (vault, placeholders, name fragments share the full name's placeholder), `src/core/detectors.ts` (13 kinds). |
+| Identifiers are replaced everywhere, consistently | `src/core/redact.ts` (vault, placeholders, name fragments share the full name's placeholder), `src/core/detectors.ts` (14 kinds). |
 | Deadlines are computed, not generated | `src/core/deadline.ts` (`computeDeadline`, CFR citations, "unknown" when unsure); `src/pipeline.ts` `mergeFacts()`: code wins, the model fills gaps. |
 | Real details are restored only on the device | `src/core/redact.ts` `rehydrate()`, called in `src/components/AppealFlow.tsx`. |
 | The ledger tells the truth | `src/ai/engine.ts` `watchGeminiRequests()` (Resource Timing); `inferenceSource` per response. |
-| Tested | `npm test`: 61 tests, including SDK-mocked engine tests (`src/ai/firebaseEngine.test.ts`) and adversarial inputs (`src/core/adversarial.test.ts`). |
+| UI tested | `npm run e2e`: Playwright smoke test on the simulated engine (flow, hide/undo, no-Nano path, 390px). |
+| Tested | `npm test`: 89 tests, including SDK-mocked engine tests (`src/ai/firebaseEngine.test.ts`) and adversarial inputs (`src/core/adversarial.test.ts`). |
 
 More: [CLAIMS.md](CLAIMS.md) (every claim with its evidence tier),
 [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md), [EVIDENCE.md](EVIDENCE.md) (judging criteria → evidence),
