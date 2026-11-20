@@ -1,6 +1,6 @@
 ### Rules only, tuning set (16 letters; rules were adjusted on these)
 
-Ran 2026-11-20T21:54:08.012Z in node v22.23.5. 16 synthetic letters, 95 planted identifiers, 57 clinical facts that must survive.
+Ran 2026-11-20T21:55:38.944Z in node v22.23.5. 16 synthetic letters, 95 planted identifiers, 57 clinical facts that must survive.
 
 | Metric | Paste into a cloud chatbot | Overturn |
 |---|---|---|
@@ -31,7 +31,7 @@ Ran 2026-11-20T21:54:08.012Z in node v22.23.5. 16 synthetic letters, 95 planted 
 
 ### Rules only, held-out set (8 letters; written after tuning, run without changes)
 
-Ran 2026-11-20T21:54:08.017Z in node v22.23.5. 8 synthetic letters, 34 planted identifiers, 23 clinical facts that must survive.
+Ran 2026-11-20T21:55:38.947Z in node v22.23.5. 8 synthetic letters, 34 planted identifiers, 23 clinical facts that must survive.
 
 | Metric | Paste into a cloud chatbot | Overturn |
 |---|---|---|

@@ -1,0 +1,10 @@
+maxFiles: 10
+protected:
+  - src/data/cases.ts
+  - src/data/heldout.ts
+  - eval_results/**
+  - scripts/eval.ts
+  - src/eval/runEval.ts
+  - .env*
+  - .github/workflows/**
+  - LICENSE

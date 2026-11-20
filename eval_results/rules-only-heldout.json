@@ -55,7 +55,7 @@
         "ok": true
       },
       "entitySource": "rules only",
-      "ms": 1
+      "ms": 0
     },
     {
       "id": "H03",
@@ -169,7 +169,7 @@
         "ok": true
       },
       "entitySource": "rules only",
-      "ms": 1
+      "ms": 0
     },
     {
       "id": "H08",
@@ -193,6 +193,6 @@
       "ms": 0
     }
   ],
-  "ranAt": "2026-11-20T21:54:08.017Z",
+  "ranAt": "2026-11-20T21:55:38.947Z",
   "environment": "node v22.23.5"
 }

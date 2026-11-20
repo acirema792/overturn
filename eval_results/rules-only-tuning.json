@@ -72,7 +72,7 @@
         "ok": true
       },
       "entitySource": "rules only",
-      "ms": 3
+      "ms": 1
     },
     {
       "id": "C04",
@@ -359,6 +359,6 @@
       "ms": 0
     }
   ],
-  "ranAt": "2026-11-20T21:54:08.012Z",
+  "ranAt": "2026-11-20T21:55:38.944Z",
   "environment": "node v22.23.5"
 }
