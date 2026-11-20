@@ -67,6 +67,12 @@
    "finding": "F10",
    "action": "ledger: 'no part of your letter' wording + config-request note; keep photo row; deadline card names fact sources; fallback note on attempted bytes",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F5",
+   "action": "unicode/all-caps/Last,First/initials name rule; explicit-label IDs with spaces or code-like values; dotted dates; spaced SSN; 11 tests",
+   "outcome": "success"
   }
  ]
 }

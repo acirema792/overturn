@@ -52,7 +52,7 @@ function escapeRe(s: string): string {
 /** Regex that matches `value` with flexible whitespace, case-insensitively. */
 function flexibleRe(value: string): RegExp {
   const parts = value.trim().split(/\s+/).map(escapeRe);
-  return new RegExp(`(?<![A-Za-z0-9])${parts.join('\\s+')}(?![A-Za-z0-9])`, 'gi');
+  return new RegExp(`(?<![\\p{L}\\p{N}])${parts.join('\\s+')}(?![\\p{L}\\p{N}])`, 'giu');
 }
 
 function findAll(text: string, value: string, kind: IdKind, source: Span['source']): Span[] {
@@ -75,13 +75,13 @@ function nameFragments(name: string): string[] {
   return name
     .replace(/^(Mr|Mrs|Ms|Miss|Dr)\.?\s+/i, '')
     .split(/\s+/)
-    .map((w) => w.replace(/[^A-Za-z'’-]/g, '').replace(/['’]s$/, ''))
-    .filter((w) => w.length >= 3 && /^[A-Z]/.test(w) && !COMMON_CAPITALISED.has(w));
+    .map((w) => w.replace(/[^\p{L}'’-]/gu, '').replace(/['’]s$/, ''))
+    .filter((w) => w.length >= 3 && /^\p{Lu}/u.test(w) && !COMMON_CAPITALISED.has(w) && !COMMON_CAPITALISED.has(w[0] + w.slice(1).toLowerCase()));
 }
 
 /** Case-sensitive fragment search, so "Rose" the name doesn't match "rose" the verb. */
 function findFragment(text: string, frag: string, canonical: string): Span[] {
-  const re = new RegExp(`(?<![A-Za-z])${escapeRe(frag)}(?![A-Za-z])`, 'g');
+  const re = new RegExp(`(?<![\\p{L}])${escapeRe(frag)}(?![\\p{L}])`, 'gu');
   const out: Span[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {

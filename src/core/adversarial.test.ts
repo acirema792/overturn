@@ -92,3 +92,21 @@ describe('F12 days left uses the local calendar date', () => {
     expect(local).toBe(`${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(at.getDate()).padStart(2, '0')}`);
   });
 });
+
+describe('F5 rules-only floor: formats the auditor found', () => {
+  const hidden = (text: string, value: string) => {
+    const r = redact(text);
+    return !r.redacted.includes(value);
+  };
+  it('all-caps names after a label', () => expect(hidden('Patient: MARIA GONZALEZ\nWe denied', 'GONZALEZ')).toBe(true));
+  it('"Last, First" after a label', () => expect(hidden('Member: Gonzalez, Maria\nWe denied', 'Maria')).toBe(true));
+  it('accented names', () => expect(hidden('Dear José Ñúñez-García,\nWe denied', 'Ñúñez')).toBe(true));
+  it('Mc/Mac names', () => expect(hidden('Patient: Fiona McGregor\nWe denied', 'McGregor')).toBe(true));
+  it('initials', () => expect(hidden('Patient: M. L. Gonzalez\nWe denied', 'Gonzalez')).toBe(true));
+  it('IDs with spaces', () => expect(hidden('Member ID: XJH 4488 12901 was denied', '4488 12901')).toBe(true));
+  it('a labelled member ID that looks like a CPT code', () => expect(hidden('Member ID: 72148\nCPT 99213', '72148')).toBe(true));
+  it('…while an unlabelled CPT code survives', () => expect(hidden('Member ID: 72148\nCPT 99213', '99213')).toBe(false));
+  it('dotted dates of birth', () => expect(hidden('DOB 04.17.1961', '04.17.1961')).toBe(true));
+  it('spaced SSNs', () => expect(hidden('SSN 219 55 0143', '219 55 0143')).toBe(true));
+  it('the egress gate catches a spaced SSN in outgoing text', () => expect(checkEgress('ssn 219 55 0143', {}).allowed).toBe(false));
+});

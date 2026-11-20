@@ -44,6 +44,8 @@ const NOT_A_NAME = new Set(
   [
     'member', 'members', 'patient', 'customer', 'subscriber', 'provider', 'sir', 'madam',
     'policyholder', 'enrollee', 'beneficiary', 'appeals', 'appeal', 'team', 'department',
+    'notice', 'of', 'denial', 'determination', 'information', 'benefits', 'benefit', 'claim', 'account',
+    'number', 'no', 'date', 'statement', 'trust', 'service', 'coverage', 'adverse', 'explanation',
     'claims', 'services', 'the', 'valued', 'health', 'plan', 'insured', 'name', 'id',
   ].map((w) => w.toLowerCase()),
 );
@@ -80,6 +82,7 @@ const RULES: Rule[] = [
   { kind: 'URL', re: /\b(?:https?:\/\/|www\.)[^\s<>()]+[^\s<>().,;:!?]/g },
   { kind: 'SSN', re: /\b\d{3}-\d{2}-\d{4}\b/g },
   { kind: 'SSN', re: /\bSSN[:#\s]*\d{9}\b/gi },
+  { kind: 'SSN', re: /\b\d{3} \d{2} \d{4}\b/g },
   {
     kind: 'PHONE',
     re: /(?<![\w$])(?:\+?1[\s.-]?)?(?:\(\d{3}\)\s?|\d{3}[\s.-])\d{3}[\s.-]\d{4}(?:\s*(?:x|ext\.?)\s*\d{1,5})?(?!\d)/gi,
@@ -89,6 +92,7 @@ const RULES: Rule[] = [
   // Dates: numeric and written forms. Years alone are allowed by Safe Harbor.
   { kind: 'DATE', re: /\b(?:0?[1-9]|1[0-2])[/-](?:0?[1-9]|[12]\d|3[01])[/-](?:\d{4}|\d{2})\b/g },
   { kind: 'DATE', re: /\b\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])\b/g },
+  { kind: 'DATE', re: /\b(?:0?[1-9]|1[0-2])\.(?:0?[1-9]|[12]\d|3[01])\.(?:\d{4}|\d{2})\b/g },
   { kind: 'DATE', re: new RegExp(`\\b(?:${MONTHS})\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?,?\\s+\\d{4}\\b`, 'g') },
   { kind: 'DATE', re: new RegExp(`\\b\\d{1,2}\\s+(?:${MONTHS})\\.?,?\\s+\\d{4}\\b`, 'g') },
   // Labeled identifiers: "Member ID: XJH448812901", "Claim #: 2026-0412-7781".
@@ -97,6 +101,14 @@ const RULES: Rule[] = [
     re: /\b(Member|Subscriber|Policy(?=\s*(?:ID|No|Number|Num|#))|Group(?=\s*(?:ID|No|Number|Num|#))|Enrollee|Beneficiary|Medicare|Medicaid|Claim|Reference|Ref|Case|Authorization|Auth|Appeal|Grievance|Tracking|Control|Account|Acct|Invoice|Statement|Patient Account|Medical Record|MRN|Chart)\s*(?:ID|No\.?|Number|Num|#)?\s*(?:#|:|No\.?)?\s*(?=[A-Z0-9-]*\d)([A-Z0-9][A-Z0-9-]{3,}[A-Z0-9])\b/gi,
     group: 2,
     accept: (v) => !looksLikeCode(v.toUpperCase()) && /\d/.test(v),
+  },
+  // Explicitly labelled IDs ("Member ID: XJH 4488 12901", "Member ID: 72148"):
+  // the label says it's an identifier, so spaced groups and code-like values count.
+  {
+    kind: 'MEMBER_ID',
+    re: /\b(?:[Mm]ember|MEMBER|[Ss]ubscriber|SUBSCRIBER|[Pp]olicy|POLICY|[Gg]roup|GROUP|Medicare|MEDICARE|Medicaid|MEDICAID|[Cc]laim|CLAIM|[Aa]ccount|ACCOUNT|[Rr]eference|REFERENCE)[ \t]*(?:ID|Id|No\.?|NO\.?|Number|NUMBER|#)[ \t]*[:#]?[ \t]*([A-Z0-9]{2,}(?:[ -][A-Z0-9]{2,}){0,4})(?![a-z])/g,
+    group: 1,
+    accept: (v) => (v.match(/\d/g) || []).length >= 4,
   },
   // Unlabeled long identifiers: ≥7 characters with ≥5 digits, not a code or money.
   {
@@ -144,6 +156,14 @@ const RULES: Rule[] = [
   {
     kind: 'PERSON',
     re: /\b([A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*(?:[ ][A-Z]\.)?[ ][A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*),?[ ]+(?:RN|MD|DO|NP|PA-C|PA|LPN|LCSW|PhD|PharmD|DPT)\b/g,
+    group: 1,
+    accept: acceptName,
+  },
+  // Unicode, all-caps, "Last, First" and initials after a label
+  // ("Patient: MARIA GONZALEZ", "Member: Gonzalez, Maria", "Dear José Ñúñez-García").
+  {
+    kind: 'PERSON',
+    re: /(?<![\p{L}])(?:(?:(?:Patient|Member|Subscriber|Insured|Enrollee|Beneficiary|Participant|Employee|PATIENT|MEMBER|SUBSCRIBER)(?: [Nn]ame| NAME)?|Name|NAME|Dependent|Guardian)[ \t]*:|(?:Dear|DEAR|Attn|To|cc)[ \t]*[:,]?)[ \t]+((?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?(?:\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.)(?:['’-]\p{L}\p{Ll}+)*,[ ]?\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.)(?:['’-]\p{L}\p{Ll}+)*(?:[ ]\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.)(?:['’-]\p{L}\p{Ll}+)*)?|\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*,[ ]?\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*|\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.)(?:['’-]\p{L}\p{Ll}+)*(?:[ ]\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.)(?:['’-]\p{L}\p{Ll}+)*){1,3}|\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*(?:[ ]\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*){1,2}))/gu,
     group: 1,
     accept: acceptName,
   },
