@@ -150,6 +150,37 @@
    "finding": "F5",
    "action": "caps names only after patient fields or Dear; O'Brien/initials; yyyy/mm/dd; 4-digit-year dotted dates; labelled spaced SSN; AGE>89; label-specific ID kinds; Unicode+caps suspects; 17 tests",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F10",
+   "action": "verifier REJECT: fallback bytes still 0; stale photo row",
+   "outcome": "failure",
+   "error": "incomplete"
+  },
+  {
+   "round": 1,
+   "finding": "F10",
+   "action": "fallback counts gate bytes as sent; header counts bytesOut>0; new sample/clear drops photo row; test",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F12",
+   "action": "verifier note: test now pins TZ=America/Los_Angeles and asserts 2026-11-20",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F9",
+   "action": "verifier note: CustomProvider instead of placeholder reCAPTCHA in debug mode",
+   "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F14",
+   "action": "verifier REJECT: playwright not in package.json; pinned playwright 1.63.0 (c65b656); e2e passes without NODE_PATH",
+   "outcome": "success"
   }
  ]
 }

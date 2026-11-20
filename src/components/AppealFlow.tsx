@@ -222,6 +222,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                 onClick={() => {
                   setText(s.text);
                   setSampleId(s.id);
+                  setExtraLedger([]); // a new letter: drop any earlier photo row
                 }}
               >
                 {s.title}
@@ -237,6 +238,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
             onChange={(e) => {
               setText(e.target.value);
               setSampleId(null);
+              if (!e.target.value.trim()) setExtraLedger([]);
             }}
             placeholder="Paste the text of the letter from your insurer, or an Explanation of Benefits, here…"
             rows={14}

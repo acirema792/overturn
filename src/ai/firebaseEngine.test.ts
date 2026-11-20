@@ -5,11 +5,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const calls: { mode: string; prompt: unknown }[] = [];
+let fallbackOnce = false;
 vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
 vi.mock('firebase/app-check', () => ({
   initializeAppCheck: vi.fn(),
   ReCaptchaEnterpriseProvider: class {},
   ReCaptchaV3Provider: class {},
+  CustomProvider: class {},
 }));
 vi.mock('firebase/remote-config', () => ({
   getRemoteConfig: () => ({ settings: {}, defaultConfig: {} }),
@@ -25,7 +27,9 @@ vi.mock('firebase/ai', () => ({
     generateContent: (prompt: unknown) => {
       calls.push({ mode: params.mode, prompt });
       const json = JSON.stringify({ plainExplanation: 'x', strongestArguments: [], evidenceToGather: [], questionsForDoctor: [], appealLetter: 'Dear [PERSON_1]' });
-      return Promise.resolve({ response: { text: () => json, inferenceSource: params.mode === 'only_on_device' ? 'on_device' : 'in_cloud' } });
+      const onDevice = params.mode === 'only_on_device' || fallbackOnce;
+      fallbackOnce = false;
+      return Promise.resolve({ response: { text: () => json, inferenceSource: onDevice ? 'on_device' : 'in_cloud' } });
     },
   }),
 }));
@@ -93,6 +97,14 @@ describe('FirebaseEngine', () => {
     expect(initializeAppCheck).not.toHaveBeenCalled();
     expect(e.appCheck).toBe('off');
     warn.mockRestore();
+  });
+
+  it('counts the prompt as sent when the cloud failed and the SDK fell back to Nano (F10)', async () => {
+    fallbackOnce = true;
+    const e = new FirebaseEngine(settings);
+    const r = await e.draftAppeal({ prompt: 'Appeal for [PERSON_1]', vault: { '[PERSON_1]': 'Maria Gonzalez' } }, { preferDevice: false });
+    expect(r.entry.where).toBe('on-device');
+    expect(r.entry.bytesOut).toBeGreaterThan(0);
   });
 
   it('sends a clean appeal prompt with PREFER_IN_CLOUD', async () => {

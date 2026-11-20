@@ -86,11 +86,14 @@ describe('F6 labels are not names; template never guesses the patient', () => {
 });
 
 describe('F12 days left uses the local calendar date', () => {
-  it('8 pm on Nov 20 in a UTC-8 zone is still Nov 20', () => {
-    // 2026-11-21T04:00Z is 8 pm on Nov 20 in Los Angeles.
-    const at = new Date('2026-11-21T04:00:00Z');
-    const local = localToday(at);
-    expect(local).toBe(`${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(at.getDate()).padStart(2, '0')}`);
+  it('8 pm on Nov 20 in Los Angeles is Nov 20, not the UTC date', () => {
+    const before = process.env.TZ;
+    process.env.TZ = 'America/Los_Angeles';
+    try {
+      expect(localToday(new Date('2026-11-21T04:00:00Z'))).toBe('2026-11-20');
+    } finally {
+      process.env.TZ = before;
+    }
   });
 });
 

@@ -10,15 +10,15 @@ const WHERE_LABEL: Record<LedgerEntry['where'], string> = {
 export function Ledger({ entries }: { entries: LedgerEntry[] }) {
   if (!entries.length) return null;
   const bytes = entries.reduce((a, e) => a + e.bytesOut, 0);
-  const cloudSteps = entries.filter((e) => e.where === 'cloud').length;
+  const sentSteps = entries.filter((e) => e.bytesOut > 0).length;
   return (
     <section className="ledger" aria-labelledby="ledger-h">
       <div className="ledger-head">
         <h3 id="ledger-h">Privacy ledger</h3>
         <p>
-          {cloudSteps === 0
+          {sentSteps === 0
             ? 'No part of your letter has left this device.'
-            : `${cloudSteps} step sent ${bytes.toLocaleString()} bytes of de-identified text to the cloud. Your letter itself stayed here.`}
+            : `${sentSteps} step sent ${bytes.toLocaleString()} bytes of de-identified text to the cloud. The original letter stayed here.`}
         </p>
       </div>
       <div className="table-wrap">

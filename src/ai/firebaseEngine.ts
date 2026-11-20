@@ -9,7 +9,7 @@
 //   - ONLY_ON_DEVICE for the appeal when the user chooses "stay offline".
 
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { initializeAppCheck, ReCaptchaEnterpriseProvider, ReCaptchaV3Provider } from 'firebase/app-check';
+import { CustomProvider, initializeAppCheck, ReCaptchaEnterpriseProvider, ReCaptchaV3Provider } from 'firebase/app-check';
 import {
   getAI,
   getGenerativeModel,
@@ -111,12 +111,13 @@ export class FirebaseEngine implements Engine {
     });
 
     // App Check is required by Firebase AI Logic. Production uses reCAPTCHA;
-    // local development uses a registered debug token. In debug mode the SDK
-    // exchanges the debug token and never asks the provider for an
-    // attestation, so a placeholder v3 provider is enough there.
+    // local development uses a registered debug token. In debug mode the App
+    // Check SDK exchanges the debug token and never asks the provider for a
+    // token, so a CustomProvider that refuses is enough (and, unlike a
+    // placeholder reCAPTCHA provider, loads no third-party script).
     if (s.appCheckDebug) (globalThis as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string }).FIREBASE_APPCHECK_DEBUG_TOKEN =
       s.appCheckDebug === 'true' ? true : s.appCheckDebug;
-    let provider: ReCaptchaEnterpriseProvider | ReCaptchaV3Provider | null = null;
+    let provider: ReCaptchaEnterpriseProvider | ReCaptchaV3Provider | CustomProvider | null = null;
     if (s.recaptchaEnterpriseKey) {
       provider = new ReCaptchaEnterpriseProvider(s.recaptchaEnterpriseKey);
       this.appCheck = s.appCheckDebug ? 'debug token' : 'reCAPTCHA Enterprise';
@@ -124,7 +125,9 @@ export class FirebaseEngine implements Engine {
       provider = new ReCaptchaV3Provider(s.recaptchaV3Key);
       this.appCheck = s.appCheckDebug ? 'debug token' : 'reCAPTCHA v3';
     } else if (s.appCheckDebug) {
-      provider = new ReCaptchaV3Provider('debug-mode-placeholder');
+      provider = new CustomProvider({
+        getToken: () => Promise.reject(new Error('No attestation provider: App Check runs in debug-token mode only.')),
+      });
       this.appCheck = 'debug token';
     } else {
       this.appCheck = 'off';
@@ -264,13 +267,16 @@ export class FirebaseEngine implements Engine {
         step: 'Write the appeal',
         mode: opts.preferDevice ? 'ONLY_ON_DEVICE' : 'PREFER_IN_CLOUD',
         where: onDevice ? 'on-device' : 'cloud',
-        bytesOut: onDevice ? 0 : gate.bytes,
+        // After a failed cloud attempt the server may have received the
+        // de-identified prompt (an HTTP error also triggers the fallback), so
+        // count it as sent.
+        bytesOut: onDevice && opts.preferDevice ? 0 : gate.bytes,
         geminiRequests: requests,
         ms: Math.round(performance.now() - t0),
         model: onDevice ? 'Gemini Nano (Chrome)' : this.cloudModel,
         note:
           onDevice && !opts.preferDevice
-            ? `The cloud request failed, so the SDK fell back to Gemini Nano. The ${gate.bytes.toLocaleString()}-byte de-identified prompt was attempted; it may or may not have reached the server.`
+            ? `The cloud request failed, so the SDK fell back to Gemini Nano. The ${gate.bytes.toLocaleString()}-byte de-identified prompt was sent first and may have reached the server, so it is counted as sent.`
             : undefined,
       }),
     };
