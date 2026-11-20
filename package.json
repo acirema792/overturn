@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "eval": "tsx scripts/eval.ts",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "e2e": "node e2e/smoke.mjs"
   },
   "dependencies": {
     "firebase": "^13.4.0",

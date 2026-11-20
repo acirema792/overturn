@@ -79,6 +79,12 @@
    "finding": "F7",
    "action": "added JUDGES/BENCHMARK-RESULTS/CLAIMS/EVIDENCE/FEEDBACK; README no longer claims unrecorded Nano runs",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F14",
+   "action": "Playwright e2e smoke (sim engine): flow, hide/undo, no-Nano template, 390px; engine tests added under F8/F9",
+   "outcome": "success"
   }
  ]
 }
