@@ -4,7 +4,7 @@
 // when Gemini Nano isn't available and only the rules have run.
 
 const ORG_OR_TERM =
-  /\b(Health|Healthcare|Plan|Plans|Insurance|Insurer|Medical|Medicine|Center|Centre|Hospital|Clinic|Care|Services|Service|Department|Medicare|Medicaid|Marketplace|Policy|Section|Article|Notice|Appeal|Appeals|Benefit|Benefits|Mutual|Partners|Cooperative|Institute|Associates|Administrators|Trust|Group|Company|Co|Inc|LLC|Advantage|Management|Unit|Office|Review|Recovery|Rehabilitation|Pharmacy|Coverage|Evidence|Summary|Description|Federal|State|County|Act|Law|Fair|Hearing|Independent|Entity|Community|Regional|Employee|Individual|Utilization|Billing|Member|Customer|Prior|Authorization|Determination|Adverse|Denial|Payment|Request|Form|Representative|Number|Claim|Date|Name|ID|Reference|Account|Statement|Subscriber|Patient|Enrollee|Participant|Phone|Email|Fax|Address|Box)\b/;
+  /\b(Health|Healthcare|Plan|Plans|Insurance|Insurer|Medical|Medicine|Center|Centre|Hospital|Clinic|Care|Services|Service|Department|Medicare|Medicaid|Marketplace|Policy|Section|Article|Notice|Appeal|Appeals|Benefit|Benefits|Mutual|Partners|Cooperative|Institute|Associates|Administrators|Trust|Group|Company|Co|Inc|LLC|Advantage|Management|Unit|Office|Review|Recovery|Rehabilitation|Pharmacy|Coverage|Evidence|Summary|Description|Federal|State|County|Act|Law|Fair|Hearing|Independent|Entity|Community|Regional|Employee|Individual|Utilization|Billing|Member|Customer|Prior|Authorization|Determination|Adverse|Denial|Payment|Request|Form|Representative|Number|Claim|Date|Name|ID|Reference|Account|Statement|Subscriber|Patient|Enrollee|Participant|Phone|Email|Fax|Address|Box|Notice|Enclosed|Information|Important|Rights)\b/i;
 
 const SENTENCE_STARTERS = new Set([
   'The', 'This', 'That', 'These', 'Those', 'Your', 'You', 'We', 'Our', 'If', 'For', 'Please', 'To', 'In',
@@ -14,26 +14,26 @@ const SENTENCE_STARTERS = new Set([
 
 export function findSuspects(redactedText: string, knownOrgs: string[] = []): string[] {
   const out = new Map<string, number>();
-  const re = /\b[A-Z][a-z'’-]+(?:[ -][A-Z][a-zA-Z'’-]+){1,3}\b/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(redactedText))) {
-    let phrase = m[0];
-    const words = phrase.split(/[ ]/);
-    if (SENTENCE_STARTERS.has(words[0])) {
-      words.shift();
-      phrase = words.join(' ');
-      if (words.length < 2) continue;
-    }
-    if (ORG_OR_TERM.test(phrase)) continue;
-    if (knownOrgs.some((o) => o && (o.includes(phrase) || phrase.includes(o)))) continue;
+  const add = (phrase: string) => {
+    if (ORG_OR_TERM.test(phrase)) return;
+    if (knownOrgs.some((o) => o && (o.toLowerCase().includes(phrase.toLowerCase()) || phrase.toLowerCase().includes(o.toLowerCase())))) return;
     out.set(phrase, (out.get(phrase) ?? 0) + 1);
+  };
+  // Capitalised word runs (Unicode: "Zoë Ångström"), minus a sentence starter.
+  const mixed = /(?<![\p{L}])\p{Lu}[\p{Ll}'’-]+(?:[ -]\p{Lu}[\p{L}'’-]+){1,3}(?![\p{L}])/gu;
+  let m: RegExpExecArray | null;
+  while ((m = mixed.exec(redactedText))) {
+    const words = m[0].split(' ');
+    if (SENTENCE_STARTERS.has(words[0])) words.shift();
+    if (words.length >= 2) add(words.join(' '));
   }
+  // ALL-CAPS runs of 2–3 words ("MARCUS FELDMAN"); headers are filtered by ORG_OR_TERM.
+  const caps = /(?<![\p{L}])\p{Lu}{2,}(?: \p{Lu}{2,}){1,2}(?![\p{L}])/gu;
+  while ((m = caps.exec(redactedText))) add(m[0]);
   // Lines that are nothing but a capitalised name (an address block's first line).
   for (const line of redactedText.split('\n')) {
     const t = line.trim();
-    if (/^[A-Z][a-z'’-]+(?:[ -][A-Z][a-zA-Z'’-]+){0,3}$/.test(t) && !ORG_OR_TERM.test(t) && !SENTENCE_STARTERS.has(t.split(' ')[0])) {
-      out.set(t, (out.get(t) ?? 0) + 1);
-    }
+    if (/^\p{Lu}[\p{Ll}'’-]+(?:[ -]\p{Lu}[\p{L}'’-]+){0,3}$/u.test(t) && !SENTENCE_STARTERS.has(t.split(' ')[0])) add(t);
   }
   return [...out.keys()];
 }

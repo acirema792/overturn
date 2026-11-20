@@ -4,6 +4,7 @@ import { computeDeadline, findNoticeDate, findWindowDays, guessPlanType, localTo
 import { checkEgress } from './egressGate';
 import { redact } from './redact';
 import { insurerFromLetter, templateAppeal } from './template';
+import { findSuspects } from './suspects';
 
 describe('F1 plan type is not fooled by a passing mention', () => {
   it('a Medicaid letter that mentions Medicare is Medicaid', () => {
@@ -141,5 +142,42 @@ describe('verifier round 1: regressions in F2/F3/F4/F6 fixes', () => {
   });
   it('F4: a two-letter hidden word does not block common text', () => {
     expect(checkEgress('Smith et al reported', { '[PERSON_1]': 'Al' }).allowed).toBe(true);
+  });
+});
+
+describe('verifier round 1 batch 2: F5 leaks and over-redaction', () => {
+  const out = (t: string) => redact(t).redacted;
+  it.each([
+    ['MEMBER NAME: JOHN Q PUBLIC', ['JOHN', 'PUBLIC']],
+    ['DOB 1961/04/12', ['1961/04/12']],
+    ['Member: DE LA CRUZ, ANA', ['CRUZ', 'ANA']],
+    ['Member: O’Brien, Siobhán', ['Brien', 'Siobhán']],
+    ['Dear Okonkwo,\nWe denied', ['Okonkwo']],
+    ['The patient, age 93, was admitted.', ['93']],
+  ])('hides %s', (text, values) => {
+    for (const v of values) expect(out(text), v).not.toContain(v);
+  });
+
+  it.each([
+    ['To: CIGNA HEALTHCARE', 'CIGNA HEALTHCARE'],
+    ['Member: ANTHEM BLUE CROSS', 'ANTHEM BLUE CROSS'],
+    ['To: BLUE CROSS BLUE SHIELD', 'BLUE CROSS BLUE SHIELD'],
+    ['To: AETNA LIFE INSURANCE COMPANY', 'AETNA LIFE INSURANCE COMPANY'],
+    ['Under Section 4.1.12 of the plan', '4.1.12'],
+    ['Policy version 3.2.25 applies', '3.2.25'],
+    ['MEMBER NAME: SEE ENCLOSED', 'SEE ENCLOSED'],
+    ['Units: 100 25 2026', '100 25 2026'],
+    ['Patient age 45 at the time', '45'],
+  ])('keeps %s', (text, value) => expect(out(text)).toContain(value));
+
+  it('labelled account and reference numbers get their own kind', () => {
+    const r = redact('Account Number: 4410 0877 23\nReference Number: RF 2231 9981');
+    expect(Object.keys(r.vault).some((k) => k.startsWith('[ACCOUNT_ID_'))).toBe(true);
+    expect(Object.keys(r.vault).some((k) => k.startsWith('[CLAIM_ID_'))).toBe(true);
+  });
+
+  it('possible-name hints include all-caps and accented names', () => {
+    expect(findSuspects('Note from MARCUS FELDMAN about the claim.')).toContain('MARCUS FELDMAN');
+    expect(findSuspects('Note from Zoë Ångström about the claim.')).toContain('Zoë Ångström');
   });
 });

@@ -29,6 +29,7 @@ const PLACEHOLDER_LABEL: Record<IdKind, string> = {
   ZIP: 'ZIP',
   URL: 'URL',
   IP: 'IP',
+  AGE: 'AGE',
   ID: 'ID',
 };
 

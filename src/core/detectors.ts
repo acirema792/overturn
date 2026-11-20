@@ -19,6 +19,7 @@ export type IdKind =
   | 'ZIP'
   | 'URL'
   | 'IP'
+  | 'AGE'
   | 'ID';
 
 export interface Span {
@@ -47,6 +48,8 @@ const NOT_A_NAME = new Set(
     'notice', 'of', 'denial', 'determination', 'information', 'benefits', 'benefit', 'claim', 'account',
     'number', 'no', 'date', 'statement', 'trust', 'service', 'coverage', 'adverse', 'explanation',
     'services', 'id', 'portal', 'support', 'relations', 'advocate', 'handbook', 'guide', 'rights',
+    'healthcare', 'insurance', 'company', 'cross', 'shield', 'blue', 'life', 'mutual', 'care', 'inc',
+    'corp', 'corporation', 'group', 'enclosed', 'see', 'attached', 'unknown', 'sir', 'madam', 'customer',
     'claims', 'services', 'the', 'valued', 'health', 'plan', 'insured', 'name', 'id',
   ].map((w) => w.toLowerCase()),
 );
@@ -78,12 +81,19 @@ const LABELED_ID_KIND = (label: string): IdKind => {
   return 'ID';
 };
 
+// Building blocks for Unicode name rules.
+const NW = String.raw`\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.|(?=['’]))(?:['’-]\p{L}\p{Ll}+)*`; // Name, O’Brien, McGregor, M.
+const CW = String.raw`\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*`; // ALL-CAPS word
+const CI = String.raw`(?:${CW}|\p{Lu}\.?)`; // ALL-CAPS word or initial
+const TITLE = String.raw`(?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?`;
+const FIELD = String.raw`(?:(?:Patient|Member|Subscriber|Insured|Enrollee|Beneficiary|Participant|Employee|PATIENT|MEMBER|SUBSCRIBER|ENROLLEE)(?: [Nn]ame| NAME)?|Name|NAME|Dependent|Guardian)[ \t]*:`;
+
 const RULES: Rule[] = [
   { kind: 'EMAIL', re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g },
   { kind: 'URL', re: /\b(?:https?:\/\/|www\.)[^\s<>()]+[^\s<>().,;:!?]/g },
   { kind: 'SSN', re: /\b\d{3}-\d{2}-\d{4}\b/g },
   { kind: 'SSN', re: /\bSSN[:#\s]*\d{9}\b/gi },
-  { kind: 'SSN', re: /\b\d{3} \d{2} \d{4}\b/g },
+  { kind: 'SSN', re: /\b(?:SSN|Social Security(?: Number| No\.?)?)[:#\s]*(\d{3} \d{2} \d{4})\b/gi, group: 1 },
   {
     kind: 'PHONE',
     re: /(?<![\w$])(?:\+?1[\s.-]?)?(?:\(\d{3}\)\s?|\d{3}[\s.-])\d{3}[\s.-]\d{4}(?:\s*(?:x|ext\.?)\s*\d{1,5})?(?!\d)/gi,
@@ -93,7 +103,12 @@ const RULES: Rule[] = [
   // Dates: numeric and written forms. Years alone are allowed by Safe Harbor.
   { kind: 'DATE', re: /\b(?:0?[1-9]|1[0-2])[/-](?:0?[1-9]|[12]\d|3[01])[/-](?:\d{4}|\d{2})\b/g },
   { kind: 'DATE', re: /\b\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])\b/g },
-  { kind: 'DATE', re: /\b(?:0?[1-9]|1[0-2])\.(?:0?[1-9]|[12]\d|3[01])\.(?:\d{4}|\d{2})\b/g },
+  // Dotted dates need a 4-digit year, so "Section 4.1.12" and "version 3.2.25" survive.
+  { kind: 'DATE', re: /(?<![\w.])(?:0?[1-9]|1[0-2])\.(?:0?[1-9]|[12]\d|3[01])\.(?:19|20)\d{2}(?![.\d])/g },
+  { kind: 'DATE', re: /\b(?:19|20)\d{2}\/(?:0?[1-9]|1[0-2])\/(?:0?[1-9]|[12]\d|3[01])\b/g },
+  // Ages over 89 are identifiers under Safe Harbor; younger ages are not.
+  { kind: 'AGE', re: /\b(?:age|aged)[ :]+(9\d|1[01]\d)\b/gi, group: 1 },
+  { kind: 'AGE', re: /\b(9\d|1[01]\d)[- ]?(?:year|yr)s?[- ]old\b/gi, group: 1 },
   { kind: 'DATE', re: new RegExp(`\\b(?:${MONTHS})\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?,?\\s+\\d{4}\\b`, 'g') },
   { kind: 'DATE', re: new RegExp(`\\b\\d{1,2}\\s+(?:${MONTHS})\\.?,?\\s+\\d{4}\\b`, 'g') },
   // Labeled identifiers: "Member ID: XJH448812901", "Claim #: 2026-0412-7781".
@@ -106,9 +121,9 @@ const RULES: Rule[] = [
   // Explicitly labelled IDs ("Member ID: XJH 4488 12901", "Member ID: 72148"):
   // the label says it's an identifier, so spaced groups and code-like values count.
   {
-    kind: 'MEMBER_ID',
-    re: /\b(?:[Mm]ember|MEMBER|[Ss]ubscriber|SUBSCRIBER|[Pp]olicy|POLICY|[Gg]roup|GROUP|Medicare|MEDICARE|Medicaid|MEDICAID|[Cc]laim|CLAIM|[Aa]ccount|ACCOUNT|[Rr]eference|REFERENCE)[ \t]*(?:ID|Id|No\.?|NO\.?|Number|NUMBER|#)[ \t]*[:#]?[ \t]*([A-Z0-9]{2,}(?:[ -][A-Z0-9]{2,}){0,4})(?![a-z])/g,
-    group: 1,
+    kind: 'ID',
+    re: /\b([Mm]ember|MEMBER|[Ss]ubscriber|SUBSCRIBER|[Pp]olicy|POLICY|[Gg]roup|GROUP|Medicare|MEDICARE|Medicaid|MEDICAID|[Cc]laim|CLAIM|[Aa]ccount|ACCOUNT|[Rr]eference|REFERENCE)[ \t]*(?:ID|Id|No\.?|NO\.?|Number|NUMBER|#)[ \t]*[:#]?[ \t]*([A-Z0-9]{2,}(?:[ -][A-Z0-9]{2,}){0,4})(?![a-z])/g,
+    group: 2,
     accept: (v) => (v.match(/\d/g) || []).length >= 4,
   },
   // Unlabeled long identifiers: ≥7 characters with ≥5 digits, not a code or money.
@@ -160,14 +175,14 @@ const RULES: Rule[] = [
     group: 1,
     accept: acceptName,
   },
-  // Unicode, all-caps, "Last, First" and initials after a label
-  // ("Patient: MARIA GONZALEZ", "Member: Gonzalez, Maria", "Dear José Ñúñez-García").
-  {
-    kind: 'PERSON',
-    re: /(?<![\p{L}])(?:(?:(?:Patient|Member|Subscriber|Insured|Enrollee|Beneficiary|Participant|Employee|PATIENT|MEMBER|SUBSCRIBER)(?: [Nn]ame| NAME)?|Name|NAME|Dependent|Guardian)[ \t]*:|(?:Dear|DEAR|Attn|To|cc)[ \t]*[:,]?)[ \t]+((?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?(?:\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.)(?:['’-]\p{L}\p{Ll}+)*,[ ]?\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.)(?:['’-]\p{L}\p{Ll}+)*(?:[ ]\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.)(?:['’-]\p{L}\p{Ll}+)*)?|\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*,[ ]?\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*|\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.)(?:['’-]\p{L}\p{Ll}+)*(?:[ ]\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.)(?:['’-]\p{L}\p{Ll}+)*){1,3}|\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*(?:[ ]\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*){1,2}))/gu,
-    group: 1,
-    accept: acceptName,
-  },
+  // Unicode, "Last, First" and initials after a label ("Member: O’Brien, Siobhán",
+  // "Dear José Ñúñez-García", "Patient: M. L. Gonzalez").
+  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR|Attn|To|cc)[ \\t]*[:,]?)[ \\t]+(${TITLE}(?:${NW},[ ]?${NW}(?:[ ]${NW})?|${NW}(?:[ ]${NW}){1,3}))`, 'gu'), group: 1, accept: acceptName },
+  // ALL-CAPS names, only after a patient field label or "Dear" ("MEMBER NAME: JOHN Q
+  // PUBLIC", "Member: DE LA CRUZ, ANA"); "To: CIGNA HEALTHCARE" is an insurer, not a person.
+  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR)[ \\t]*[:,]?)[ \\t]+(${CW}(?:[ ]${CW}){0,2},[ ]?${CW}(?:[ ]${CI})?|${CW}(?:[ ]${CI})?(?:[ ]${CW}){1,2})`, 'gu'), group: 1, accept: acceptName },
+  // A single surname after "Dear" ("Dear Okonkwo,").
+  { kind: 'PERSON', re: new RegExp(`\\b(?:Dear|DEAR)[ \\t]+${TITLE}(${NW}|${CW}),`, 'gu'), group: 1, accept: acceptName },
 ];
 
 function labelOf(match: RegExpExecArray): string {
@@ -197,7 +212,7 @@ export function detect(text: string): Span[] {
 
 const KIND_PRIORITY: Record<IdKind, number> = {
   SSN: 10, EMAIL: 9, MEMBER_ID: 8, CLAIM_ID: 8, ACCOUNT_ID: 8, PHONE: 7, PERSON: 6,
-  ADDRESS: 5, DATE: 5, URL: 4, IP: 4, ZIP: 3, ID: 2,
+  ADDRESS: 5, DATE: 5, AGE: 5, URL: 4, IP: 4, ZIP: 3, ID: 2,
 };
 
 /** Merge overlapping spans; the union is redacted, the strongest kind wins. */

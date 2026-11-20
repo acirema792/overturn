@@ -137,6 +137,19 @@
    "finding": "F4",
    "action": "follow-up: run-together names blocked; min word length 3",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F5",
+   "action": "verifier REJECT: audit examples still leaked (JOHN Q PUBLIC, yyyy/mm/dd, DE LA CRUZ, O'Brien, Dear X, age 93) and new over-redaction of caps insurers/section numbers/units",
+   "outcome": "failure",
+   "error": "incomplete + over-redaction"
+  },
+  {
+   "round": 1,
+   "finding": "F5",
+   "action": "caps names only after patient fields or Dear; O'Brien/initials; yyyy/mm/dd; 4-digit-year dotted dates; labelled spaced SSN; AGE>89; label-specific ID kinds; Unicode+caps suspects; 17 tests",
+   "outcome": "success"
   }
  ]
 }
