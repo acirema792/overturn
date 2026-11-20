@@ -132,8 +132,17 @@ const NUMBER_WORDS: Record<string, number> = {
 };
 
 /** "within 180 days", "within one hundred eighty (180) calendar days", "65 days from the date". */
+// Sentences about the PLAN's own deadline ("We will decide within 30 days of
+// receiving your appeal") are not the patient's appeal window.
+const PLAN_OBLIGATION =
+  /\b(?:we|the plan|our (?:team|reviewers?))\b[^.]{0,40}\b(?:will|must|shall|have to)\s+(?:make|decide|respond|notify|send|tell|answer|review|give|issue)\b|\b(?:decide|decision|respond|response|answer|notify you)\b[^.]{0,30}\bwithin\b/i;
+
 export function findWindowDays(text: string): number | null {
-  const t = text.replace(/\s+/g, ' ');
+  const t = text
+    .split(/(?<=[.!?])\s+|\n+/)
+    .filter((sentence) => !PLAN_OBLIGATION.test(sentence))
+    .join(' ')
+    .replace(/\s+/g, ' ');
   const patterns = [
     /(?:within|no later than|in|have|up to)\s+(?:[a-z -]+\s+)?\(?(\d{2,3})\)?\s+(?:calendar\s+)?days?\b[^.]{0,80}?\b(?:appeal|request|reconsideration|review|date of (?:this|the) (?:notice|letter))/i,
     /(?:appeal|request|reconsideration)[^.]{0,80}?\bwithin\s+(?:[a-z -]+\s+)?\(?(\d{2,3})\)?\s+(?:calendar\s+)?days?/i,
@@ -184,24 +193,33 @@ export function toISODate(s: string): string | null {
 const DATE_IN_TEXT =
   /\b(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?,?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2})\b/g;
 
+// Lines whose dates are about the patient or the care, never the notice.
+const NOT_NOTICE_LINE = /\b(?:birth|dob|d\.o\.b|born|service|dos|admission|admitted|discharge|treatment|received|presented|visit|procedure|surgery)\b/i;
+const NOTICE_LABEL =
+  /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date|date issued|issue date|\bissued\b(?: on)?|statement date|\bsent\b|^\s*date\s*:)\s*[:\-]?\s*/i;
+
 /**
- * The notice date: a date labelled "Date of notice"/"Notice date"/"Date:", or
- * else the first date in the first few lines (the letter's dateline).
+ * The notice date: a date on a line labelled as the notice/letter date, or
+ * else the first date in the first few lines (the dateline). Lines about a
+ * birth date or a date of service are skipped in both passes.
  */
 export function findNoticeDate(text: string): string | null {
-  const labelled = text.match(
-    /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date|date issued|issue date|issued(?: on)?|statement date|sent|^\s*date)\s*[:\-]?\s*([A-Za-z0-9 ,./-]{6,24})/im,
-  );
-  if (labelled) {
-    const inner = labelled[1].match(DATE_IN_TEXT);
-    if (inner) {
-      const iso = toISODate(inner[0]);
-      if (iso) return iso;
-    }
+  const lines = text.split('\n');
+  for (const line of lines) {
+    if (NOT_NOTICE_LINE.test(line)) continue;
+    const m = line.match(NOTICE_LABEL);
+    if (!m || m.index === undefined) continue;
+    const inner = line.slice(m.index + m[0].length).match(DATE_IN_TEXT);
+    const iso = inner ? toISODate(inner[0]) : null;
+    if (iso) return iso;
   }
-  const head = text.split('\n').slice(0, 8).join('\n');
-  const first = head.match(DATE_IN_TEXT);
-  return first ? toISODate(first[0]) : null;
+  for (const line of lines.slice(0, 8)) {
+    if (NOT_NOTICE_LINE.test(line)) continue;
+    const first = line.match(DATE_IN_TEXT);
+    const iso = first ? toISODate(first[0]) : null;
+    if (iso) return iso;
+  }
+  return null;
 }
 
 const PLAN_SIGNALS: Record<Exclude<PlanType, 'unknown'>, RegExp[]> = {
