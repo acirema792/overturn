@@ -15,6 +15,7 @@ import {
 import type { IdKind } from './core/detectors';
 import { redact, type FoundEntity, type Redaction } from './core/redact';
 import { findSuspects } from './core/suspects';
+import { insurerFromLetter } from './core/template';
 
 export type FactSource = 'letter text (code)' | 'Gemini Nano' | 'legal default' | 'not found';
 
@@ -78,7 +79,7 @@ function mergeFacts(raw: string, model?: FactsResult): Facts {
   // Code wins whenever it found something; the model fills the gaps.
   const planType: PlanType = rulesPlan !== 'unknown' ? rulesPlan : (model?.planType ?? 'unknown');
   return {
-    insurer: model?.insurer ?? raw.split('\n').find((l) => l.trim())?.trim().slice(0, 60) ?? '',
+    insurer: model?.insurer || insurerFromLetter(raw),
     serviceDenied: model?.serviceDenied ?? '',
     reasonInPlainWords: model?.reasonInPlainWords ?? '',
     category: model?.denialCategory ?? rulesCategory,

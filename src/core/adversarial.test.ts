@@ -2,6 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { computeDeadline, findNoticeDate, findWindowDays, guessPlanType } from './deadline';
 import { checkEgress } from './egressGate';
+import { redact } from './redact';
+import { insurerFromLetter, templateAppeal } from './template';
 
 describe('F1 plan type is not fooled by a passing mention', () => {
   it('a Medicaid letter that mentions Medicare is Medicaid', () => {
@@ -60,5 +62,24 @@ describe('F4 egress gate matches names as whole words', () => {
   });
   it('still blocks reformatted IDs', () => {
     expect(checkEgress('member nwh-4488-12901', { '[MEMBER_ID_1]': 'NWH448812901' }).allowed).toBe(false);
+  });
+});
+
+describe('F6 labels are not names; template never guesses the patient', () => {
+  it('"Patient Account No." and "Employee Benefits Trust" are not people', () => {
+    const r = redact('Mercy Ridge | Patient Account No. 00458812733\nRedwood Coast Employee Benefits Trust');
+    expect(Object.entries(r.vault).filter(([k]) => k.startsWith('[PERSON_')).map(([, v]) => v)).toEqual([]);
+  });
+  it('labelled names with a colon are still found', () => {
+    const r = redact('Patient: Grace Achterberg\nParticipant: Owen Delacroix, ID 1');
+    expect(r.redacted).not.toMatch(/Grace|Achterberg|Owen|Delacroix/);
+  });
+  it('the template leaves a blank instead of naming someone who may not be the patient', () => {
+    const t = templateAppeal({ category: 'other', serviceDenied: '', insurer: '', vault: { '[PERSON_1]': 'Dr. Weller' }, urgent: false });
+    expect(t.appealLetter).not.toContain('[PERSON_1]');
+    expect(t.appealLetter).toContain('Member: ____');
+  });
+  it('the template skips a dateline when guessing the insurer', () => {
+    expect(insurerFromLetter('Statement date: Oct 31, 2026\n\nMercy Ridge Medical Center | Patient Account No. 1')).toBe('Mercy Ridge Medical Center');
   });
 });

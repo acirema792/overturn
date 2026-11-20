@@ -15,11 +15,23 @@ export interface TemplateInput {
   urgent: boolean;
 }
 
+/** First line that looks like an organisation name, not a dateline or a field. */
+export function insurerFromLetter(letter: string): string {
+  for (const raw of letter.split('\n')) {
+    const line = raw.split('|')[0].trim();
+    if (!line || /\d/.test(line) || /:/.test(line) || line.length > 70) continue;
+    return line;
+  }
+  return '';
+}
+
 const firstOf = (vault: Record<string, string>, label: string) =>
   Object.keys(vault).find((k) => k.startsWith(`[${label}_`));
 
 export function templateAppeal(t: TemplateInput): AppealResult {
-  const patient = t.patient ?? firstOf(t.vault, 'PERSON') ?? '____';
+  // Only a placeholder the on-device model labelled "patient". Guessing the
+  // first name in the letter can pick the doctor or a family member.
+  const patient = t.patient ?? '____';
   const member = firstOf(t.vault, 'MEMBER_ID') ?? '____';
   const claim = firstOf(t.vault, 'CLAIM_ID') ?? firstOf(t.vault, 'ACCOUNT_ID') ?? '____';
   const service = t.serviceDenied || 'the service described in your notice';

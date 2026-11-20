@@ -17,3 +17,4 @@ Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 ## Escalations (for the person)
 
 ## Rulings
+- Never add detector rules derived from held-out misses (src/data/heldout.ts). Held-out numbers must stay out-of-sample. (Round 1, after a reverted F6 attempt.)

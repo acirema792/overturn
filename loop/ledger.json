@@ -30,6 +30,19 @@
    "finding": "F4",
    "action": "whole-word gate for names, squash for digit values; masked findings shown; undo user hides; 3 tests",
    "outcome": "success"
+  },
+  {
+   "round": 1,
+   "finding": "F6",
+   "action": "first attempt added held-out-derived labels (Hello/Recipient/Guarantor/Prepared for), leak 7->2 on held-out: reverted as contamination",
+   "outcome": "failure",
+   "error": "held-out contamination"
+  },
+  {
+   "round": 1,
+   "finding": "F6",
+   "action": "field labels need a colon; template leaves patient blank unless Nano labelled one; insurer from first org-like line; 4 tests",
+   "outcome": "success"
   }
  ]
 }

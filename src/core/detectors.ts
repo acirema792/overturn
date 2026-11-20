@@ -122,7 +122,10 @@ const RULES: Rule[] = [
   // Names after a salutation, a label, a relationship word or a title.
   {
     kind: 'PERSON',
-    re: /\b(?:Dear|Patient(?: [Nn]ame)?|Member(?: [Nn]ame)?|Subscriber(?: [Nn]ame)?|Insured(?: [Nn]ame)?|Enrollee(?: [Nn]ame)?|Beneficiary(?: [Nn]ame)?|Participant(?: [Nn]ame)?|Employee(?: [Nn]ame)?|Name|Attn|Attention|To|Dependent|Guardian|Parent\/Guardian|cc|Signed|Representative)[ \t]*[:,]?[ \t]+((?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?[A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*(?:[ ][A-Z]\.)?(?:[ ][A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*){1,2})/g,
+    // Field labels ("Patient:", "Member Name:") need a colon, so "Patient
+    // Account No." and "Employee Benefits Trust" are not taken as names.
+    // Salutations and routing words ("Dear", "To", "cc") don't.
+    re: /\b(?:(?:(?:Patient|Member|Subscriber|Insured|Enrollee|Beneficiary|Participant|Employee)(?: [Nn]ame)?|Name|Dependent|Guardian|Parent\/Guardian|Representative)[ \t]*:|(?:Dear|Attn|Attention|To|cc|Signed)[ \t]*[:,]?)[ \t]+((?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?[A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*(?:[ ][A-Z]\.)?(?:[ ][A-Z][a-z]*(?:['’-][A-Za-z][a-z]+)*){1,2})/g,
     group: 1,
     accept: acceptName,
   },
