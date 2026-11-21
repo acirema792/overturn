@@ -86,6 +86,8 @@ const LABELED_ID_KIND = (label: string): IdKind => {
 const NW = String.raw`\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.|(?=['’]))(?:['’-]\p{L}\p{Ll}+)*`; // Name, O’Brien, McGregor, M.
 const CW = String.raw`\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*`; // ALL-CAPS word
 const CI = String.raw`(?:${CW}|\p{Lu}\.?)`; // ALL-CAPS word or initial
+// Lowercase surname particles: "Maria de la Cruz", "Vincent van Gogh".
+const PART = String.raw`(?:[ ](?:de|del|della|da|di|do|dos|das|du|van|von|der|den|ter|ten|le|la|bin|ibn|al|el))*`;
 const TITLE = String.raw`(?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?`;
 // "Name:" alone counts only at the start of a field, so "Drug Name:" and "SERVICE NAME:" don't.
 const BARE_NAME = String.raw`(?:(?<=^|[\n\t|]| {2})(?:Name|NAME))`;
@@ -114,6 +116,15 @@ const RULES: Rule[] = [
   // Dotted dates need a 4-digit year, so "Section 4.1.12" and "version 3.2.25" survive.
   { kind: 'DATE', re: /(?<![\w.])(?:0?[1-9]|1[0-2])\.(?:0?[1-9]|[12]\d|3[01])\.(?:19|20)\d{2}(?![.\d])/g },
   { kind: 'DATE', re: /\b(?:19|20)\d{2}\/(?:0?[1-9]|1[0-2])\/(?:0?[1-9]|[12]\d|3[01])\b/g },
+  { kind: 'DATE', re: new RegExp(`\\b\\d{1,2}[- ](?:${MONTHS})[- ]\\d{4}\\b`, 'gi') },
+  // Safe Harbor also lists vehicle and device identifiers.
+  {
+    kind: 'ID',
+    re: /\b(?:license plate|plate (?:no\.?|number|#)|VIN|vehicle (?:id|identification number)|device (?:id|serial(?: number)?)|serial (?:no\.?|number|#))[ \t]*[:#]?[ \t]*([A-Z0-9][A-Z0-9-]{4,16})\b/gi,
+    group: 1,
+    accept: (v) => /\d/.test(v),
+  },
+  { kind: 'ZIP', re: /\b(?:ZIP|Zip|zip)(?: [Cc]ode)?[ \t]*[:#]?[ \t]*(\d{5}(?:-\d{4})?)\b/g, group: 1 },
   // Ages over 89 are identifiers under Safe Harbor; younger ages are not.
   { kind: 'AGE', re: /\b(?:age|aged)[ :]+(9\d|1[01]\d)\b(?!\s*(?:days?|months?|weeks?|percent|percentile|%))/gi, group: 1 },
   { kind: 'AGE', re: /\b(9\d|1[01]\d)[- ]?(?:year|yr)s?[- ]old\b/gi, group: 1 },
@@ -130,7 +141,7 @@ const RULES: Rule[] = [
   // the label says it's an identifier, so spaced groups and code-like values count.
   {
     kind: 'ID',
-    re: /\b([Mm]ember|MEMBER|[Ss]ubscriber|SUBSCRIBER|[Pp]olicy|POLICY|[Gg]roup|GROUP|Medicare|MEDICARE|Medicaid|MEDICAID|[Cc]laim|CLAIM|[Aa]ccount|ACCOUNT|[Rr]eference|REFERENCE|Medical Record|MEDICAL RECORD)[ \t]*(?:ID|Id|No\.?|NO\.?|Number|NUMBER|#)[ \t]*[:#]?[ \t]*([A-Z0-9]{2,}(?:[ -](?=[A-Z0-9]*\d)[A-Z0-9]{2,}){0,4})(?![a-z])/g,
+    re: /\b([Mm]ember|MEMBER|[Ss]ubscriber|SUBSCRIBER|[Pp]olicy|POLICY|[Gg]roup|GROUP|Medicare|MEDICARE|Medicaid|MEDICAID|[Cc]laim|CLAIM|[Aa]ccount|ACCOUNT|[Rr]eference|REFERENCE|Medical Record|MEDICAL RECORD)[ \t]*(?:ID|Id|No\.?|NO\.?|[Nn]umber|NUMBER|#)[ \t]*[:#]?[ \t]*([A-Z0-9]{2,}(?:[ -](?=[A-Z0-9]*\d)[A-Z0-9]{2,}){0,4})(?![a-z])/g,
     group: 2,
     accept: (v) => (v.match(/\d/g) || []).length >= 4,
   },
@@ -185,7 +196,7 @@ const RULES: Rule[] = [
   },
   // Unicode, "Last, First" and initials after a label ("Member: O’Brien, Siobhán",
   // "Dear José Ñúñez-García", "Patient: M. L. Gonzalez").
-  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR|Attn|To|cc)[ \\t]*[:,]?)[ \\t]+(${TITLE}(?:${NW},[ ]?${NW}(?:[ ]${NW})?|${NW}(?:[ ]${NW}){1,3}))`, 'gu'), group: 1, accept: acceptName },
+  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR|Attn|To|cc)[ \\t]*[:,]?)[ \\t]+(${TITLE}(?:${NW},[ ]?${NW}(?:[ ]${NW})?|${NW}(?:${PART}[ ]${NW}){1,3}))`, 'gu'), group: 1, accept: acceptName },
   // ALL-CAPS names, only after a patient field label or "Dear" ("MEMBER NAME: JOHN Q
   // PUBLIC", "Member: DE LA CRUZ, ANA"); "To: CIGNA HEALTHCARE" is an insurer, not a person.
   { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR)[ \\t]*[:,]?)[ \\t]+(${CW}(?:[ ]${CW}){0,2},[ ]?${CW}(?:[ ]${CI})?)`, 'gu'), group: 1, accept: acceptName },

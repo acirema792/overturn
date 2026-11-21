@@ -74,3 +74,22 @@ describe('G4 consistency: capitals', () => {
     expect(checkEgress(r.redacted, r.vault).allowed).toBe(true);
   });
 });
+
+describe('G6 more rules-only formats', () => {
+  it.each([
+    ['Treating physician: Dr. A. Patel', 'Patel'],
+    ['Requesting provider: Dr. J. R. Okafor', 'Okafor'],
+    ['Patient: Maria de la Cruz', 'Cruz'],
+    ['Dear Maria de Jesus,', 'Jesus'],
+    ['Member: Vincent van Gogh', 'Gogh'],
+    ['Claim number 2026 0412 7781', '0412 7781'],
+    ['Member number: XJH 4488 12901', '4488 12901'],
+    ['DOB: 12-Apr-1961', '12-Apr-1961'],
+    ['License plate 7ABC123', '7ABC123'],
+    ['ZIP 62704', '62704'],
+  ])('hides %s', (text, value) => expect(redact(text).redacted).not.toContain(value));
+  it.each([
+    ['CPT 72148 billed', '72148'],
+    ['The plan number is in your handbook.', 'plan number'],
+  ])('keeps %s', (text, value) => expect(redact(text).redacted).toContain(value));
+});

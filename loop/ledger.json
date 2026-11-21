@@ -293,6 +293,12 @@
    "finding": "G10",
    "action": "model-found details get 'not personal' undo chips",
    "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G6",
+   "action": "particles, lowercase number label, dd-Mon-yyyy, vehicle/device IDs, labelled ZIP; 12 tests",
+   "outcome": "success"
   }
  ]
 }
