@@ -10,7 +10,8 @@ export interface EngineChoice {
 export function chooseEngine(search = location.search): EngineChoice {
   const params = new URLSearchParams(search);
   if (params.get('engine') === 'sim') {
-    const device = params.get('device') === 'unavailable' ? 'unavailable' : 'available';
+    const d = params.get('device');
+    const device = d === 'unavailable' || d === 'downloadable' ? d : 'available';
     return { engine: new SimEngine(device) };
   }
   const settings = settingsFromEnv();

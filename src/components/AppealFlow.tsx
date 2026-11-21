@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { EgressBlockedError, ledgerEntry, type DeviceAvailability, type Engine, type LedgerEntry } from '../ai/engine';
+import { DraftFailedError, EgressBlockedError, ledgerEntry, type DeviceAvailability, type Engine, type LedgerEntry } from '../ai/engine';
 import type { AppealResult } from '../ai/schemas';
 import { CATEGORY_LABEL, CATEGORY_PLAYBOOK } from '../core/categories';
 import { checkEgress } from '../core/egressGate';
@@ -52,6 +52,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string>('');
   const [selection, setSelection] = useState('');
+  const [typedHide, setTypedHide] = useState('');
   const topRef = useRef<HTMLDivElement>(null);
   const deviceOk = device === 'available' || device === 'downloadable' || device === 'downloading';
 
@@ -66,20 +67,28 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
 
   const ledger = [...(analysis?.ledger ?? []), ...extraLedger];
 
-  async function read(raw: string) {
+  async function read(raw: string, useDevice: boolean) {
     setError(null);
     // Keep the photo-reading row: it is part of this letter's history.
     setExtraLedger((l) => l.filter((e) => e.step === 'Read the photo'));
     setStage('reading');
     try {
-      if (deviceOk) {
+      let prepareError: string | undefined;
+      if (useDevice) {
         setProgress('Preparing Gemini Nano on this device…');
-        // Must run inside the click handler's task chain (user activation).
-        await engine.prepareDevice((f) => setProgress(`Downloading Gemini Nano to this device: ${Math.round(f * 100)}%`));
-        onDeviceChange();
+        try {
+          // Must run inside the click handler's task chain (user activation).
+          await engine.prepareDevice((f) => setProgress(`Downloading Gemini Nano to this device: ${Math.round(f * 100)}%`));
+          onDeviceChange();
+        } catch (err) {
+          // Don't block the patient: fall back to the on-device rules.
+          prepareError = err instanceof Error ? err.message : String(err);
+        }
       }
-      setProgress(deviceOk ? 'Gemini Nano is reading the letter on this device…' : 'Finding personal details with on-device rules…');
-      const a = await analyse(engine, raw, deviceOk);
+      const withNano = useDevice && !prepareError;
+      setProgress(withNano ? 'Gemini Nano is reading the letter on this device…' : 'Finding personal details with on-device rules…');
+      const result = await analyse(engine, raw, withNano);
+      const a = prepareError ? { ...result, deviceError: `Gemini Nano couldn't be prepared (${prepareError}); rules only` } : result;
       setAnalysis(a);
       setStage('review');
     } catch (e) {
@@ -137,6 +146,20 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
         setError(`${e.message} Hide them on the left, then try again.`);
         setStage('review');
       } else {
+        if (e instanceof DraftFailedError && e.attemptedBytes > 0) {
+          setExtraLedger((l) => [
+            ...l,
+            ledgerEntry({
+              step: 'Write the appeal',
+              mode: 'PREFER_IN_CLOUD',
+              where: 'cloud',
+              bytesOut: e.attemptedBytes,
+              geminiRequests: 0,
+              ms: 0,
+              note: 'The de-identified prompt was sent, but the request failed; the template letter was used instead.',
+            }),
+          ]);
+        }
         setError(`The model couldn't write the appeal (${e instanceof Error ? e.message : String(e)}). Here is a template letter instead; nothing was guessed.`);
         applyTemplate();
       }
@@ -177,6 +200,11 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
     setAnalysis(null);
     setAppeal(null);
     setLetter('');
+    setText('');
+    setSampleId(null);
+    setSelection('');
+    setTypedHide('');
+    setUnknownPh([]);
     setExtraLedger([]);
     setError(null);
   }
@@ -245,9 +273,29 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
             rows={14}
           />
           <div className="actions">
-            <button className="primary" disabled={text.trim().length < 40} onClick={() => read(text)}>
-              {deviceOk ? 'Read it on this device' : 'Hide my details on this device'}
-            </button>
+            {device === 'available' ? (
+              <button className="primary" disabled={text.trim().length < 40} onClick={() => read(text, true)}>
+                Read it on this device
+              </button>
+            ) : deviceOk ? (
+              <>
+                <button className="primary" disabled={text.trim().length < 40} onClick={() => read(text, false)}>
+                  Hide my details now (rules only)
+                </button>
+                <button
+                  className="secondary"
+                  disabled={text.trim().length < 40}
+                  onClick={() => read(text, true)}
+                  title="Chrome downloads the on-device model once; it can take several minutes"
+                >
+                  {device === 'downloading' ? 'Wait for Gemini Nano, then read' : 'Download Gemini Nano (once), then read'}
+                </button>
+              </>
+            ) : (
+              <button className="primary" disabled={text.trim().length < 40} onClick={() => read(text, false)}>
+                Hide my details on this device
+              </button>
+            )}
             <label className={`secondary file ${device !== 'available' ? 'disabled' : ''}`} title={device !== 'available' ? 'Photo reading needs Gemini Nano in Chrome' : ''}>
               Use a photo (PNG/JPEG)
               <input
@@ -309,6 +357,8 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
               <div>
                 <h3>Your letter <span className="muted small">(stays here)</span></h3>
                 <div
+                  tabIndex={0}
+                  aria-label="Your original letter. Select text to hide it."
                   onMouseUp={() => setSelection(window.getSelection()?.toString().trim() ?? '')}
                   onKeyUp={() => setSelection(window.getSelection()?.toString().trim() ?? '')}
                 >
@@ -318,6 +368,29 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                   <button className="secondary" disabled={!selection || selection.length > 80} onClick={() => hide(selection)}>
                     {selection ? `Hide “${selection.slice(0, 30)}${selection.length > 30 ? '…' : ''}”` : 'Select text above to hide it'}
                   </button>
+                  <form
+                    className="type-hide"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (typedHide.trim() && analysis.raw.toLowerCase().includes(typedHide.trim().toLowerCase())) {
+                        hide(typedHide);
+                        setTypedHide('');
+                      }
+                    }}
+                  >
+                    <label className="sr-only" htmlFor="type-hide">
+                      Type a word or name from your letter to hide it
+                    </label>
+                    <input
+                      id="type-hide"
+                      value={typedHide}
+                      onChange={(e) => setTypedHide(e.target.value)}
+                      placeholder="…or type text to hide"
+                    />
+                    <button className="secondary" type="submit" disabled={!typedHide.trim() || !analysis.raw.toLowerCase().includes(typedHide.trim().toLowerCase())}>
+                      Hide
+                    </button>
+                  </form>
                 </div>
               </div>
               <div>

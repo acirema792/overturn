@@ -35,6 +35,19 @@ export class EgressBlockedError extends Error {
   }
 }
 
+/**
+ * The appeal request failed after it may have left the device (network or
+ * HTTP error with no on-device fallback). `attemptedBytes` is the size of the
+ * de-identified prompt that was sent, so the ledger can record it honestly.
+ */
+export class DraftFailedError extends Error {
+  attemptedBytes: number;
+  constructor(message: string, attemptedBytes: number) {
+    super(message);
+    this.attemptedBytes = attemptedBytes;
+  }
+}
+
 export interface Engine {
   readonly kind: 'firebase' | 'simulated';
   readonly cloudModel: string;

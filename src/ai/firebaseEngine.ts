@@ -21,6 +21,7 @@ import {
 import { fetchAndActivate, getRemoteConfig, getValue } from 'firebase/remote-config';
 import { checkEgress } from '../core/egressGate';
 import {
+  DraftFailedError,
   EgressBlockedError,
   ledgerEntry,
   watchGeminiRequests,
@@ -259,7 +260,14 @@ export class FirebaseEngine implements Engine {
       },
     });
     const t0 = performance.now();
-    const { value, requests } = await watchGeminiRequests(() => model.generateContent(req.prompt));
+    let watched: Awaited<ReturnType<typeof watchGeminiRequests<Awaited<ReturnType<GenerativeModel['generateContent']>>>>>;
+    try {
+      watched = await watchGeminiRequests(() => model.generateContent(req.prompt));
+    } catch (e) {
+      // With PREFER_IN_CLOUD the request was sent before it failed.
+      throw new DraftFailedError(e instanceof Error ? e.message : String(e), opts.preferDevice ? 0 : gate.bytes);
+    }
+    const { value, requests } = watched;
     const onDevice = value.response.inferenceSource === 'on_device';
     return {
       result: parseJson<AppealResult>(value.response.text()),

@@ -89,6 +89,27 @@ try {
     assert.match(ledger, /No part of your letter has left this device/);
   });
 
+  await step('type-to-hide works from the keyboard, and Start over clears the letter', async () => {
+    await page.goto(`${BASE}?engine=sim&device=unavailable`);
+    await page.getByRole('button', { name: /bariatric/ }).click();
+    await page.getByRole('button', { name: /Hide my details/ }).click();
+    await page.getByText('Check what leaves your device').waitFor();
+    await page.getByLabel('Type a word or name from your letter to hide it').fill('Concord');
+    await page.keyboard.press('Enter');
+    assert.ok(!(await page.locator('pre.outgoing').first().innerText()).includes('Concord'));
+    await page.getByRole('button', { name: 'Start over' }).click();
+    assert.equal(await page.locator('#letter').inputValue(), '', 'old letter still in the box');
+  });
+
+  await step('Nano downloadable: offers rules-only now or a one-time download', async () => {
+    await page.goto(`${BASE}?engine=sim&device=downloadable`);
+    await page.getByRole('button', { name: /MRI denied/ }).click();
+    await page.getByRole('button', { name: /Download Gemini Nano/ }).waitFor();
+    await page.getByRole('button', { name: /rules only/ }).click();
+    await page.getByText('Check what leaves your device').waitFor();
+    assert.match(await page.locator('.facts').innerText(), /Rules only/);
+  });
+
   await step('390px: no horizontal scroll on the review screen', async () => {
     const m = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await m.goto(`${BASE}?engine=sim&device=unavailable`);

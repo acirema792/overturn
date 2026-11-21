@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const calls: { mode: string; prompt: unknown }[] = [];
 let fallbackOnce = false;
+let failOnce = false;
 vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
 vi.mock('firebase/app-check', () => ({
   initializeAppCheck: vi.fn(),
@@ -26,6 +27,10 @@ vi.mock('firebase/ai', () => ({
     initializeDeviceModel: () => Promise.resolve(),
     generateContent: (prompt: unknown) => {
       calls.push({ mode: params.mode, prompt });
+      if (failOnce) {
+        failOnce = false;
+        return Promise.reject(new Error('403 Forbidden'));
+      }
       const json = JSON.stringify({ plainExplanation: 'x', strongestArguments: [], evidenceToGather: [], questionsForDoctor: [], appealLetter: 'Dear [PERSON_1]' });
       const onDevice = params.mode === 'only_on_device' || fallbackOnce;
       fallbackOnce = false;
@@ -36,7 +41,7 @@ vi.mock('firebase/ai', () => ({
 
 import { FirebaseEngine } from './firebaseEngine';
 import { initializeAppCheck } from 'firebase/app-check';
-import { EgressBlockedError } from './engine';
+import { DraftFailedError, EgressBlockedError } from './engine';
 
 const settings = { apiKey: 'k', projectId: 'p', appId: 'a' };
 
@@ -105,6 +110,16 @@ describe('FirebaseEngine', () => {
     const r = await e.draftAppeal({ prompt: 'Appeal for [PERSON_1]', vault: { '[PERSON_1]': 'Maria Gonzalez' } }, { preferDevice: false });
     expect(r.entry.where).toBe('on-device');
     expect(r.entry.bytesOut).toBeGreaterThan(0);
+  });
+
+  it('reports the bytes of a cloud attempt that failed (G3)', async () => {
+    failOnce = true;
+    const e = new FirebaseEngine(settings);
+    const err = await e
+      .draftAppeal({ prompt: 'Appeal for [PERSON_1]', vault: { '[PERSON_1]': 'Maria Gonzalez' } }, { preferDevice: false })
+      .catch((x) => x);
+    expect(err).toBeInstanceOf(DraftFailedError);
+    expect(err.attemptedBytes).toBeGreaterThan(0);
   });
 
   it('sends a clean appeal prompt with PREFER_IN_CLOUD', async () => {

@@ -524,6 +524,25 @@ mark.hl {
 }
 .hide-row {
   margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.type-hide {
+  display: flex;
+  gap: 6px;
+  flex: 1 1 220px;
+}
+.type-hide input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
 }
 .suspects {
   display: flex;

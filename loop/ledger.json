@@ -263,6 +263,24 @@
    "finding": "G5",
    "action": "skip effective/coverage/since/by/due/dated header dates; prefer a bare dateline; 5 tests",
    "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G3",
+   "action": "DraftFailedError carries attempted bytes; ledger row for failed cloud attempt; test",
+   "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G7",
+   "action": "downloadable: rules-only now or download; prepare failure falls back to rules; e2e",
+   "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G11",
+   "action": "reset clears text/selection; focusable letter pane; type-to-hide form; e2e",
+   "outcome": "success"
   }
  ]
 }
