@@ -323,6 +323,24 @@
    "finding": "H2",
    "action": "offline draft not cloud-gated (both engines); test",
    "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "H5",
+   "action": "failed-attempt row shows '\u2014' requests (unknown)",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "H6",
+   "action": "input lede: 'identifiers it finds are replaced\u2026 you check'",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "H7",
+   "action": "Read-by card distinguishes 'you chose rules only'",
+   "outcome": "success"
   }
  ]
 }

@@ -160,7 +160,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
               mode: 'PREFER_IN_CLOUD',
               where: 'cloud',
               bytesOut: e.attemptedBytes,
-              geminiRequests: 0,
+              geminiRequests: -1, // unknown: the request failed before it could be counted
               ms: 0,
               note: 'The de-identified prompt was sent, but the request failed; the template letter was used instead.',
             }),
@@ -244,8 +244,9 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
         <section className="card">
           <h2>Paste your denial letter</h2>
           <p className="lede">
-            Your letter is read <strong>on this device</strong> by Gemini Nano. Your name, member ID, address and every other identifier
-            are replaced before anything goes to the cloud, and you see exactly what will be sent.
+            Your letter is read <strong>on this device</strong>{device === 'available' ? ' by Gemini Nano' : ''}. Names, member IDs,
+            addresses and other identifiers it finds are replaced before anything goes to the cloud, and you check exactly what will be
+            sent.
           </p>
           <div className="samples">
             <span className="muted small">Try a sample (synthetic, not a real person):</span>
@@ -341,7 +342,9 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                   ? `${analysis.modelEntities.length} details found by the on-device model, plus rule-based checks.`
                   : analysis.deviceError
                     ? `The on-device model didn't run (${analysis.deviceError}). Nothing was sent to the cloud instead.`
-                    : 'No on-device model in this browser. Check the outgoing text carefully.'}
+                    : device === 'unavailable'
+                      ? 'No on-device model in this browser. Check the outgoing text carefully.'
+                      : 'You chose rules only. Check the outgoing text carefully.'}
               </p>
             </div>
           </section>

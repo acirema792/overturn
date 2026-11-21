@@ -47,7 +47,7 @@ export function Ledger({ entries }: { entries: LedgerEntry[] }) {
                 <td className="mono small">{e.mode ?? '—'}</td>
                 <td className="small">{e.model ?? '—'}</td>
                 <td className="num mono">{e.bytesOut.toLocaleString()}</td>
-                <td className="num mono">{e.where === 'code' ? '—' : e.geminiRequests}</td>
+                <td className="num mono">{e.where === 'code' || e.geminiRequests < 0 ? '—' : e.geminiRequests}</td>
                 <td className="num mono">{e.ms < 1000 ? `${e.ms} ms` : `${(e.ms / 1000).toFixed(1)} s`}</td>
               </tr>
             ))}
