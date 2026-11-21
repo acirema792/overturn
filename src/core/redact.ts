@@ -83,7 +83,8 @@ export function nameFragments(name: string): string[] {
 /** Case-sensitive fragment search, so "Rose" the name doesn't match "rose" the verb. */
 function findFragment(text: string, frag: string, canonical: string): Span[] {
   // As written or in capitals ("Gonzalez", "GONZALEZ"), never lowercase ("hope").
-  const re = new RegExp(`(?<![\\p{L}])(?:${escapeRe(frag)}|${escapeRe(frag.toUpperCase())})(?![\\p{L}])`, 'gu');
+  // Not when it starts a hyphenated word ("Long-term" is not "Ms. Long").
+  const re = new RegExp(`(?<![\\p{L}])(?:${escapeRe(frag)}|${escapeRe(frag.toUpperCase())})(?![\\p{L}])(?!-\\p{Ll})`, 'gu');
   const out: Span[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
@@ -108,7 +109,10 @@ export function redact(text: string, entities: FoundEntity[] = []): Redaction {
     ...entities.map((e) => ({ value: e.text, kind: e.kind, source: e.source })),
   ];
   for (const seed of seeds) {
-    spans.push(...findAll(text, seed.value, seed.kind, seed.source));
+    // A one-word name ("Bill", "May", "Days") is matched case-sensitively, so
+    // it doesn't swallow "your bill", "you may" or "180 days".
+    const oneWordName = seed.kind === 'PERSON' && !/\s/.test(seed.value.trim());
+    spans.push(...(oneWordName ? findFragment(text, seed.value.trim(), seed.value.trim()) : findAll(text, seed.value, seed.kind, seed.source)));
     if (seed.kind === 'PERSON') {
       for (const frag of nameFragments(seed.value)) spans.push(...findFragment(text, frag, seed.value.trim()));
     }

@@ -62,8 +62,8 @@ export class SimEngine implements Engine {
   }
 
   async draftAppeal(req: CloudRequest, opts: { preferDevice: boolean }) {
-    const gate = checkEgress(req.prompt, req.vault);
-    if (!gate.allowed) throw new EgressBlockedError(gate.findings);
+    const gate = checkEgress(req.prompt, req.vault, req.checkText);
+    if (!opts.preferDevice && !gate.allowed) throw new EgressBlockedError(gate.findings);
     await wait(500);
     const letterPart = req.prompt.split('DE-IDENTIFIED LETTER:')[1] ?? '';
     const placeholders = [...new Set(letterPart.match(PLACEHOLDER_RE) ?? [])];

@@ -203,3 +203,15 @@ export function buildAppealPrompt(a: Analysis): string {
     roles: roleLines(a),
   });
 }
+
+/**
+ * The cloud request: the full prompt, plus the per-letter parts the egress gate
+ * searches for names and IDs (the redacted letter, the model-written service
+ * description and the role lines), as opposed to Overturn's fixed wording.
+ */
+export function buildAppealRequest(a: Analysis): { prompt: string; checkText: string } {
+  return {
+    prompt: buildAppealPrompt(a),
+    checkText: [a.redaction.redacted, applyVault(a.facts.serviceDenied, a.redaction.vault), ...roleLines(a)].join('\n'),
+  };
+}

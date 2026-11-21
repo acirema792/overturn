@@ -25,6 +25,8 @@ export interface LedgerEntry {
 export interface CloudRequest {
   prompt: string;
   vault: Record<string, string>;
+  /** Per-letter text the gate searches for identifiers (defaults to the prompt). */
+  checkText?: string;
 }
 
 export class EgressBlockedError extends Error {

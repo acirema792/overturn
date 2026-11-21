@@ -2,7 +2,7 @@
 
 **Appeal a health insurance denial. Your identity stays on your device.**
 
-![tests](https://img.shields.io/badge/tests-160%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
+![tests](https://img.shields.io/badge/tests-173%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
 
 Overturn is a web app for #BuildHybridAI 2026 built on **Firebase AI Logic hybrid inference**.
 Gemini Nano reads the denial letter **in Chrome, on the patient's device**. Code replaces
@@ -77,7 +77,7 @@ it yourself in the app's Benchmark tab in desktop Chrome.
 
 ```bash
 npm ci
-npm test          # 160 unit, pipeline, engine (SDK mocked) and adversarial tests
+npm test          # 173 unit, pipeline, engine (SDK mocked) and adversarial tests
 npm run build && npm run e2e   # Playwright UI smoke test (simulated engine; run `npx playwright install chromium` once)
 npm run eval      # rules-only benchmark → eval_results/
 npm run dev       # needs .env.local (see .env.example) for real models

@@ -239,8 +239,11 @@ export class FirebaseEngine implements Engine {
     // The gate runs here, inside the engine, so no caller can skip it.
     // Remote Config sets the letter's length (the template says "under 400 words").
     const prompt = req.prompt.replace(/under \d+ words/, `under ${this.wordLimit} words`);
-    const gate = checkEgress(prompt, req.vault);
-    if (!gate.allowed) throw new EgressBlockedError(gate.findings);
+    // The gate guards what may leave the device, so it runs for every request
+    // that can reach the cloud. "Stay offline" (ONLY_ON_DEVICE, checked below)
+    // never sends anything, so it is not gated.
+    const gate = checkEgress(prompt, req.vault, req.checkText);
+    if (!opts.preferDevice && !gate.allowed) throw new EgressBlockedError(gate.findings);
 
     // Same SDK caveat as onDevice(): without the LanguageModel API, "stay
     // offline" would quietly go to the cloud. Honour the user's choice.

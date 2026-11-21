@@ -6,7 +6,7 @@ import { checkEgress } from '../core/egressGate';
 import { rehydrate } from '../core/redact';
 import { templateAppeal } from '../core/template';
 import { CASES } from '../data/cases';
-import { analyse, buildAppealPrompt, finishAnalysis, patientPlaceholder, applyVault, type Analysis } from '../pipeline';
+import { analyse, buildAppealPrompt, buildAppealRequest, finishAnalysis, patientPlaceholder, applyVault, type Analysis } from '../pipeline';
 import { OriginalWithHighlights, RedactedText } from './Highlight';
 import { Ledger } from './Ledger';
 
@@ -62,7 +62,8 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
 
   const gate = useMemo(() => {
     if (!analysis) return null;
-    return checkEgress(buildAppealPrompt(analysis), analysis.redaction.vault);
+    const req = buildAppealRequest(analysis);
+    return checkEgress(req.prompt, analysis.redaction.vault, req.checkText);
   }, [analysis]);
 
   const ledger = [...(analysis?.ledger ?? []), ...extraLedger];
@@ -142,7 +143,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
     setStage('drafting');
     setProgress(preferDevice ? 'Gemini Nano is drafting your appeal on this device…' : 'Gemini is drafting your appeal from the de-identified letter…');
     try {
-      const { result, entry } = await engine.draftAppeal({ prompt: buildAppealPrompt(analysis), vault: analysis.redaction.vault }, { preferDevice });
+      const { result, entry } = await engine.draftAppeal({ ...buildAppealRequest(analysis), vault: analysis.redaction.vault }, { preferDevice });
       setExtraLedger((l) => [...l, entry]);
       finish(result);
     } catch (e) {

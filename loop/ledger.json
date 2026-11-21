@@ -311,6 +311,18 @@
    "finding": "G8",
    "action": "README/BENCHMARK/devpost wording: 'replaces what it finds + review + gate', deadline sources, held-out leak positions, freeze history",
    "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "H1",
+   "action": "regression from G4: one-word names case-sensitive in redaction and gate; gate searches per-letter checkText not fixed template; digit values with flexible separators and strict boundaries; compound-word guard; 13 tests",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "H2",
+   "action": "offline draft not cloud-gated (both engines); test",
+   "outcome": "success"
   }
  ]
 }
