@@ -13,6 +13,7 @@ Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 |---|---|---|---|---|---|
 | 1 | 6.9 | 6.5 | 7.0 | 6.5 | 7.5 |
 | 2 | 7.3 | 7.0 | 7.5 | 6.5 | 8.0 |
+| 3 | 7.3 | 7.0 | 7.5 | 6.5 | 8.0 |
 
 ## Open findings
 - Awaiting verification: 3b351e6 (round-1 attempt 3 for F2/F3/F5/F6/F7; F3, F5, F6 at their attempt cap), cecabff G1, 5809188 G2+G5, a25703e G3+G7+G11, 7620f7b G4+G10, b4d264b G6, 8323964 G8+G9.
