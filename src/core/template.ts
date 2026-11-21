@@ -27,7 +27,11 @@ export function insurerFromLetter(letter: string, people: string[] = []): string
     if (from) line = from[1].trim();
     // Keep the part before an address, phone, separator or bracket:
     // "Northwind Health Plan, P.O. Box 44120…" → "Northwind Health Plan".
-    line = line.split(/,|\||·|\(|\s[-–]\s|\d/)[0].trim();
+    // Keep the part before an address, phone or separator ("Northwind Health
+    // Plan, P.O. Box…" → "Northwind Health Plan"); a part that still has a
+    // digit is a dateline, a page header or a claim line, so skip the line.
+    line = line.split(/,|\||·|\(|\s[-–]\s/)[0].trim();
+    if (/\d/.test(line)) continue;
     if (line.length < 3 || /:/.test(line) || line.length > 70 || !/\p{L}{2}/u.test(line)) continue;
     const lower = line.toLowerCase();
     if (known.some((k) => lower.includes(k))) continue;

@@ -6,7 +6,7 @@ still shows the whole flow, with the rules as the on-device layer.
 | Minute | Do this | Watch for |
 |---|---|---|
 | 0:00 | Open the live app (link in README). | Header pills: **Gemini Nano ready / downloadable / not available**, the cloud model, and App Check mode (footer). |
-| 0:30 | Click the sample **"Employer plan, MRI denied…"**, then **Read it on this device**. | The first time in Chrome, Nano may download (progress shown). The privacy ledger shows **Find personal details** and **Read the denial**: *On this device*, `ONLY_ON_DEVICE`, **0 bytes, 0 Gemini requests seen**. |
+| 0:30 | Click the sample **"Employer plan, MRI denied…"**, then **Read it on this device** (if Chrome hasn't downloaded Gemini Nano yet, choose **Download Gemini Nano (once), then read**, or **rules only**). | The download takes a few minutes, once, with progress shown. The privacy ledger shows **Find personal details** and **Read the denial**: *On this device*, `ONLY_ON_DEVICE`, **0 bytes, 0 Gemini requests seen**. |
 | 1:30 | Look at **Check what leaves your device**. | Left: your letter, highlighted by who found each detail (Gemini Nano / rules / you). Right: exactly what the cloud would get, with `[PERSON_1]`, `[MEMBER_ID_1]`… The **egress check** is green. The **deadline card** reads Mon, April 26, 2027, from the letter's 180 days, computed by code. |
 | 2:15 | Select any word in the left pane, then click **Hide**. Then click its ✕ to undo. | The outgoing text and the gate update instantly. |
 | 2:45 | Click **Send the hidden version to Gemini**. | The ledger adds **Write the appeal**: *Cloud*, `PREFER_IN_CLOUD`, N bytes. Your letter has the real name and member ID again, put back on the device. |
@@ -24,7 +24,7 @@ still shows the whole flow, with the rules as the on-device layer.
 | Real details are restored only on the device | `src/core/redact.ts` `rehydrate()`, called in `src/components/AppealFlow.tsx`. |
 | The ledger tells the truth | `src/ai/engine.ts` `watchGeminiRequests()` (Resource Timing); `inferenceSource` per response. |
 | UI tested | `npm run e2e`: Playwright smoke test on the simulated engine (flow, hide/undo, no-Nano path, 390px). |
-| Tested | `npm test`: 173 tests, including SDK-mocked engine tests (`src/ai/firebaseEngine.test.ts`) and adversarial inputs (`src/core/adversarial.test.ts`). |
+| Tested | `npm test`: 193 tests, including SDK-mocked engine tests (`src/ai/firebaseEngine.test.ts`) and adversarial inputs (`src/core/adversarial.test.ts`). |
 
 More: [CLAIMS.md](CLAIMS.md) (every claim with its evidence tier),
 [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md), [EVIDENCE.md](EVIDENCE.md) (judging criteria → evidence),

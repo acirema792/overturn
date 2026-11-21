@@ -59,15 +59,21 @@ added here with the Chrome version and hardware. Until then, we make no claim ab
 - spaced IDs, and labelled IDs that look like procedure codes;
 - dotted and yyyy/mm/dd dates, labelled spaced SSNs, and ages over 89 (Safe Harbor).
 
-**Over-redaction guarded by tests** (in the tested forms only): insurer names in capitals after "To:", "Member:" or "Dear", field values like "SERVICE NAME: MRI LUMBAR SPINE", text after a labelled ID ("Reference #: 88812345 CPT 72148"), CPT/HCPCS/ICD-10 codes, dollar
+**Over-redaction guarded by tests** (in the tested forms only): insurer names in capitals after "To:", field values like "SERVICE NAME: MRI LUMBAR SPINE", clinical codes after a labelled ID ("Claim #: 2026041277 CPT 99213" is redacted to the ID only and passes the gate), CPT/HCPCS/ICD-10 codes, dollar
 amounts, a medical-policy reference ("Medical Policy MP-204"), section and version numbers ("Section 4.1.12"), drug doses and ages under 90 survive. (A value after an explicit ID label, such as "Policy No. MP-204", is redacted on purpose.)
 
 **Traps now handled correctly:**
 - a Medicaid letter that mentions Medicare;
 - a date of birth on the first line;
-- the plan's own timelines ("a decision will be made within 90 days") next to the patient's window;
+- the plan's own timelines ("a decision will be made within 90 days") next to the patient's window, in the tested phrasings (some others are still misread; see Known gaps);
 - service-date ranges in the letterhead;
 - short names inside other words ("Pat" in "patient").
+
+## Known gaps (open, escalated)
+
+- Some plan-timeline phrasings placed before the patient's window ("We'll decide your appeal within 30 days. You have 180 days…") are read as the window. The resulting deadline is earlier than the real one, never later.
+- Capitals names after "Member:" or "Dear" are hidden even when they are an insurer ("MEMBER: KAISER PERMANENTE"): over-redaction is preferred to a leak.
+- The eval counts a leak only when a whole planted value survives; a surviving surname fragment is not counted.
 
 ## History
 
@@ -75,3 +81,4 @@ amounts, a medical-policy reference ("Medical Policy MP-204"), section and versi
 |---|---|---|
 | 2026-11-20 | First frozen run | 7/34 |
 | 2026-11-20 | Audit round-1 fixes and verifier follow-ups (none derived from held-out cases) | 7/34 (unchanged) |
+| 2026-11-21 | Audit round-2 and round-3 fixes and verifier follow-ups (none derived from held-out cases) | 7/34 (unchanged) |

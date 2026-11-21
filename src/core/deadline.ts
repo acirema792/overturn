@@ -149,7 +149,7 @@ const DAYS_MENTION = new RegExp(
 
 // The patient acts: "you may/can/must…", "if you send it", "your appeal must be received", "we must receive your…".
 const PATIENT_CLAUSE =
-  /\byou\s+(?:may|can|must|should|have|need)\b|\b(?:if|when|once)\s+you\b|\bmust be (?:received|filed|submitted|postmarked|sent)\b|\bwe must (?:receive|get|have)\b/i;
+  /\byou\b[^.;]{0,60}?\b(?:may|can|must|should|have|need)\b(?! to be)|\b(?:if|when|once)\s+you\b|\bmust be (?:received|filed|submitted|postmarked|sent)\b|\bwe must (?:receive|get|have)\b/i;
 // The plan acts: "we will…", "the reviewer will…", "a decision will be made…", "you will be notified…".
 const PLAN_CLAUSE =
   /\b(?:we|the plan|our (?:plan|team|reviewers?)|the reviewer|reviewers?|they)\s+(?:will|shall|must|are required to|have to)\b|\b(?:will|shall) be (?:made|decided|notified|sent|reviewed|mailed|issued)\b|\byou will (?:be notified|receive|get|hear)\b/i;
@@ -181,9 +181,16 @@ export function findWindowDays(text: string): number | null {
       const breaks = [...before.matchAll(/[,;]|\b(?:if|and|but|or)\b/gi)];
       const clauseStart = breaks.length ? breaks[breaks.length - 1].index! : 0;
       const clause = sentence.slice(clauseStart, m.index + m[0].length);
-      const context = clause + sentence.slice(m.index + m[0].length, m.index + m[0].length + 60);
-      if (NEXT_LEVEL.test(context) || THIRD_PARTY.test(clause)) continue;
-      const patient = PATIENT_CLAUSE.test(clause);
+      const context = clause + sentence.slice(m.index + m[0].length, m.index + m[0].length + 100);
+      const upToNumber = sentence.slice(0, m.index + m[0].length);
+      // A later process ("State Fair Hearing … after our appeal decision") is skipped
+      // unless the same clause also offers the appeal itself ("a fair hearing or an appeal").
+      const offersAppeal = /\bappeals?\b(?!\s+(?:decision|determination))/i.test(context.replace(NEXT_LEVEL, ''));
+      if (NEXT_LEVEL.test(context) && !offersAppeal) continue;
+      // Someone else's deadline ("Your provider may submit…") only when the patient isn't in it.
+      if (THIRD_PARTY.test(clause) && !/\byou\b/i.test(upToNumber)) continue;
+      // "you or your doctor can file…": the patient may be the subject before a clause break.
+      const patient = PATIENT_CLAUSE.test(clause) || (THIRD_PARTY.test(clause) && PATIENT_CLAUSE.test(upToNumber));
       const plan = PLAN_CLAUSE.test(clause);
       if (patient || !plan) return n;
     }
@@ -226,7 +233,7 @@ const DATE_IN_TEXT =
 // care, never the notice. Only the label right before the date counts, so
 // "Customer Service   Date: 11/02/2026" keeps its notice date.
 const NOT_NOTICE_BEFORE =
-  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|dated|expires?|expiration|renewal|enrolled|enrollment)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
+  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|(?<=requested? )dated|expires?|expiration|renewal|enrolled|enrollment)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
 // "10/01/2026 - 10/03/2026": the second date of a skipped range is skipped too.
 const RANGE_JOINER = /^\s*(?:-|–|to|through|thru|and|,)\s*$/i;
 const NOTICE_LABEL =

@@ -275,8 +275,15 @@ export class FirebaseEngine implements Engine {
     }
     const { value, requests } = watched;
     const onDevice = value.response.inferenceSource === 'on_device';
+    let result: AppealResult;
+    try {
+      // text() throws for a blocked answer; parseJson throws for non-JSON.
+      result = parseJson<AppealResult>(value.response.text());
+    } catch (e) {
+      throw new DraftFailedError(e instanceof Error ? e.message : String(e), onDevice ? 0 : gate.bytes);
+    }
     return {
-      result: parseJson<AppealResult>(value.response.text()),
+      result,
       entry: ledgerEntry({
         step: 'Write the appeal',
         mode: opts.preferDevice ? 'ONLY_ON_DEVICE' : 'PREFER_IN_CLOUD',

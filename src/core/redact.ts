@@ -72,6 +72,16 @@ function findAll(text: string, value: string, kind: IdKind, source: Span['source
  * Name fragments: if "Maria L. Gonzalez" is a person, "Gonzalez" and "Maria"
  * on their own elsewhere in the letter are identifiers too ("Ms. Gonzalez").
  */
+// Short or common words are only matched as written: in capitals they are too
+// often ordinary text ("THIS IS NOT A BILL", "LONG-TERM CARE", "GOLD PPO").
+const COMMON_CAPS = new Set(['GRANT', 'GREEN', 'BROWN', 'WHITE', 'BLACK', 'YOUNG', 'PRICE', 'BANKS', 'RIVERS', 'HOPE', 'ROSE', 'FAITH', 'GRACE', 'JUNE', 'APRIL', 'MARCH', 'HAND', 'PARK', 'HALL', 'WELL', 'WILL', 'CHASE', 'FROST', 'HILL', 'STONE', 'WOOD', 'LAKE', 'FIELD', 'FORD', 'MAJOR', 'NOBLE', 'POWER', 'PAYNE', 'CASH', 'BOND', 'CROSS', 'BLUE', 'SHIELD', 'CARE', 'HEALTH']);
+/** The forms of a name part we match: as written, plus capitals when that is safe. */
+export function nameFormsRe(part: string): string {
+  const esc = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const caps = part.toUpperCase();
+  return caps.length >= 5 && !COMMON_CAPS.has(caps) && caps !== part ? `${esc}|${caps.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}` : esc;
+}
+
 export function nameFragments(name: string): string[] {
   return name
     .replace(/^(Mr|Mrs|Ms|Miss|Dr)\.?\s+/i, '')
@@ -84,7 +94,7 @@ export function nameFragments(name: string): string[] {
 function findFragment(text: string, frag: string, canonical: string): Span[] {
   // As written or in capitals ("Gonzalez", "GONZALEZ"), never lowercase ("hope").
   // Not when it starts a hyphenated word ("Long-term" is not "Ms. Long").
-  const re = new RegExp(`(?<![\\p{L}])(?:${escapeRe(frag)}|${escapeRe(frag.toUpperCase())})(?![\\p{L}])(?!-\\p{Ll})`, 'gu');
+  const re = new RegExp(`(?<![\\p{L}])(?:${nameFormsRe(frag)})(?![\\p{L}])(?!-\\p{L})`, 'gu');
   const out: Span[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {

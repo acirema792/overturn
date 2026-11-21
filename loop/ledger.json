@@ -341,6 +341,55 @@
    "finding": "H7",
    "action": "Read-by card distinguishes 'you chose rules only'",
    "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "F3",
+   "action": "verifier ESCALATE: attempt 3 lets unmarked plan-time clauses win (earlier deadline); at cap, kept and escalated",
+   "outcome": "failure",
+   "error": "cap reached"
+  },
+  {
+   "round": 3,
+   "finding": "F5",
+   "action": "verifier ESCALATE: attempt 3 reintroduced leaks; reverted label narrowing (person labels widened, caps names after Member/Dear hidden again); two keep-expectations flipped, flagged for sign-off",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "F6",
+   "action": "verifier ESCALATE: attempt 3 insurer guess returned November/Page; reverted to skipping lines with digits, kept From:/people/hint fixes",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "G2",
+   "action": "attempt 2: third-party skip only when the patient is not in the sentence; fair hearing kept when an appeal is also offered",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "G3",
+   "action": "attempt 2: unparseable/blocked cloud answers also raise DraftFailedError",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "G4",
+   "action": "attempt 2: capitals only for long uncommon name parts; applyVault case-sensitive, not sentence-initial, not compounds; gate uses neutral placeholder token",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "G5",
+   "action": "attempt 2: dated skipped only after request",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "G8",
+   "action": "attempt 2: EVIDENCE/README/JUDGES/HowItWorks/CLAIMS/BENCHMARK wording; Known gaps and history added",
+   "outcome": "success"
   }
  ]
 }

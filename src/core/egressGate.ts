@@ -1,5 +1,5 @@
 import { detect, type IdKind } from './detectors';
-import { nameFragments, PLACEHOLDER_RE } from './redact';
+import { nameFormsRe, nameFragments, PLACEHOLDER_RE } from './redact';
 
 export interface GateFinding {
   reason: 'vault-value' | 'detector';
@@ -42,7 +42,7 @@ function digitValueRe(value: string): RegExp {
 function nameRe(value: string): RegExp {
   const parts = value.trim().split(/\s+/).map(escapeRe);
   if (parts.length === 1) {
-    return new RegExp(`(?<![\\p{L}])(?:${parts[0]}|${parts[0].toUpperCase()})(?![\\p{L}])(?!-\\p{Ll})`, 'u');
+    return new RegExp(`(?<![\\p{L}])(?:${nameFormsRe(value.trim())})(?![\\p{L}])(?!-\\p{L})`, 'u');
   }
   return new RegExp(`(?<![\\p{L}])${parts.join(String.raw`[\s.,'’-]*`)}(?![\\p{L}])`, 'iu');
 }
@@ -60,8 +60,10 @@ function nameRe(value: string): RegExp {
  */
 export function checkEgress(payload: string, vault: Record<string, string>, checkText?: string): GateResult {
   const findings: GateFinding[] = [];
-  const withoutPlaceholders = payload.replace(PLACEHOLDER_RE, ' ');
-  const variable = (checkText ?? payload).replace(PLACEHOLDER_RE, ' ');
+  // A neutral token, not a space, so "Claim #: [CLAIM_ID_1] CPT 99213" doesn't
+  // read as "Claim #: CPT 99213" (a label followed by an ID-like code).
+  const withoutPlaceholders = payload.replace(PLACEHOLDER_RE, ' · ');
+  const variable = (checkText ?? payload).replace(PLACEHOLDER_RE, ' · ');
   const squashedVariable = squash(variable);
 
   for (const value of Object.values(vault)) {

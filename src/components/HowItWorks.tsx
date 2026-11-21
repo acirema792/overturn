@@ -71,7 +71,7 @@ export function HowItWorks() {
             Open <code>chrome://flags/#prompt-api-for-gemini-nano-multimodal-input</code>, set it to <em>Enabled</em>, and restart Chrome (needed
             for photos).
           </li>
-          <li>The first time you click "Read it on this device", Chrome downloads the model. That can take a few minutes, once.</li>
+          <li>If Chrome hasn't downloaded the model yet, click "Download Gemini Nano (once), then read". That can take a few minutes, once. You can also continue with rules only.</li>
         </ol>
         <p className="muted small">
           Without Gemini Nano, Overturn still works: rules hide what they can find, you review and hide the rest, and the cloud writes the

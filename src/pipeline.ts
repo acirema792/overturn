@@ -13,7 +13,7 @@ import {
   type PlanType,
 } from './core/deadline';
 import { detect, type IdKind } from './core/detectors';
-import { nameFragments, redact, type FoundEntity, type Redaction } from './core/redact';
+import { nameFormsRe, nameFragments, redact, type FoundEntity, type Redaction } from './core/redact';
 import { findSuspects } from './core/suspects';
 import { insurerFromLetter } from './core/template';
 
@@ -184,7 +184,9 @@ export function applyVault(text: string, vault: Record<string, string>): string 
   }
   for (const [frag, phs] of owners) {
     if (phs.size !== 1) continue;
-    const re = new RegExp(`(?<![\\p{L}])(?:${frag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?:['’]s)?(?![\\p{L}])`, 'giu');
+    // As written (or safe capitals), not at the start of a sentence (where
+    // "Hand surgery" is a body part), and not in a compound ("Long-term").
+    const re = new RegExp(`(?<=[\\p{L}\\p{N},;:(] )(?:${nameFormsRe(frag)})(?:['’]s)?(?![\\p{L}])(?!-\\p{L})`, 'gu');
     out = out.replace(re, [...phs][0]);
   }
   return out;
