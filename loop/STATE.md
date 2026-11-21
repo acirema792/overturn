@@ -1,6 +1,6 @@
 # Audit loop state
 
-Round: 2 (audit in progress; round-1 follow-ups in verification)
+Round: 3 (final round: verification + audit in progress)
 Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 
 ## Baseline tripwires (2026-11-20)
@@ -15,8 +15,8 @@ Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 | 2 | 7.3 | 7.0 | 7.5 | 6.5 | 8.0 |
 
 ## Open findings
-- Round-1 attempt-3 commit 3b351e6 (F2/F3/F5/F6/F7) awaiting verification; F3, F5, F6 are at their attempt cap: one more rejection → escalate.
-- Round 2 queue: G1 S3, G2 S3, G3 S2, G4 S2, G5 S2, G6 S2, G7 S2, G8 S1, G9 S1, G10 S1, G11 S1. G12 → escalate (protected).
+- Awaiting verification: 3b351e6 (round-1 attempt 3 for F2/F3/F5/F6/F7; F3, F5, F6 at their attempt cap), cecabff G1, 5809188 G2+G5, a25703e G3+G7+G11, 7620f7b G4+G10, b4d264b G6, 8323964 G8+G9.
+- G12: escalated (protected CI workflow).
 
 ## Escalations (for the person)
 - G12 (protected: CI workflow): add lint and e2e (with `npx playwright install --with-deps chromium`) to CI. Needs your OK.
