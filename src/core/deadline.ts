@@ -160,6 +160,13 @@ const NOTICE_TOPIC = /\b(?:notice|letter|determination)\b/i;
 const PAYMENT_TOPIC = /\b(?:pay|payment|balance|bill)\b/i;
 const isAppealSentence = (s: string) => APPEAL_TOPIC.test(s) || (NOTICE_TOPIC.test(s) && !PAYMENT_TOPIC.test(s));
 
+// Windows for a later or different process, or for someone else: a State Fair
+// Hearing, an external/independent review, "after our appeal decision", or
+// the provider's own deadline. These are never the first appeal's window.
+const NEXT_LEVEL =
+  /\b(?:fair hearing|state hearing|external review|independent review(?:er)?|review entity|hearing officer)\b|\b(?:of|after|from) (?:the date of |receiving )?(?:our|the|a|your) (?:appeal|final|internal appeal|reconsideration) (?:decision|determination)\b/i;
+const THIRD_PARTY = /\b(?:your|the) (?:provider|doctor|physician|pharmacist|employer|facility|hospital)\b/i;
+
 export function findWindowDays(text: string): number | null {
   const sentences = text.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/);
   for (const sentence of sentences) {
@@ -174,6 +181,8 @@ export function findWindowDays(text: string): number | null {
       const breaks = [...before.matchAll(/[,;]|\b(?:if|and|but|or)\b/gi)];
       const clauseStart = breaks.length ? breaks[breaks.length - 1].index! : 0;
       const clause = sentence.slice(clauseStart, m.index + m[0].length);
+      const context = clause + sentence.slice(m.index + m[0].length, m.index + m[0].length + 60);
+      if (NEXT_LEVEL.test(context) || THIRD_PARTY.test(clause)) continue;
       const patient = PATIENT_CLAUSE.test(clause);
       const plan = PLAN_CLAUSE.test(clause);
       if (patient || !plan) return n;
@@ -217,7 +226,7 @@ const DATE_IN_TEXT =
 // care, never the notice. Only the label right before the date counts, so
 // "Customer Service   Date: 11/02/2026" keeps its notice date.
 const NOT_NOTICE_BEFORE =
-  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
+  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|dated|expires?|expiration|renewal|enrolled|enrollment)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
 // "10/01/2026 - 10/03/2026": the second date of a skipped range is skipped too.
 const RANGE_JOINER = /^\s*(?:-|–|to|through|thru|and|,)\s*$/i;
 const NOTICE_LABEL =
@@ -256,7 +265,15 @@ export function findNoticeDate(text: string): string | null {
     const [first] = noticeDatesIn(line, m.index + m[0].length);
     if (first) return first;
   }
-  for (const line of lines.slice(0, 8)) {
+  // Dateline fallback: a line that is nothing but a date wins over a date
+  // inside other header text.
+  const head = lines.slice(0, 8);
+  for (const line of head) {
+    if (!new RegExp(`^\\s*(?:${DATE_IN_TEXT.source})\\s*$`).test(line)) continue;
+    const [first] = noticeDatesIn(line);
+    if (first) return first;
+  }
+  for (const line of head) {
     const [first] = noticeDatesIn(line);
     if (first) return first;
   }

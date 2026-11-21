@@ -251,6 +251,18 @@
    "finding": "G1",
    "action": "fragment joins a full name's placeholder only if exactly one full name contains it; 3 tests",
    "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G2",
+   "action": "skip fair-hearing/external/independent-review/after-appeal-decision and provider windows; 5 tests",
+   "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G5",
+   "action": "skip effective/coverage/since/by/due/dated header dates; prefer a bare dateline; 5 tests",
+   "outcome": "success"
   }
  ]
 }

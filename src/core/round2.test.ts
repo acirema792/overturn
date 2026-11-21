@@ -27,3 +27,25 @@ describe('G1 relatives who share a surname keep separate placeholders', () => {
     expect(personOf(t, 'Lee Park')).toBeDefined();
   });
 });
+
+import { findNoticeDate, findWindowDays } from './deadline';
+
+describe('G2 next-level and third-party windows are not the appeal window', () => {
+  it.each([
+    ['If we uphold our decision, you can ask for a State Fair Hearing within 120 days of the date of our appeal decision. You must file an appeal with the plan within 60 days of the date of this notice.', 60],
+    ['Your provider may submit additional information within 14 days for review. You may appeal within 180 days of this notice.', 180],
+    ['The independent reviewer will decide within 45 days of receiving your request for review.', null],
+    ['You may request an external review within 4 months; first, you must appeal within 180 days of this notice.', 180],
+    ['Your appeal must be filed no later than 60 calendar days after you receive this notice.', 60],
+  ])('%s', (text, days) => expect(findWindowDays(text)).toBe(days));
+});
+
+describe('G5 header dates that are not the notice date', () => {
+  it.each([
+    'Plan effective date: 01/01/2026\nOctober 2, 2026\nDear member',
+    'Coverage period 01/01/2026 - 12/31/2026\nOctober 2, 2026\nDear member',
+    'Member since 03/15/2019\nOctober 2, 2026\nDear member',
+    'Respond by: 12/31/2026\nOctober 2, 2026\nDear member',
+    'Prior authorization request dated 09/20/2026\nOctober 2, 2026\nDear member',
+  ])('%s', (text) => expect(findNoticeDate(text)).toBe('2026-10-02'));
+});
