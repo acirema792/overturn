@@ -1,5 +1,5 @@
 import { detect, type IdKind } from './detectors';
-import { PLACEHOLDER_RE } from './redact';
+import { nameFragments, PLACEHOLDER_RE } from './redact';
 
 export interface GateFinding {
   reason: 'vault-value' | 'detector';
@@ -14,6 +14,7 @@ export interface GateResult {
   bytes: number;
 }
 
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const squash = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 const words = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 
@@ -50,6 +51,17 @@ export function checkEgress(payload: string, vault: Record<string, string>): Gat
       const v = words(value);
       const runTogether = v.includes(' ') && squash(value).length >= 8 && squashedPayload.includes(squash(value));
       if ((v.length >= 3 && wordsPayload.includes(` ${v} `)) || runTogether) findings.push({ reason: 'vault-value', excerpt: mask(value) });
+    }
+  }
+
+  // Parts of a person's name in text a model wrote ("MRI for Gonzalez",
+  // "Maria's MRI"). Matched as written or in capitals, whole word, so the
+  // word "hope" doesn't match the name "Hope Rivers".
+  for (const [ph, value] of Object.entries(vault)) {
+    if (!ph.startsWith('[PERSON_') || /\d/.test(value)) continue;
+    for (const frag of nameFragments(value)) {
+      const re = new RegExp(`(?<![\\p{L}])(?:${escapeRe(frag)}|${escapeRe(frag.toUpperCase())})(?![\\p{L}])`, 'u');
+      if (re.test(withoutPlaceholders)) findings.push({ reason: 'vault-value', excerpt: mask(frag) });
     }
   }
 

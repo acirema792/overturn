@@ -56,7 +56,7 @@ export const FACTS_SCHEMA = {
     insurer: { type: 'string', description: 'Name of the insurance company or plan.' },
     planType: { type: 'string', enum: [...PLAN_TYPES] },
     denialCategory: { type: 'string', enum: [...DENIAL_CATEGORIES] },
-    serviceDenied: { type: 'string', description: 'The treatment, test, drug or bill that was denied.' },
+    serviceDenied: { type: 'string', description: 'The treatment, test, drug or bill that was denied. No names of people.' },
     reasonInPlainWords: {
       type: 'string',
       description: 'One or two sentences a non-expert understands. No names or numbers of people.',

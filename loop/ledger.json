@@ -281,6 +281,18 @@
    "finding": "G11",
    "action": "reset clears text/selection; focusable letter pane; type-to-hide form; e2e",
    "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G4",
+   "action": "gate checks PERSON name fragments (as written + caps); applyVault maps unambiguous fragments; caps fragments redacted; prompt says no names; 8 tests",
+   "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G10",
+   "action": "model-found details get 'not personal' undo chips",
+   "outcome": "success"
   }
  ]
 }

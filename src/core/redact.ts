@@ -72,7 +72,7 @@ function findAll(text: string, value: string, kind: IdKind, source: Span['source
  * Name fragments: if "Maria L. Gonzalez" is a person, "Gonzalez" and "Maria"
  * on their own elsewhere in the letter are identifiers too ("Ms. Gonzalez").
  */
-function nameFragments(name: string): string[] {
+export function nameFragments(name: string): string[] {
   return name
     .replace(/^(Mr|Mrs|Ms|Miss|Dr)\.?\s+/i, '')
     .split(/\s+/)
@@ -82,11 +82,12 @@ function nameFragments(name: string): string[] {
 
 /** Case-sensitive fragment search, so "Rose" the name doesn't match "rose" the verb. */
 function findFragment(text: string, frag: string, canonical: string): Span[] {
-  const re = new RegExp(`(?<![\\p{L}])${escapeRe(frag)}(?![\\p{L}])`, 'gu');
+  // As written or in capitals ("Gonzalez", "GONZALEZ"), never lowercase ("hope").
+  const re = new RegExp(`(?<![\\p{L}])(?:${escapeRe(frag)}|${escapeRe(frag.toUpperCase())})(?![\\p{L}])`, 'gu');
   const out: Span[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
-    out.push({ start: m.index, end: m.index + frag.length, kind: 'PERSON', text: frag, source: 'propagated', canonical });
+    out.push({ start: m.index, end: m.index + m[0].length, kind: 'PERSON', text: m[0], source: 'propagated', canonical });
   }
   return out;
 }

@@ -126,6 +126,11 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
     window.getSelection()?.removeAllRanges();
   }
 
+  function unhideModel(value: string) {
+    if (!analysis) return;
+    setAnalysis(finishAnalysis({ ...analysis, modelEntities: analysis.modelEntities.filter((m) => m.text !== value) }));
+  }
+
   function unhide(value: string) {
     if (!analysis) return;
     setAnalysis(finishAnalysis({ ...analysis, userEntities: analysis.userEntities.filter((u) => u.text !== value) }));
@@ -398,6 +403,18 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                 <RedactedText text={analysis.redaction.redacted} />
               </div>
             </div>
+            {analysis.modelEntities.length > 0 && (
+              <details className="small model-found">
+                <summary>Found by Gemini Nano ({analysis.modelEntities.length}). Remove any that aren't personal.</summary>
+                <div className="suspects">
+                  {analysis.modelEntities.map((m) => (
+                    <button key={`${m.kind}:${m.text}`} className="chip" onClick={() => unhideModel(m.text)} aria-label={`“${m.text}” is not personal: stop hiding it`}>
+                      “{m.text}” ✕
+                    </button>
+                  ))}
+                </div>
+              </details>
+            )}
             {analysis.userEntities.length > 0 && (
               <div className="suspects user-hides">
                 <span className="small">Hidden by you:</span>

@@ -49,3 +49,28 @@ describe('G5 header dates that are not the notice date', () => {
     'Prior authorization request dated 09/20/2026\nOctober 2, 2026\nDear member',
   ])('%s', (text) => expect(findNoticeDate(text)).toBe('2026-10-02'));
 });
+
+import { checkEgress } from './egressGate';
+import { applyVault } from '../pipeline';
+
+describe('G4 partial names in model-written text', () => {
+  const vault = { '[PERSON_1]': 'Maria L. Gonzalez' };
+  it.each(['lumbar MRI for Maria Gonzalez', 'lumbar MRI for Gonzalez', "Maria's lumbar MRI", 'MRI for MARIA GONZALEZ', 'M. Gonzalez'])(
+    'gate blocks "%s"',
+    (text) => expect(checkEgress(text, vault).allowed).toBe(false),
+  );
+  it('a lowercase common word that is also a name part does not block', () => {
+    expect(checkEgress('There is hope for this appeal.', { '[PERSON_1]': 'Hope Rivers' }).allowed).toBe(true);
+  });
+  it('applyVault maps an unambiguous surname to the full name placeholder', () => {
+    expect(applyVault('lumbar MRI for Gonzalez', vault)).toBe('lumbar MRI for [PERSON_1]');
+  });
+});
+
+describe('G4 consistency: capitals', () => {
+  it('a surname in capitals is redacted, so the gate does not block the outgoing text', () => {
+    const r = redact('Patient: Maria Gonzalez\nRE: GONZALEZ CLAIM');
+    expect(r.redacted).not.toContain('GONZALEZ');
+    expect(checkEgress(r.redacted, r.vault).allowed).toBe(true);
+  });
+});

@@ -13,7 +13,7 @@ import {
   type PlanType,
 } from './core/deadline';
 import { detect, type IdKind } from './core/detectors';
-import { redact, type FoundEntity, type Redaction } from './core/redact';
+import { nameFragments, redact, type FoundEntity, type Redaction } from './core/redact';
 import { findSuspects } from './core/suspects';
 import { insurerFromLetter } from './core/template';
 
@@ -175,6 +175,17 @@ export function applyVault(text: string, vault: Record<string, string>): string 
     if (value.trim().length < 2) continue;
     const re = new RegExp(value.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+'), 'gi');
     out = out.replace(re, ph);
+  }
+  // Then name parts ("MRI for Gonzalez"), when only one person has that part.
+  const owners = new Map<string, Set<string>>();
+  for (const [ph, value] of entries) {
+    if (!ph.startsWith('[PERSON_')) continue;
+    for (const frag of nameFragments(value)) owners.set(frag, (owners.get(frag) ?? new Set()).add(ph));
+  }
+  for (const [frag, phs] of owners) {
+    if (phs.size !== 1) continue;
+    const re = new RegExp(`(?<![\\p{L}])(?:${frag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?:['’]s)?(?![\\p{L}])`, 'giu');
+    out = out.replace(re, [...phs][0]);
   }
   return out;
 }
