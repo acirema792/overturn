@@ -58,7 +58,7 @@ export function HowItWorks() {
             </tr>
             <tr>
               <td>Remote Config</td>
-              <td>Switches the cloud model and the appeal temperature without a new release.</td>
+              <td>Switches the cloud model and the appeal letter's length without a new release.</td>
             </tr>
           </tbody>
         </table>

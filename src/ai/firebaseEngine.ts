@@ -76,7 +76,8 @@ const TEXT_IO = {
 
 const RC_DEFAULTS = {
   cloud_model: 'gemini-3.5-flash-lite',
-  appeal_temperature: 0.4,
+  // Gemini 3.x ignores `temperature`, so the lever is the letter's length.
+  appeal_word_limit: 400,
 };
 
 declare global {
@@ -94,7 +95,7 @@ export class FirebaseEngine implements Engine {
   cloudModel = RC_DEFAULTS.cloud_model;
   appCheck: 'reCAPTCHA Enterprise' | 'reCAPTCHA v3' | 'debug token' | 'off' = 'off';
   private app: FirebaseApp;
-  private temperature = RC_DEFAULTS.appeal_temperature;
+  private wordLimit = RC_DEFAULTS.appeal_word_limit;
   private ai;
   private entityModel: GenerativeModel;
   private factsModel: GenerativeModel;
@@ -163,7 +164,8 @@ export class FirebaseEngine implements Engine {
       .catch(() => false)
       .then(() => {
         this.cloudModel = getValue(rc, 'cloud_model').asString() || RC_DEFAULTS.cloud_model;
-        this.temperature = getValue(rc, 'appeal_temperature').asNumber() || RC_DEFAULTS.appeal_temperature;
+        const limit = getValue(rc, 'appeal_word_limit').asNumber();
+        this.wordLimit = limit >= 150 && limit <= 800 ? Math.round(limit) : RC_DEFAULTS.appeal_word_limit;
       });
   }
 
@@ -235,7 +237,9 @@ export class FirebaseEngine implements Engine {
   async draftAppeal(req: CloudRequest, opts: { preferDevice: boolean }) {
     await this.readyRemoteConfig;
     // The gate runs here, inside the engine, so no caller can skip it.
-    const gate = checkEgress(req.prompt, req.vault);
+    // Remote Config sets the letter's length (the template says "under 400 words").
+    const prompt = req.prompt.replace(/under \d+ words/, `under ${this.wordLimit} words`);
+    const gate = checkEgress(prompt, req.vault);
     if (!gate.allowed) throw new EgressBlockedError(gate.findings);
 
     // Same SDK caveat as onDevice(): without the LanguageModel API, "stay
@@ -249,7 +253,6 @@ export class FirebaseEngine implements Engine {
       inCloudParams: {
         model: this.cloudModel,
         generationConfig: {
-          temperature: this.temperature,
           responseMimeType: 'application/json',
           responseJsonSchema: APPEAL_SCHEMA as unknown as Record<string, unknown>,
         },
@@ -262,7 +265,7 @@ export class FirebaseEngine implements Engine {
     const t0 = performance.now();
     let watched: Awaited<ReturnType<typeof watchGeminiRequests<Awaited<ReturnType<GenerativeModel['generateContent']>>>>>;
     try {
-      watched = await watchGeminiRequests(() => model.generateContent(req.prompt));
+      watched = await watchGeminiRequests(() => model.generateContent(prompt));
     } catch (e) {
       // With PREFER_IN_CLOUD the request was sent before it failed.
       throw new DraftFailedError(e instanceof Error ? e.message : String(e), opts.preferDevice ? 0 : gate.bytes);

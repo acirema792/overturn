@@ -2,12 +2,13 @@
 
 **Appeal a health insurance denial. Your identity stays on your device.**
 
-![tests](https://img.shields.io/badge/tests-126%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
+![tests](https://img.shields.io/badge/tests-160%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
 
 Overturn is a web app for #BuildHybridAI 2026 built on **Firebase AI Logic hybrid inference**.
-Gemini Nano reads the denial letter **in Chrome, on the patient's device**. Code removes every
-name, member ID, address and date. **Only the de-identified text goes to Gemini in the cloud**,
-which writes the appeal. The real details are filled back in on the device.
+Gemini Nano reads the denial letter **in Chrome, on the patient's device**. Code replaces
+every name, member ID, address and date it finds, you check the result, and a code gate blocks
+anything it still recognises. **Only that de-identified text goes to Gemini in the cloud**, which
+writes the appeal. The real details are filled back in on the device.
 
 - **Live app:** _added at deploy_ · **Demo video:** _added at submission_
 - **Review in five minutes:** [JUDGES.md](JUDGES.md) · **Measured results:** [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md) · **Claims and evidence:** [CLAIMS.md](CLAIMS.md) · **SDK feedback:** [FEEDBACK.md](FEEDBACK.md)
@@ -27,7 +28,7 @@ That split is exactly what hybrid inference is for.
 | Step | Where | Firebase AI Logic mode | Why this mode |
 |---|---|---|---|
 | 1. Read the letter (or a photo of it): find every person, ID, address, contact; read the denial reason | Gemini Nano in Chrome | `ONLY_ON_DEVICE` + our own availability check first | `PREFER_ON_DEVICE` would silently fall back to the cloud when Nano isn't ready, which would upload the raw letter. And in SDK 13.4.0, even `ONLY_ON_DEVICE` goes to the cloud when Chrome lacks the Prompt API ([FEEDBACK.md](FEEDBACK.md)), so we check first and fail closed. |
-| 2. Replace identifiers with placeholders (`[PERSON_1]`, `[MEMBER_ID_1]`); compute the appeal deadline | Plain code on the device | none | Deterministic rules for 14 identifier kinds, plus every value Nano found, everywhere it appears. Deadlines come from the letter or federal minimums (ERISA 180 days, Medicare Advantage 65, Medicaid 60), never from a model. |
+| 2. Replace identifiers with placeholders (`[PERSON_1]`, `[MEMBER_ID_1]`); compute the appeal deadline | Plain code on the device | none | Deterministic rules for 14 identifier kinds, plus every value Nano found, everywhere it appears. The deadline arithmetic is code: the window the letter states, or the federal minimum (ERISA 180 days, Medicare Advantage 65, Medicaid 60). If code can't find the notice date or window, Gemini Nano's reading is used and the deadline card says so. |
 | 3. Egress gate + the patient's approval | Plain code on the device | none | The request is blocked if any known identifier (even reformatted) or any detectable new one is in the outgoing text. The patient sees the exact text and approves it. |
 | 4. Write the explanation, arguments and appeal letter | Gemini in the cloud | `PREFER_IN_CLOUD` | The stronger model does the hard writing from de-identified text. If the network fails, the SDK falls back to Gemini Nano. |
 | 4b. "Stay offline" | Gemini Nano | `ONLY_ON_DEVICE` | The patient can keep everything local. |
@@ -45,7 +46,7 @@ recorded during the step.
 | **Gemini Nano in Chrome** (via AI Logic) | Finds identities, reads the denial, transcribes photos, drafts offline. |
 | **Gemini Developer API** (via AI Logic) | Writes the appeal from de-identified text. |
 | **App Check** | Required by AI Logic: only this app can call Gemini through the project. |
-| **Remote Config** | Switches the cloud model and the appeal temperature without a release. |
+| **Remote Config** | Switches the cloud model and the appeal letter's word limit without a release. |
 
 ## Measured results
 
@@ -54,7 +55,7 @@ in your own Chrome). Letters are synthetic; expected answers were written before
 
 | | Paste into a chatbot | Overturn, rules only, **held-out** letters |
 |---|---|---|
-| Identifiers that would reach the cloud | 34/34 | **7/34** (all names, in positions the rules don't recognise) |
+| Identifiers that would reach the cloud | 34/34 | **7/34** (all names: after labels the rules don't use, like "Recipient:", or in running text) |
 | Clinical facts kept for the appeal | 23/23 | **23/23** |
 | Appeal deadline correct | n/a | **8/8** (including "unknown: we won't guess") |
 
@@ -76,7 +77,7 @@ it yourself in the app's Benchmark tab in desktop Chrome.
 
 ```bash
 npm ci
-npm test          # 126 unit, pipeline, engine (SDK mocked) and adversarial tests
+npm test          # 160 unit, pipeline, engine (SDK mocked) and adversarial tests
 npm run build && npm run e2e   # Playwright UI smoke test (simulated engine; run `npx playwright install chromium` once)
 npm run eval      # rules-only benchmark → eval_results/
 npm run dev       # needs .env.local (see .env.example) for real models

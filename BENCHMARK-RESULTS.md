@@ -10,7 +10,7 @@ does the appeal keep the medical facts it needs?
   before any run.
 - **Tuning set (16 letters):** the rules were developed against these, so their numbers are
   in-sample.
-- **Held-out set (8 letters):** written after the rules were frozen and run once. Rules derived from
+- **Held-out set (8 letters):** written after the first rules freeze and first run at that freeze (7/34). The rules changed later during the audit, never from held-out cases, and the number stayed 7/34 (see History). Rules derived from
   held-out misses are banned (`loop/STATE.md`, Rulings), and one attempt that broke this was
   reverted (`loop/ledger.json`).
 - **Baseline:** pasting the letter into a cloud chatbot sends every identifier.
@@ -26,7 +26,7 @@ This is the floor for browsers without Gemini Nano. Recorded run: `eval_results/
 | Appeal deadline correct (code-computed) | n/a | 16/16 | **8/8** |
 | Denial reason correct | n/a | 16/16 | 7/8 |
 
-**The misses, explained.** Of the 13 leaked identifiers, 12 are people's names and 1 is the patient's employer, all in positions no rule labels:
+**The misses, explained.** Of the 13 leaked identifiers, 12 are people's names and 1 is the patient's employer, after labels the rules don't use ("Hello", "Recipient:", "Guarantor:", "Prepared for:") or in running text:
 - a bare recipient block ("Hope Rivers");
 - a lowercase name ("alexei petrov");
 - "for Nadia Haddad", "Hello Marcus Feldman", "your niece, Carla Benedetti";

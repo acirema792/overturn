@@ -299,6 +299,18 @@
    "finding": "G6",
    "action": "particles, lowercase number label, dd-Mon-yyyy, vehicle/device IDs, labelled ZIP; 12 tests",
    "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G9",
+   "action": "Remote Config lever is now appeal_word_limit (prompt-enforced); temperature dropped from cloud request and docs",
+   "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G8",
+   "action": "README/BENCHMARK/devpost wording: 'replaces what it finds + review + gate', deadline sources, held-out leak positions, freeze history",
+   "outcome": "success"
   }
  ]
 }
