@@ -114,11 +114,21 @@ export function redact(text: string, entities: FoundEntity[] = []): Redaction {
   }
 
   const merged = mergeSpans(spans).map((s) => ({ ...s, text: text.slice(s.start, s.end) }));
-  // A bare fragment ("Vance") shares its full name's placeholder, so the cloud
-  // model can tell "Ms. [PERSON_1]" is the same person as "[PERSON_1]".
-  const fullNames = new Set(merged.filter((s) => s.kind === 'PERSON').map((s) => normalise(s.text)));
-  const canonicalOf = (s: (typeof merged)[number]) =>
-    s.canonical && s.canonical.length > s.text.length && fullNames.has(normalise(s.canonical)) ? s.canonical : s.text;
+  // A bare fragment ("Vance", "Vance's") shares a full name's placeholder only
+  // when exactly one full name in the letter contains it. With relatives who
+  // share a surname ("Maria Gonzalez", "Jose Gonzalez") "Ms. Gonzalez" is
+  // ambiguous and keeps its own placeholder, rather than naming the wrong person.
+  const stripWord = (w: string) => w.toLowerCase().replace(/['’]s$/, '').replace(/[^\p{L}'’-]/gu, '');
+  const fullNameSpans = merged.filter((s) => s.kind === 'PERSON' && /\s/.test(s.text.trim()));
+  const canonicalOf = (s: (typeof merged)[number]) => {
+    if (s.kind !== 'PERSON' || /\s/.test(s.text.trim())) return s.text;
+    const frag = stripWord(s.text);
+    const owners = new Set(
+      fullNameSpans.filter((f) => f.text.split(/\s+/).some((w) => stripWord(w) === frag)).map((f) => normalise(f.text)),
+    );
+    if (owners.size !== 1) return s.text;
+    return fullNameSpans.find((f) => normalise(f.text) === [...owners][0])!.text;
+  };
 
   // Same value → same placeholder, so the cloud model can still reason
   // ("[PERSON_1] is the patient, [PERSON_2] is the treating physician").

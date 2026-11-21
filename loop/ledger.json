@@ -245,6 +245,12 @@
    "finding": "F7",
    "action": "verifier minor: scope over-redaction claims; README held-out wording",
    "outcome": "success"
+  },
+  {
+   "round": 2,
+   "finding": "G1",
+   "action": "fragment joins a full name's placeholder only if exactly one full name contains it; 3 tests",
+   "outcome": "success"
   }
  ]
 }
