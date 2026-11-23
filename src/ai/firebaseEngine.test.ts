@@ -39,7 +39,7 @@ vi.mock('firebase/ai', () => ({
   }),
 }));
 
-import { FirebaseEngine } from './firebaseEngine';
+import { FirebaseEngine, parseFirebaseConfig, settingsFromEnv } from './firebaseEngine';
 import { initializeAppCheck } from 'firebase/app-check';
 import { DraftFailedError, EgressBlockedError } from './engine';
 
@@ -128,4 +128,23 @@ describe('FirebaseEngine', () => {
     expect(calls.map((c) => c.mode)).toEqual(['prefer_in_cloud']);
     expect(r.entry.where).toBe('cloud');
   });
+});
+
+describe('config from one variable', () => {
+  const pasted = `// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaFAKE",
+  authDomain: "demo.firebaseapp.com",
+  projectId: "demo",
+  storageBucket: "demo.firebasestorage.app",
+  messagingSenderId: "1",
+  appId: "1:1:web:abc"
+};`;
+  it('parses the console block as pasted', () => {
+    expect(parseFirebaseConfig(pasted)).toMatchObject({ apiKey: 'AIzaFAKE', projectId: 'demo', appId: '1:1:web:abc' });
+  });
+  it('settingsFromEnv uses it with the site key', () => {
+    expect(settingsFromEnv({ VITE_FIREBASE_CONFIG: pasted, VITE_RECAPTCHA_V3_KEY: 'site' })).toMatchObject({ projectId: 'demo', recaptchaV3Key: 'site' });
+  });
+  it('returns null when nothing is configured', () => expect(settingsFromEnv({})).toBeNull());
 });

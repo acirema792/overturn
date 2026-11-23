@@ -53,19 +53,45 @@ export interface FirebaseSettings {
   appCheckDebug?: string;
 }
 
-export function settingsFromEnv(): FirebaseSettings | null {
-  const env = import.meta.env;
-  if (!env.VITE_FIREBASE_API_KEY || !env.VITE_FIREBASE_PROJECT_ID || !env.VITE_FIREBASE_APP_ID) return null;
+/**
+ * Accepts the `firebaseConfig = { … }` block exactly as the Firebase console
+ * shows it (JS object syntax, with or without `const firebaseConfig =` and `;`).
+ */
+export function parseFirebaseConfig(raw: string | undefined): Record<string, string> | null {
+  if (!raw || !raw.trim()) return null;
+  const body = raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1);
+  if (!body) return null;
+  const json = body
+    .replace(/\/\/.*$/gm, '')
+    .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":')
+    .replace(/'/g, '"')
+    .replace(/,\s*}/g, '}');
+  try {
+    const obj = JSON.parse(json);
+    return obj && typeof obj === 'object' ? obj : null;
+  } catch {
+    return null;
+  }
+}
+
+export function settingsFromEnv(env: Record<string, string | undefined> = import.meta.env): FirebaseSettings | null {
+  // One variable with the console's config block, or the individual variables.
+  const cfg = parseFirebaseConfig(env.VITE_FIREBASE_CONFIG) ?? {};
+  const pick = (key: string, envKey: string) => cfg[key] || env[envKey];
+  const apiKey = pick('apiKey', 'VITE_FIREBASE_API_KEY');
+  const projectId = pick('projectId', 'VITE_FIREBASE_PROJECT_ID');
+  const appId = pick('appId', 'VITE_FIREBASE_APP_ID');
+  if (!apiKey || !projectId || !appId) return null;
   return {
-    apiKey: env.VITE_FIREBASE_API_KEY,
-    authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: env.VITE_FIREBASE_PROJECT_ID,
-    appId: env.VITE_FIREBASE_APP_ID,
-    messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
-    recaptchaEnterpriseKey: env.VITE_RECAPTCHA_ENTERPRISE_KEY,
-    recaptchaV3Key: env.VITE_RECAPTCHA_V3_KEY,
-    appCheckDebug: env.VITE_APPCHECK_DEBUG,
+    apiKey,
+    authDomain: pick('authDomain', 'VITE_FIREBASE_AUTH_DOMAIN'),
+    projectId,
+    appId,
+    messagingSenderId: pick('messagingSenderId', 'VITE_FIREBASE_MESSAGING_SENDER_ID'),
+    storageBucket: pick('storageBucket', 'VITE_FIREBASE_STORAGE_BUCKET'),
+    recaptchaEnterpriseKey: env.VITE_RECAPTCHA_ENTERPRISE_KEY || undefined,
+    recaptchaV3Key: env.VITE_RECAPTCHA_V3_KEY || undefined,
+    appCheckDebug: env.VITE_APPCHECK_DEBUG || undefined,
   };
 }
 

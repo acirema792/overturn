@@ -32,6 +32,10 @@ jobs:
         env:
           # Firebase web config and the App Check site key are public identifiers,
           # kept in repository variables (Settings → Secrets and variables → Actions → Variables).
+          # Two variables are enough: FIREBASE_CONFIG (the console's firebaseConfig
+          # block, pasted as is) and RECAPTCHA_SITE_KEY. The individual ones are optional.
+          VITE_FIREBASE_CONFIG: ${{ vars.FIREBASE_CONFIG }}
+          VITE_RECAPTCHA_V3_KEY: ${{ vars.RECAPTCHA_SITE_KEY || vars.VITE_RECAPTCHA_V3_KEY }}
           VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
@@ -39,7 +43,6 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_RECAPTCHA_ENTERPRISE_KEY: ${{ vars.VITE_RECAPTCHA_ENTERPRISE_KEY }}
-          VITE_RECAPTCHA_V3_KEY: ${{ vars.VITE_RECAPTCHA_V3_KEY }}
       - name: UI smoke test (simulated engine)
         run: |
           npx playwright install --with-deps chromium
