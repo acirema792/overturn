@@ -24,6 +24,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
       - run: npm test
       - run: npm run eval
       - name: Build
@@ -39,6 +40,10 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_RECAPTCHA_ENTERPRISE_KEY: ${{ vars.VITE_RECAPTCHA_ENTERPRISE_KEY }}
           VITE_RECAPTCHA_V3_KEY: ${{ vars.VITE_RECAPTCHA_V3_KEY }}
+      - name: UI smoke test (simulated engine)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run e2e
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

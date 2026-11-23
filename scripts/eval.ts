@@ -3,7 +3,10 @@ import { runEval, renderMarkdown } from '../src/eval/runEval';
 import { CASES } from '../src/data/cases';
 import { HELDOUT } from '../src/data/heldout';
 
-mkdirSync('eval_results', { recursive: true });
+// Prints by default. Only `npm run eval:write` (--write) updates the committed
+// results in eval_results/, so a routine run never rewrites published files.
+const write = process.argv.includes('--write');
+if (write) mkdirSync('eval_results', { recursive: true });
 const env = `node ${process.version}`;
 const sets = [
   { file: 'rules-only-tuning', label: 'Rules only, tuning set (16 letters; rules were adjusted on these)', cases: CASES },
@@ -12,8 +15,8 @@ const sets = [
 let out = '';
 for (const s of sets) {
   const r = await runEval(s.label, undefined, env, s.cases);
-  writeFileSync(`eval_results/${s.file}.json`, JSON.stringify(r, null, 2));
+  if (write) writeFileSync(`eval_results/${s.file}.json`, JSON.stringify(r, null, 2));
   out += renderMarkdown(r) + '\n\n';
 }
-writeFileSync('eval_results/rules-only.md', out);
+if (write) writeFileSync('eval_results/rules-only.md', out);
 console.log(out);

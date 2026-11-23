@@ -447,6 +447,18 @@
    "finding": "G3",
    "action": "attempt 3: fallback-then-unparseable reply counts the sent prompt",
    "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "F13",
+   "action": "approved by the person: eval prints by default; eval:write updates eval_results",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "G12",
+   "action": "approved by the person: CI runs lint and e2e (playwright chromium)",
+   "outcome": "success"
   }
  ]
 }
