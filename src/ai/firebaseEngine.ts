@@ -100,10 +100,19 @@ const TEXT_IO = {
   expectedOutputs: [{ type: 'text' as const, languages: ['en'] }],
 };
 
+// The free Gemini Developer API has short "high demand" spikes: each model is
+// tried up to 3 times (pauses below), then the next model.
+const BUSY_DELAYS_MS = [2000, 6000];
+// Tried in order when the configured cloud model is busy.
+const CLOUD_FALLBACK_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+
 const RC_DEFAULTS = {
   cloud_model: 'gemini-3.5-flash-lite',
   // Gemini 3.x ignores `temperature`, so the lever is the letter's length.
   appeal_word_limit: 400,
+  // Measured on the live project: default thinking took ~100 s for an appeal,
+  // LOW ~4 s with the same output quality for this task.
+  appeal_thinking: 'LOW',
 };
 
 declare global {
@@ -122,6 +131,7 @@ export class FirebaseEngine implements Engine {
   appCheck: 'reCAPTCHA Enterprise' | 'reCAPTCHA v3' | 'debug token' | 'off' = 'off';
   private app: FirebaseApp;
   private wordLimit = RC_DEFAULTS.appeal_word_limit;
+  private thinking = RC_DEFAULTS.appeal_thinking;
   private ai;
   private entityModel: GenerativeModel;
   private factsModel: GenerativeModel;
@@ -192,6 +202,8 @@ export class FirebaseEngine implements Engine {
         this.cloudModel = getValue(rc, 'cloud_model').asString() || RC_DEFAULTS.cloud_model;
         const limit = getValue(rc, 'appeal_word_limit').asNumber();
         this.wordLimit = limit >= 150 && limit <= 800 ? Math.round(limit) : RC_DEFAULTS.appeal_word_limit;
+        const thinking = getValue(rc, 'appeal_thinking').asString().toUpperCase();
+        this.thinking = ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH', 'DEFAULT'].includes(thinking) ? thinking : RC_DEFAULTS.appeal_thinking;
       });
   }
 
@@ -277,28 +289,53 @@ export class FirebaseEngine implements Engine {
       throw new Error('Gemini Nano is not available on this device, so the offline draft did not run. Nothing was sent.');
     }
     const mode = opts.preferDevice ? InferenceMode.ONLY_ON_DEVICE : InferenceMode.PREFER_IN_CLOUD;
-    const model = getGenerativeModel(this.ai, {
-      mode,
-      inCloudParams: {
-        model: this.cloudModel,
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseJsonSchema: APPEAL_SCHEMA as unknown as Record<string, unknown>,
+    const modelFor = (cloudModel: string) =>
+      getGenerativeModel(this.ai, {
+        mode,
+        inCloudParams: {
+          model: cloudModel,
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseJsonSchema: APPEAL_SCHEMA as unknown as Record<string, unknown>,
+            ...(this.thinking === 'DEFAULT' ? {} : { thinkingConfig: { thinkingLevel: this.thinking as never } }),
+          },
         },
-      },
-      onDeviceParams: {
-        createOptions: { ...TEXT_IO, temperature: 0.4, topK: 3 } as never,
-        promptOptions: { responseConstraint: APPEAL_SCHEMA },
-      },
-    });
+        onDeviceParams: {
+          createOptions: { ...TEXT_IO, temperature: 0.4, topK: 3 } as never,
+          promptOptions: { responseConstraint: APPEAL_SCHEMA },
+        },
+      });
+    // Busy cloud models ("high demand", 429/500/503) are retried once after a
+    // pause, then the next model is tried. Every attempt sends the same
+    // de-identified prompt and is counted in the ledger.
+    const models = opts.preferDevice ? [this.cloudModel] : [this.cloudModel, ...CLOUD_FALLBACK_MODELS.filter((m) => m !== this.cloudModel)];
+    const attempts: string[] = [];
     const t0 = performance.now();
-    let watched: Awaited<ReturnType<typeof watchGeminiRequests<Awaited<ReturnType<GenerativeModel['generateContent']>>>>>;
-    try {
-      watched = await watchGeminiRequests(() => model.generateContent(prompt));
-    } catch (e) {
-      // With PREFER_IN_CLOUD the request was sent before it failed.
-      throw new DraftFailedError(e instanceof Error ? e.message : String(e), opts.preferDevice ? 0 : gate.bytes);
+    let watched: Awaited<ReturnType<typeof watchGeminiRequests<Awaited<ReturnType<GenerativeModel['generateContent']>>>>> | undefined;
+    let usedModel = this.cloudModel;
+    for (const [i, cloudModel] of models.entries()) {
+      for (let tryNo = 0; tryNo < BUSY_DELAYS_MS.length + 1 && !watched; tryNo++) {
+        try {
+          attempts.push(cloudModel);
+          watched = await watchGeminiRequests(() => modelFor(cloudModel).generateContent(prompt));
+          usedModel = cloudModel;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          const busy = /\b(?:429|500|503)\b|high demand|overloaded|unavailable|resource exhausted/i.test(msg);
+          const last = i === models.length - 1 && tryNo === BUSY_DELAYS_MS.length;
+          if (opts.preferDevice || !busy || last) {
+            // With PREFER_IN_CLOUD the request was sent before it failed.
+            throw new DraftFailedError(
+              attempts.length > 1 ? `${msg} (after ${attempts.length} attempts: ${attempts.join(', ')})` : msg,
+              opts.preferDevice ? 0 : gate.bytes * attempts.length,
+            );
+          }
+          if (tryNo < BUSY_DELAYS_MS.length) await new Promise((r) => setTimeout(r, BUSY_DELAYS_MS[tryNo]));
+        }
+      }
+      if (watched) break;
     }
+    if (!watched) throw new DraftFailedError('No cloud model answered.', opts.preferDevice ? 0 : gate.bytes * attempts.length);
     const { value, requests } = watched;
     const onDevice = value.response.inferenceSource === 'on_device';
     let result: AppealResult;
@@ -318,14 +355,16 @@ export class FirebaseEngine implements Engine {
         // After a failed cloud attempt the server may have received the
         // de-identified prompt (an HTTP error also triggers the fallback), so
         // count it as sent.
-        bytesOut: onDevice && opts.preferDevice ? 0 : gate.bytes,
+        bytesOut: onDevice && opts.preferDevice ? 0 : gate.bytes * attempts.length,
         geminiRequests: requests,
         ms: Math.round(performance.now() - t0),
-        model: onDevice ? 'Gemini Nano (Chrome)' : this.cloudModel,
+        model: onDevice ? 'Gemini Nano (Chrome)' : usedModel,
         note:
           onDevice && !opts.preferDevice
             ? `The cloud request failed, so the SDK fell back to Gemini Nano. The ${gate.bytes.toLocaleString()}-byte de-identified prompt was sent first and may have reached the server, so it is counted as sent.`
-            : undefined,
+            : attempts.length > 1
+              ? `The cloud model was busy; ${attempts.length} attempts (${attempts.join(', ')}), each sending the same de-identified prompt.`
+              : undefined,
       }),
     };
   }

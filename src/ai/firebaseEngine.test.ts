@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const calls: { mode: string; prompt: unknown }[] = [];
 let fallbackOnce = false;
 let failOnce = false;
+let busyCount = 0;
 vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
 vi.mock('firebase/app-check', () => ({
   initializeAppCheck: vi.fn(),
@@ -27,6 +28,10 @@ vi.mock('firebase/ai', () => ({
     initializeDeviceModel: () => Promise.resolve(),
     generateContent: (prompt: unknown) => {
       calls.push({ mode: params.mode, prompt });
+      if (busyCount > 0) {
+        busyCount--;
+        return Promise.reject(new Error('[500 Internal Server Error] This model is currently experiencing high demand.'));
+      }
       if (failOnce) {
         failOnce = false;
         return Promise.reject(new Error('403 Forbidden'));
@@ -120,6 +125,19 @@ describe('FirebaseEngine', () => {
       .catch((x) => x);
     expect(err).toBeInstanceOf(DraftFailedError);
     expect(err.attemptedBytes).toBeGreaterThan(0);
+  });
+
+  it('retries a busy cloud model, then the next model, counting every attempt', async () => {
+    vi.useFakeTimers();
+    busyCount = 3; // first model busy on all 3 tries → second model answers
+    const e = new FirebaseEngine(settings);
+    const pending = e.draftAppeal({ prompt: 'Appeal for [PERSON_1]', vault: { '[PERSON_1]': 'Maria Gonzalez' } }, { preferDevice: false });
+    await vi.runAllTimersAsync();
+    const r = await pending;
+    vi.useRealTimers();
+    expect(r.entry.model).toBe('gemini-3.8-flash');
+    expect(r.entry.bytesOut).toBe(4 * new TextEncoder().encode('Appeal for [PERSON_1]').length);
+    expect(r.entry.note).toMatch(/4 attempts/);
   });
 
   it('sends a clean appeal prompt with PREFER_IN_CLOUD', async () => {

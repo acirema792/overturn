@@ -62,6 +62,7 @@ The letter below was de-identified on the patient's device. Placeholders such as
 Rules:
 1. When the appeal needs one of these values, write the placeholder exactly as it appears (same brackets, same number). Use only placeholders that appear in the letter.
 2. Never invent names, ID numbers, dates, phone numbers or addresses. If something is needed but missing, write a fill-in like ____ .
+   Addresses, phone numbers and emails in a letterhead or a "call us" line belong to the insurer, not the patient: never use them as the patient's own contact details (write ____ instead).
 3. Base every argument on what the letter says and on how US appeals work. Do not promise an outcome.
 4. Write the appeal letter in the patient's voice, formal and firm, under 400 words. Reference the claim or ID placeholders in a "Re:" line. Ask for a full and fair review, and ask for a free copy of the claim file and the clinical criteria used.
 5. Use plain English a stressed patient understands.
