@@ -168,6 +168,9 @@ const NEXT_LEVEL =
 const THIRD_PARTY = /\b(?:your|the) (?:provider|doctor|physician|pharmacist|employer|facility|hospital)\b/i;
 
 export function findWindowDays(text: string): number | null {
+  // Every plausible patient window is a candidate, and the EARLIEST wins: if
+  // the letter is misread, the patient is told to act sooner, never later.
+  const candidates: number[] = [];
   const sentences = text.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/);
   for (const sentence of sentences) {
     if (!isAppealSentence(sentence)) continue;
@@ -183,19 +186,19 @@ export function findWindowDays(text: string): number | null {
       const clause = sentence.slice(clauseStart, m.index + m[0].length);
       const context = clause + sentence.slice(m.index + m[0].length, m.index + m[0].length + 100);
       const upToNumber = sentence.slice(0, m.index + m[0].length);
-      // A later process ("State Fair Hearing … after our appeal decision") is skipped
-      // unless the same clause also offers the appeal itself ("a fair hearing or an appeal").
-      const offersAppeal = /\bappeals?\b(?!\s+(?:decision|determination))/i.test(context.replace(NEXT_LEVEL, ''));
+      // Skipping a candidate can only make the answer later, so only clear cases are skipped:
+      // a later process with no appeal offered in the same clause…
+      const offersAppeal = /\bappeals?\b(?!\s+(?:decision|determination|resolution|results?|letter|notice))/i.test(context.replace(NEXT_LEVEL, ''));
       if (NEXT_LEVEL.test(context) && !offersAppeal) continue;
-      // Someone else's deadline ("Your provider may submit…") only when the patient isn't in it.
+      // …someone else's deadline with the patient nowhere in the sentence…
       if (THIRD_PARTY.test(clause) && !/\byou\b/i.test(upToNumber)) continue;
-      // "you or your doctor can file…": the patient may be the subject before a clause break.
+      // …and the plan's own timeline ("we will decide within 30 days").
       const patient = PATIENT_CLAUSE.test(clause) || (THIRD_PARTY.test(clause) && PATIENT_CLAUSE.test(upToNumber));
       const plan = PLAN_CLAUSE.test(clause);
-      if (patient || !plan) return n;
+      if (patient || !plan) candidates.push(n);
     }
   }
-  return null;
+  return candidates.length ? Math.min(...candidates) : null;
 }
 
 const MONTH_INDEX: Record<string, number> = {
@@ -233,11 +236,11 @@ const DATE_IN_TEXT =
 // care, never the notice. Only the label right before the date counts, so
 // "Customer Service   Date: 11/02/2026" keeps its notice date.
 const NOT_NOTICE_BEFORE =
-  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|(?<=requested? )dated|expires?|expiration|renewal|enrolled|enrollment)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
+  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|(?<!(?:notice|determination|decision|this|is) )dated|expires?|expiration|renewal|enrolled|enrollment)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
 // "10/01/2026 - 10/03/2026": the second date of a skipped range is skipped too.
 const RANGE_JOINER = /^\s*(?:-|–|to|through|thru|and|,)\s*$/i;
 const NOTICE_LABEL =
-  /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date|date issued|issue date|\bissued\b(?: on)?|statement date|\bsent\b|(?:^|\s{2,}|\|\s*)date\s*:)\s*[:-]?\s*/i;
+  /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date\b(?!d)|date issued|issue date|\bissued\b(?: on)?|statement date|\bsent\b|(?:^|\s{2,}|\|\s*)date\s*:)\s*[:-]?\s*/i;
 
 /** ISO dates on a line, from `from` onwards, skipping birth/service dates. */
 function noticeDatesIn(line: string, from = 0): string[] {

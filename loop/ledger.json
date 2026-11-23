@@ -390,6 +390,25 @@
    "finding": "G8",
    "action": "attempt 2: EVIDENCE/README/JUDGES/HowItWorks/CLAIMS/BENCHMARK wording; Known gaps and history added",
    "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "G2",
+   "action": "verifier REJECT (attempt 2): later-than-real windows (fair hearing 120, provider 365)",
+   "outcome": "failure",
+   "error": "late deadline"
+  },
+  {
+   "round": 3,
+   "finding": "G2",
+   "action": "attempt 3: earliest candidate window wins, so misreads can only be earlier; 5 tests",
+   "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "G5",
+   "action": "verifier: 'letter dated'/'records dated' taken as notice date; label needs word end, dated only after notice/determination/decision/this/is; 2 tests",
+   "outcome": "success"
   }
  ]
 }
