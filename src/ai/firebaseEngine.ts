@@ -280,7 +280,8 @@ export class FirebaseEngine implements Engine {
       // text() throws for a blocked answer; parseJson throws for non-JSON.
       result = parseJson<AppealResult>(value.response.text());
     } catch (e) {
-      throw new DraftFailedError(e instanceof Error ? e.message : String(e), onDevice ? 0 : gate.bytes);
+      // With PREFER_IN_CLOUD the prompt was sent even if the SDK then fell back to Nano.
+      throw new DraftFailedError(e instanceof Error ? e.message : String(e), opts.preferDevice ? 0 : gate.bytes);
     }
     return {
       result,

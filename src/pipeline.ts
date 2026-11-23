@@ -13,7 +13,7 @@ import {
   type PlanType,
 } from './core/deadline';
 import { detect, type IdKind } from './core/detectors';
-import { nameFormsRe, nameFragments, redact, type FoundEntity, type Redaction } from './core/redact';
+import { isEverydayWord, nameFormsRe, nameFragments, redact, type FoundEntity, type Redaction } from './core/redact';
 import { findSuspects } from './core/suspects';
 import { insurerFromLetter } from './core/template';
 
@@ -171,12 +171,20 @@ export function patientPlaceholder(a: Analysis): string | undefined {
 export function applyVault(text: string, vault: Record<string, string>): string {
   let out = text;
   const entries = Object.entries(vault).sort((x, y) => y[1].length - x[1].length);
+  const esc = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Mid-sentence, as written, not a compound: for words that are also everyday words.
+  const cautious = (part: string) => new RegExp(`(?<=[\\p{L}\\p{N},;:(] )(?:${nameFormsRe(part)})(?:['’]s)?(?![\\p{L}])(?!-\\p{L})`, 'gu');
   for (const [ph, value] of entries) {
-    if (value.trim().length < 2) continue;
-    const re = new RegExp(value.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+'), 'gi');
+    const v = value.trim();
+    if (v.length < 2) continue;
+    const oneWordName = ph.startsWith('[PERSON_') && !/\s/.test(v);
+    const re =
+      oneWordName && isEverydayWord(v)
+        ? cautious(v)
+        : new RegExp(`(?<![\\p{L}\\p{N}])${esc(v).replace(/\s+/g, '\\s+')}(?:['’]s)?(?![\\p{L}\\p{N}])`, 'giu');
     out = out.replace(re, ph);
   }
-  // Then name parts ("MRI for Gonzalez"), when only one person has that part.
+  // Then name parts ("MRI for Gonzalez", "lumbar MRI for maria"), when only one person has that part.
   const owners = new Map<string, Set<string>>();
   for (const [ph, value] of entries) {
     if (!ph.startsWith('[PERSON_')) continue;
@@ -184,9 +192,9 @@ export function applyVault(text: string, vault: Record<string, string>): string 
   }
   for (const [frag, phs] of owners) {
     if (phs.size !== 1) continue;
-    // As written (or safe capitals), not at the start of a sentence (where
-    // "Hand surgery" is a body part), and not in a compound ("Long-term").
-    const re = new RegExp(`(?<=[\\p{L}\\p{N},;:(] )(?:${nameFormsRe(frag)})(?:['’]s)?(?![\\p{L}])(?!-\\p{L})`, 'gu');
+    const re = isEverydayWord(frag)
+      ? cautious(frag)
+      : new RegExp(`(?<![\\p{L}])${esc(frag)}(?:['’]s)?(?![\\p{L}])(?!-\\p{L})`, 'giu');
     out = out.replace(re, [...phs][0]);
   }
   return out;

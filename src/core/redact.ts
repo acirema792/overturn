@@ -75,6 +75,10 @@ function findAll(text: string, value: string, kind: IdKind, source: Span['source
 // Short or common words are only matched as written: in capitals they are too
 // often ordinary text ("THIS IS NOT A BILL", "LONG-TERM CARE", "GOLD PPO").
 const COMMON_CAPS = new Set(['GRANT', 'GREEN', 'BROWN', 'WHITE', 'BLACK', 'YOUNG', 'PRICE', 'BANKS', 'RIVERS', 'HOPE', 'ROSE', 'FAITH', 'GRACE', 'JUNE', 'APRIL', 'MARCH', 'HAND', 'PARK', 'HALL', 'WELL', 'WILL', 'CHASE', 'FROST', 'HILL', 'STONE', 'WOOD', 'LAKE', 'FIELD', 'FORD', 'MAJOR', 'NOBLE', 'POWER', 'PAYNE', 'CASH', 'BOND', 'CROSS', 'BLUE', 'SHIELD', 'CARE', 'HEALTH']);
+// Name parts that are also everyday words: handled cautiously (as written, mid-sentence).
+const EVERYDAY = new Set([...COMMON_CAPS, 'MAY', 'BILL', 'LONG', 'GOLD', 'MARK', 'PAGE', 'DAY', 'DAYS', 'ENGLISH', 'KING', 'LOVE', 'DAWN', 'JOY', 'IVY', 'HOLLY', 'AMBER', 'RUBY', 'PEARL', 'SUMMER', 'WINTER', 'SPRING', 'JUSTICE', 'HUNTER', 'BAKER', 'COOK', 'CARTER', 'BISHOP', 'MILLER', 'SMITH', 'MASON', 'BELL', 'LAW', 'BEST', 'BROOK', 'CHURCH', 'ROSS', 'FOX', 'WOLF', 'BIRD', 'LAMB']);
+export const isEverydayWord = (w: string) => EVERYDAY.has(w.toUpperCase());
+
 const escRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 // Labels after which a word in capitals is a name ("FOR CHEN", "ATTN KIM", "MEMBER LEE").
 const CAPS_NAME_LABEL = String.raw`\b(?:FOR|RE|ATTN|ATTENTION|MEMBER|PATIENT|NAME|DEAR|MR|MRS|MS|MISS|DR|TO|CC|SUBSCRIBER|INSURED|CLAIMANT|ENROLLEE|DEPENDENT|GUARANTOR|SPOUSE)\.?:?[ \t]{1,3}`;
