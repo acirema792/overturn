@@ -13,7 +13,8 @@
     "typecheck": "tsc -b",
     "e2e": "node e2e/smoke.mjs",
     "demo": "node scripts/demo/record.mjs",
-    "eval:write": "tsx scripts/eval.ts --write"
+    "eval:write": "tsx scripts/eval.ts --write",
+    "deploy:pages": "bash scripts/deploy-pages.sh"
   },
   "dependencies": {
     "firebase": "^13.4.0",

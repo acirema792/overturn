@@ -1,4 +1,4 @@
-name: Test, evaluate and deploy
+name: Test and evaluate
 
 on:
   push:
@@ -7,12 +7,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -27,36 +21,10 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run eval
+      # The site itself is published to the gh-pages branch by scripts/deploy-pages.sh.
       - name: Build
         run: npm run build
-        env:
-          # Firebase web config and the App Check site key are public identifiers,
-          # kept in repository variables (Settings → Secrets and variables → Actions → Variables).
-          # Two variables are enough: FIREBASE_CONFIG (the console's firebaseConfig
-          # block, pasted as is) and RECAPTCHA_SITE_KEY. The individual ones are optional.
-          VITE_FIREBASE_CONFIG: ${{ vars.FIREBASE_CONFIG }}
-          VITE_RECAPTCHA_V3_KEY: ${{ vars.RECAPTCHA_SITE_KEY || vars.VITE_RECAPTCHA_V3_KEY }}
-          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
-          VITE_RECAPTCHA_ENTERPRISE_KEY: ${{ vars.VITE_RECAPTCHA_ENTERPRISE_KEY }}
       - name: UI smoke test (simulated engine)
         run: |
           npx playwright install --with-deps chromium
           npm run e2e
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
