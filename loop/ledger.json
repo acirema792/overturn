@@ -422,6 +422,19 @@
    "finding": "H1",
    "action": "attempt 2: up to 3 separators of any kind; no match after letter/digit/$ or before .d/,d; 8 tests",
    "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "G4",
+   "action": "verifier REJECT (attempt 2): COMMON_CAPS/length rule leaked short or common capitals surnames",
+   "outcome": "failure",
+   "error": "leak"
+  },
+  {
+   "round": 3,
+   "finding": "G4",
+   "action": "attempt 3: capitals for short/common parts only next to another part of the name or after a label (FOR, RE, ATTN, MEMBER\u2026); 6 tests",
+   "outcome": "success"
   }
  ]
 }

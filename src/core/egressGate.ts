@@ -42,10 +42,10 @@ function digitValueRe(value: string): RegExp {
 }
 
 /** A name, whole word; one-word names only as written or in capitals ("Bill", not "bill"). */
-function nameRe(value: string): RegExp {
+function nameRe(value: string, otherParts: string[] = []): RegExp {
   const parts = value.trim().split(/\s+/).map(escapeRe);
   if (parts.length === 1) {
-    return new RegExp(`(?<![\\p{L}])(?:${nameFormsRe(value.trim())})(?![\\p{L}])(?!-\\p{L})`, 'u');
+    return new RegExp(`(?<![\\p{L}])(?:${nameFormsRe(value.trim(), otherParts)})(?![\\p{L}])(?!-\\p{L})`, 'u');
   }
   return new RegExp(`(?<![\\p{L}])${parts.join(String.raw`[\s.,'’-]*`)}(?![\\p{L}])`, 'iu');
 }
@@ -86,8 +86,9 @@ export function checkEgress(payload: string, vault: Record<string, string>, chec
   // Parts of a person's name in text a model wrote ("MRI for Gonzalez").
   for (const [ph, value] of Object.entries(vault)) {
     if (!ph.startsWith('[PERSON_') || /\d/.test(value)) continue;
-    for (const frag of nameFragments(value)) {
-      if (nameRe(frag).test(variable)) findings.push({ reason: 'vault-value', excerpt: mask(frag) });
+    const parts = nameFragments(value);
+    for (const frag of parts) {
+      if (nameRe(frag, parts).test(variable)) findings.push({ reason: 'vault-value', excerpt: mask(frag) });
     }
   }
 

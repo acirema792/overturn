@@ -75,11 +75,32 @@ function findAll(text: string, value: string, kind: IdKind, source: Span['source
 // Short or common words are only matched as written: in capitals they are too
 // often ordinary text ("THIS IS NOT A BILL", "LONG-TERM CARE", "GOLD PPO").
 const COMMON_CAPS = new Set(['GRANT', 'GREEN', 'BROWN', 'WHITE', 'BLACK', 'YOUNG', 'PRICE', 'BANKS', 'RIVERS', 'HOPE', 'ROSE', 'FAITH', 'GRACE', 'JUNE', 'APRIL', 'MARCH', 'HAND', 'PARK', 'HALL', 'WELL', 'WILL', 'CHASE', 'FROST', 'HILL', 'STONE', 'WOOD', 'LAKE', 'FIELD', 'FORD', 'MAJOR', 'NOBLE', 'POWER', 'PAYNE', 'CASH', 'BOND', 'CROSS', 'BLUE', 'SHIELD', 'CARE', 'HEALTH']);
-/** The forms of a name part we match: as written, plus capitals when that is safe. */
-export function nameFormsRe(part: string): string {
-  const esc = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Labels after which a word in capitals is a name ("FOR CHEN", "ATTN KIM", "MEMBER LEE").
+const CAPS_NAME_LABEL = String.raw`\b(?:FOR|RE|ATTN|ATTENTION|MEMBER|PATIENT|NAME|DEAR|MR|MRS|MS|MISS|DR|TO|CC|SUBSCRIBER|INSURED|CLAIMANT|ENROLLEE|DEPENDENT|GUARANTOR|SPOUSE)\.?:?[ \t]{1,3}`;
+
+/**
+ * The forms of a name part we match. Always as written. In capitals: always
+ * for long, uncommon parts ("GONZALEZ"); for short or common ones ("LEE",
+ * "BROWN", "BILL") only next to another part of the same name ("BROWN, JAMES")
+ * or after a label ("ATTN KIM"), so "THIS IS NOT A BILL" stays readable.
+ */
+export function nameFormsRe(part: string, otherParts: string[] = []): string {
   const caps = part.toUpperCase();
-  return caps.length >= 5 && !COMMON_CAPS.has(caps) && caps !== part ? `${esc}|${caps.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}` : esc;
+  const forms = [escRe(part)];
+  if (caps === part && !/[a-z]/.test(part)) return forms[0];
+  if (caps.length >= 5 && !COMMON_CAPS.has(caps)) {
+    forms.push(escRe(caps));
+  } else {
+    forms.push(`(?<=${CAPS_NAME_LABEL})${escRe(caps)}`);
+    const others = otherParts.map((o) => escRe(o.toUpperCase())).filter((o) => o && o !== escRe(caps));
+    if (others.length) {
+      const alt = others.join('|');
+      forms.push(`${escRe(caps)}(?=,?[ \t]{1,2}(?:${alt})(?![\p{L}]))`);
+      forms.push(`(?<=(?:${alt}),?[ \t]{1,2})${escRe(caps)}`);
+    }
+  }
+  return forms.join('|');
 }
 
 export function nameFragments(name: string): string[] {
@@ -91,10 +112,10 @@ export function nameFragments(name: string): string[] {
 }
 
 /** Case-sensitive fragment search, so "Rose" the name doesn't match "rose" the verb. */
-function findFragment(text: string, frag: string, canonical: string): Span[] {
+function findFragment(text: string, frag: string, canonical: string, otherParts: string[] = []): Span[] {
   // As written or in capitals ("Gonzalez", "GONZALEZ"), never lowercase ("hope").
   // Not when it starts a hyphenated word ("Long-term" is not "Ms. Long").
-  const re = new RegExp(`(?<![\\p{L}])(?:${nameFormsRe(frag)})(?![\\p{L}])(?!-\\p{L})`, 'gu');
+  const re = new RegExp(`(?<![\\p{L}])(?:${nameFormsRe(frag, otherParts)})(?![\\p{L}])(?!-\\p{L})`, 'gu');
   const out: Span[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
@@ -124,7 +145,8 @@ export function redact(text: string, entities: FoundEntity[] = []): Redaction {
     const oneWordName = seed.kind === 'PERSON' && !/\s/.test(seed.value.trim());
     spans.push(...(oneWordName ? findFragment(text, seed.value.trim(), seed.value.trim()) : findAll(text, seed.value, seed.kind, seed.source)));
     if (seed.kind === 'PERSON') {
-      for (const frag of nameFragments(seed.value)) spans.push(...findFragment(text, frag, seed.value.trim()));
+      const parts = nameFragments(seed.value);
+      for (const frag of parts) spans.push(...findFragment(text, frag, seed.value.trim(), parts));
     }
   }
 
