@@ -11,7 +11,8 @@
     "test": "vitest run",
     "eval": "tsx scripts/eval.ts",
     "typecheck": "tsc -b",
-    "e2e": "node e2e/smoke.mjs"
+    "e2e": "node e2e/smoke.mjs",
+    "demo": "node scripts/demo/record.mjs"
   },
   "dependencies": {
     "firebase": "^13.4.0",
