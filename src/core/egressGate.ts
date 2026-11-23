@@ -71,7 +71,11 @@ export function checkEgress(payload: string, vault: Record<string, string>, chec
 
   for (const value of Object.values(vault)) {
     if (/\d/.test(value)) {
-      if (squash(value).length >= 4 && digitValueRe(value).test(variable)) findings.push({ reason: 'vault-value', excerpt: mask(value) });
+      // Cheap prefilter first (every regex match also matches here), strict regex second.
+      const v = squash(value);
+      if (v.length >= 4 && squashedVariable.includes(v) && digitValueRe(value).test(variable)) {
+        findings.push({ reason: 'vault-value', excerpt: mask(value) });
+      }
     } else if (value.trim().length >= 3) {
       // A multi-word name is also caught run together ("mariagonzalez").
       const runTogether = /\s/.test(value.trim()) && squash(value).length >= 8 && squashedVariable.includes(squash(value));
