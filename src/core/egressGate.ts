@@ -31,11 +31,14 @@ export function mask(value: string): string {
  *  2. the rule-based detectors find a new identifier in the payload.
  * Placeholders like [PERSON_1] are removed before the detector pass.
  */
-const sep = String.raw`[\s./-]?`;
-/** "NWH448812901" also matches "nwh-4488-12901", but "1/2/26" never matches inside "$1,226.00". */
+// Up to three separator characters of any kind (spaces, dots, slashes, dashes,
+// en dashes, underscores, commas) between characters: "NWH – 4488 – 12901",
+// "nwh_4488_12901", "2026,041,277" all match "NWH448812901"/"2026041277".
+const sep = String.raw`[^\p{L}\p{N}$]{0,3}`;
+/** Fails closed on reformatting, but never matches inside a money amount or a longer number. */
 function digitValueRe(value: string): RegExp {
   const chars = [...value.replace(/[^A-Za-z0-9]/g, '')].map(escapeRe);
-  return new RegExp(`(?<![\\p{L}\\p{N}])${chars.join(sep)}(?![\\p{L}\\p{N}])`, 'iu');
+  return new RegExp(`(?<![\\p{L}\\p{N}$])${chars.join(sep)}(?![\\p{L}\\p{N}])(?![.,]\\d)`, 'iu');
 }
 
 /** A name, whole word; one-word names only as written or in capitals ("Bill", not "bill"). */

@@ -409,6 +409,19 @@
    "finding": "G5",
    "action": "verifier: 'letter dated'/'records dated' taken as notice date; label needs word end, dated only after notice/determination/decision/this/is; 2 tests",
    "outcome": "success"
+  },
+  {
+   "round": 3,
+   "finding": "H1",
+   "action": "verifier REJECT (attempt 1): single-separator digit match let reformatted SSN/ID/DOB/phone through",
+   "outcome": "failure",
+   "error": "leak"
+  },
+  {
+   "round": 3,
+   "finding": "H1",
+   "action": "attempt 2: up to 3 separators of any kind; no match after letter/digit/$ or before .d/,d; 8 tests",
+   "outcome": "success"
   }
  ]
 }
