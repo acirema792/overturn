@@ -16,11 +16,11 @@ Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 | 3 | 7.3 | 7.0 | 7.5 | 6.5 | 8.0 |
 
 ## Open findings
-- Verified and approved: F1 logic, F4, F8, F9, F10 (782c90b), F11, F12, F14, G1, G6, G7, G9, G10, G11, F2 and F7 parts of 3b351e6.
-- NOT independently verified (implementer-tested only; 193 tests, eval unchanged): 90d8f08 (H1/H2), c21bcc8 (H5-H7), 03364f0 (G2-G5, G8 second attempts; F5/F6 reverts). A fresh verifier pass is recommended before submission.
+- Final verifier (2026-11-23) on 90d8f08 / c21bcc8 / 03364f0: c21bcc8 APPROVED; 90d8f08 and 03364f0 REJECTED. Follow-ups: d1f6f1f (deadline: earliest window wins; 'letter dated'), 73f8a07 + 7bc35ad (gate: any separators, money-safe, prefilter), 5db8b81 (capitals in name context), and the applyVault / fallback-bytes commit. 220 tests, eval unchanged. These follow-ups are NOT yet independently verified.
+- Known residual (S3, documented): the gate's placeholder token can hide a label next to a partly redacted value ("Name: [PERSON_1] John Smith"); the offline draft is not cloud-gated and doesn't re-check inferenceSource (the availability guard runs first).
 
 ## Escalations (for the person)
-- F3 (attempt cap reached): some plan-timeline phrasings placed before the patient's window ("We'll decide your appeal within 30 days. You have 180 days…") are read as the window. Errors are toward an EARLIER deadline. Options: (a) accept and document (current; listed in BENCHMARK-RESULTS Known gaps); (b) redesign as "only patient-marked windows count, else the legal default", which needs a new verification pass.
+- F3/G2: the window is now the earliest plausible candidate, so misreads err earlier; skipped categories (later process with no appeal offered; provider-only sentences) could still err later if a letter states only those. Documented in BENCHMARK-RESULTS Known gaps.
 - F5 expectation change: two tests now expect "Dear AETNA," and "MEMBER: KAISER PERMANENTE" to be hidden (previously kept), because capitals names after those labels can't be told from insurers without a list and leaks are worse. Please confirm this trade-off.
 - H3 (rule change): Medicaid 10-day continuation-of-benefits window read as the appeal window when it comes first; dd-Mon-yyyy / dotted / yyyy/mm/dd notice dates not parsed.
 - H4 (rule change): "Patient Name: SMITH, John A", "Subscriber: GARCIA, Maria", "Dear Ms. de la Torre,", "The patient, Sofia Marquez, age 34" still leak rules-only.

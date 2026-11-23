@@ -65,13 +65,13 @@ amounts, a medical-policy reference ("Medical Policy MP-204"), section and versi
 **Traps now handled correctly:**
 - a Medicaid letter that mentions Medicare;
 - a date of birth on the first line;
-- the plan's own timelines ("a decision will be made within 90 days") next to the patient's window, in the tested phrasings (some others are still misread; see Known gaps);
+- the plan's own timelines ("a decision will be made within 90 days") and fair-hearing, external-review and provider windows next to the patient's window (the earliest candidate wins; see Known gaps);
 - service-date ranges in the letterhead;
 - short names inside other words ("Pat" in "patient").
 
 ## Known gaps (open, escalated)
 
-- Some plan-timeline phrasings placed before the patient's window ("We'll decide your appeal within 30 days. You have 180 days…") are read as the window. The resulting deadline is earlier than the real one, never later.
+- The appeal window is the earliest plausible patient window in the letter, so a misread errs toward an earlier deadline. Some plan-timeline phrasings ("Most appeals are decided within 30 days") can still count as candidates and make the deadline too early. Windows we skip outright (a later process such as a State Fair Hearing with no appeal offered in the same clause, or a provider's deadline in a sentence without "you") could make it later if a letter states only those.
 - Capitals names after "Member:" or "Dear" are hidden even when they are an insurer ("MEMBER: KAISER PERMANENTE"): over-redaction is preferred to a leak.
 - The eval counts a leak only when a whole planted value survives; a surviving surname fragment is not counted.
 

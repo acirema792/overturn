@@ -11,7 +11,7 @@ submission, and isn't claimed until then. **NOT-CLAIMED:** we say this so nobody
 | All clinical facts needed for the appeal survive redaction (80/80) | REPRODUCIBLE | same |
 | Appeal deadline correct on 24/24 letters, including "won't guess" when unknown | REPRODUCIBLE | same; `src/core/deadline.ts` |
 | Raw-letter steps never reach the cloud, even when Chrome lacks the on-device API | REPRODUCIBLE | `src/ai/firebaseEngine.test.ts` (SDK mocked) |
-| The egress gate blocks reformatted identifiers and parts of names, and doesn't false-alarm on Overturn's own prompt wording for the tested letters (all 24 cases, plus names that are also common words) | REPRODUCIBLE | `src/core/round3.test.ts`, `src/core/verify4.test.ts`, `src/pipeline.test.ts` |
+| The egress gate blocks identifiers reformatted with common separators (spaces, dots, slashes, dashes, underscores, commas), and parts of names (in capitals only next to the rest of the name or after a label for short or common surnames), and doesn't false-alarm on Overturn's own prompt wording for the tested letters (all 24 cases, plus names that are also common words) | REPRODUCIBLE | `src/core/round3.test.ts`, `src/core/verify4.test.ts`, `src/core/verify5.test.ts`, `src/pipeline.test.ts` |
 | Each step reports where it ran (`inferenceSource`) and the Gemini requests the browser saw | PENDING | Visible in the ledger on the live app |
 | Gemini Nano recall on the benchmark | PENDING | Benchmark tab in Chrome; results added to BENCHMARK-RESULTS.md with Chrome version |
 | Cloud appeal quality | PENDING | Example output to be added from the live app |
