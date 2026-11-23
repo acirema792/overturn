@@ -36,3 +36,12 @@ if the docs said in one line: "for data that must not leave the device, use `ONL
 - From the App Check source: in debug mode the SDK exchanges the debug token and never asks the provider
   for a token, but `initializeAppCheck` still needs a provider (we pass a refusing `CustomProvider`).
   Not yet exercised against a live project. A documented "debug only" provider would save local-dev confusion.
+
+## 5. From deploying it
+
+- reCAPTCHA v3 ("Classic") is now deprecated in App Check, and a web app registered only for
+  Enterprise answers v3 token exchanges with `400 App not registered`. A clearer error ("registered
+  for reCAPTCHA Enterprise, not v3") would have saved us a debugging round.
+- The free Gemini Developer API returned `500 "This model is currently experiencing high demand"`
+  for most non-trivial requests during our tests (tiny prompts still succeeded). With default
+  thinking an appeal took ~100 s; `thinkingConfig.thinkingLevel: LOW` brought it to ~4 s.

@@ -33,25 +33,23 @@ Send Claude the three things marked **SEND** at the end. Never send a password o
 5. **SEND #1:** copy that whole `firebaseConfig = { … }` block to Claude.
    It is **not** a secret: it only names the project. App Check (next step) stops other sites from using it.
 
-## 4. Create a reCAPTCHA v3 key
+## 4. Create a reCAPTCHA Enterprise key (Google Cloud Fraud Defense)
 
-1. Open https://www.google.com/recaptcha/admin/create
-2. Label: `overturn` · reCAPTCHA type: **Score based (v3)**
-3. Domains: add **`acirema792.github.io`** (and `localhost` is optional)
-4. Accept the terms → **Submit**.
-5. You get two keys:
-   - **Site key** → **SEND #2** to Claude (public: it goes into the web page).
-   - **Secret key** → do **NOT** send it. You paste it into Firebase in step 5.
+reCAPTCHA "Classic" (v3) is deprecated in Firebase App Check; use Enterprise.
 
-## 5. Turn on App Check
+1. In Firebase: **Security → App Check → Apps** → your web app → **reCAPTCHA Enterprise**.
+2. If Firebase offers to create a key, accept it; otherwise create one in Google Cloud console →
+   **Security → reCAPTCHA (Fraud Defense) → Create key**: type **Website**, domain **`acirema792.github.io`**,
+   no checkbox challenge (score-based) → Create.
+3. Paste the **site key** into the Firebase App Check panel → **Save**.
+4. **SEND #2:** the site key to Claude (it's public: it goes into the web page). There is no secret key to paste for Enterprise.
 
-1. Back in the Firebase console: left menu **Security → App Check** (or **Build → App Check**).
-2. **Apps** tab → find the web app `overturn` → **reCAPTCHA** (v3) → paste the **Secret key** from step 4 → **Save**.
-3. Still on the **Apps** tab: click the **⋮** (three dots) next to the web app → **Manage debug tokens** → **Add debug token**:
-   - Name: `claude-live-test`
-   - Value: the token Claude gives you **in chat** (never commit it to the repo)
-   - Save. (This lets Claude test the live cloud path from a script. **Delete it after judging ends, Dec 16.**)
-4. **APIs** tab: the row **Firebase AI Logic** should say **Enforced**. If it says Unenforced, click it → **Enforce**.
+## 5. App Check checks
+
+1. **Apps** tab: the web app row shows **reCAPTCHA Enterprise** as registered.
+2. ⋮ → **Manage debug tokens** → **Add debug token** (optional, only for Claude's scripted tests):
+   - Name: `claude-live-test`, Value: the token Claude gives you **in chat** (never commit it). **Delete it after judging ends, Dec 16.**
+3. **APIs** tab: **Firebase AI Logic** should say **Enforced**.
 
 ## 6. (Optional) Remote Config
 
@@ -63,7 +61,7 @@ Overturn works with built-in defaults. To change the cloud model or the letter l
 | # | What | Secret? |
 |---|---|---|
 | 1 | The `firebaseConfig = { … }` block | No |
-| 2 | The reCAPTCHA v3 **site key** | No |
+| 2 | The reCAPTCHA Enterprise **site key** | No |
 | 3 | "Repo created" + "debug token added" | No |
 
-Never send: your Google password, the reCAPTCHA **secret** key, or any service-account file.
+Never send: your Google password, any secret key, or any service-account file.

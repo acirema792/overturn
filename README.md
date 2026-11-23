@@ -10,7 +10,7 @@ every name, member ID, address and date it finds, you check the result, and a co
 anything it still recognises. **Only that de-identified text goes to Gemini in the cloud**, which
 writes the appeal. The real details are filled back in on the device.
 
-- **Live app:** _added at deploy_ · **Demo video:** _added at submission_
+- **Live app:** https://acirema792.github.io/overturn/ · **Demo video:** _added at submission_
 - **Review in five minutes:** [JUDGES.md](JUDGES.md) · **Measured results:** [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md) · **Claims and evidence:** [CLAIMS.md](CLAIMS.md) · **SDK feedback:** [FEEDBACK.md](FEEDBACK.md)
 
 ## Why
