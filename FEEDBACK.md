@@ -35,7 +35,7 @@ if the docs said in one line: "for data that must not leave the device, use `ONL
   It isn't clear whether web pages may set them, or whether Chrome ignores them there.
 - From the App Check source: in debug mode the SDK exchanges the debug token and never asks the provider
   for a token, but `initializeAppCheck` still needs a provider (we pass a refusing `CustomProvider`).
-  Confirmed against the live project (debug-token exchange returned 200). A documented "debug only" provider would save local-dev confusion.
+  Confirmed against the live project on 2026-11-23 (debug-token exchange returned 200; evidence in loop/run-log.md). A documented "debug only" provider would save local-dev confusion.
 
 ## 5. From deploying it
 
