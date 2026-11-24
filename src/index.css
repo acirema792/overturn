@@ -531,11 +531,16 @@ mark.hl {
 }
 .type-hide {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   flex: 1 1 220px;
+  min-width: 0;
+}
+.type-hide button {
+  flex: none;
 }
 .type-hide input {
-  flex: 1;
+  flex: 1 1 140px;
   min-width: 0;
   font: inherit;
   padding: 9px 12px;

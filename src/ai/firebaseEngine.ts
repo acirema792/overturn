@@ -9,7 +9,7 @@
 //   - ONLY_ON_DEVICE for the appeal when the user chooses "stay offline".
 
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { CustomProvider, initializeAppCheck, ReCaptchaEnterpriseProvider, ReCaptchaV3Provider } from 'firebase/app-check';
+import { CustomProvider, getToken, initializeAppCheck, ReCaptchaEnterpriseProvider, ReCaptchaV3Provider, type AppCheck } from 'firebase/app-check';
 import {
   getAI,
   getGenerativeModel,
@@ -26,6 +26,7 @@ import {
   ledgerEntry,
   watchGeminiRequests,
   type CloudRequest,
+  type CloudAccess,
   type DeviceAvailability,
   type Engine,
   type LedgerEntry,
@@ -131,6 +132,7 @@ export class FirebaseEngine implements Engine {
   appCheck: 'reCAPTCHA Enterprise' | 'reCAPTCHA v3' | 'debug token' | 'off' = 'off';
   private app: FirebaseApp;
   private wordLimit = RC_DEFAULTS.appeal_word_limit;
+  private appCheckInstance: AppCheck | undefined;
   private thinking = RC_DEFAULTS.appeal_thinking;
   private ai;
   private entityModel: GenerativeModel;
@@ -171,7 +173,7 @@ export class FirebaseEngine implements Engine {
       this.appCheck = 'off';
       console.warn('App Check is not configured: Firebase AI Logic will reject cloud requests. Set VITE_RECAPTCHA_ENTERPRISE_KEY or VITE_APPCHECK_DEBUG.');
     }
-    if (provider) initializeAppCheck(this.app, { provider, isTokenAutoRefreshEnabled: true });
+    if (provider) this.appCheckInstance = initializeAppCheck(this.app, { provider, isTokenAutoRefreshEnabled: true });
 
     this.ai = getAI(this.app, { backend: new GoogleAIBackend() });
 
@@ -205,6 +207,16 @@ export class FirebaseEngine implements Engine {
         const thinking = getValue(rc, 'appeal_thinking').asString().toUpperCase();
         this.thinking = ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH', 'DEFAULT'].includes(thinking) ? thinking : RC_DEFAULTS.appeal_thinking;
       });
+  }
+
+  async cloudAccess(): Promise<CloudAccess> {
+    if (!this.appCheckInstance) return 'not-configured';
+    try {
+      const t = await getToken(this.appCheckInstance);
+      return t?.token ? 'ok' : 'blocked';
+    } catch {
+      return 'blocked';
+    }
   }
 
   async deviceAvailability(): Promise<DeviceAvailability> {
@@ -272,7 +284,7 @@ export class FirebaseEngine implements Engine {
     return this.onDevice<FactsResult>('Read the denial', this.factsModel, factsPrompt(letter), parseJson);
   }
 
-  async draftAppeal(req: CloudRequest, opts: { preferDevice: boolean }) {
+  async draftAppeal(req: CloudRequest, opts: { preferDevice: boolean; onAttempt?: (attempt: number, total: number, model: string) => void }) {
     await this.readyRemoteConfig;
     // The gate runs here, inside the engine, so no caller can skip it.
     // Remote Config sets the letter's length (the template says "under 400 words").
@@ -305,22 +317,26 @@ export class FirebaseEngine implements Engine {
           promptOptions: { responseConstraint: APPEAL_SCHEMA },
         },
       });
-    // Busy cloud models ("high demand", 429/500/503) are retried once after a
-    // pause, then the next model is tried. Every attempt sends the same
+    // Busy cloud models ("high demand", 429/500/503) are retried after a pause
+    // (BUSY_DELAYS_MS), then the next model is tried. Every attempt sends the same
     // de-identified prompt and is counted in the ledger.
     const models = opts.preferDevice ? [this.cloudModel] : [this.cloudModel, ...CLOUD_FALLBACK_MODELS.filter((m) => m !== this.cloudModel)];
     const attempts: string[] = [];
     const t0 = performance.now();
     let watched: Awaited<ReturnType<typeof watchGeminiRequests<Awaited<ReturnType<GenerativeModel['generateContent']>>>>> | undefined;
     let usedModel = this.cloudModel;
+    let requestsSeen = 0;
+    const totalAttempts = models.length * (BUSY_DELAYS_MS.length + 1);
     for (const [i, cloudModel] of models.entries()) {
       for (let tryNo = 0; tryNo < BUSY_DELAYS_MS.length + 1 && !watched; tryNo++) {
         try {
           attempts.push(cloudModel);
+          if (attempts.length > 1) opts.onAttempt?.(attempts.length, totalAttempts, cloudModel);
           watched = await watchGeminiRequests(() => modelFor(cloudModel).generateContent(prompt));
           usedModel = cloudModel;
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
+          requestsSeen += (e as { geminiRequests?: number }).geminiRequests ?? 0;
           const busy = /\b(?:429|500|503)\b|high demand|overloaded|unavailable|resource exhausted/i.test(msg);
           const last = i === models.length - 1 && tryNo === BUSY_DELAYS_MS.length;
           if (opts.preferDevice || !busy || last) {
@@ -328,6 +344,8 @@ export class FirebaseEngine implements Engine {
             throw new DraftFailedError(
               attempts.length > 1 ? `${msg} (after ${attempts.length} attempts: ${attempts.join(', ')})` : msg,
               opts.preferDevice ? 0 : gate.bytes * attempts.length,
+              requestsSeen,
+              Math.round(performance.now() - t0),
             );
           }
           if (tryNo < BUSY_DELAYS_MS.length) await new Promise((r) => setTimeout(r, BUSY_DELAYS_MS[tryNo]));

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { DeviceAvailability } from './ai/engine';
+import type { CloudAccess, DeviceAvailability } from './ai/engine';
 import { AppealFlow } from './components/AppealFlow';
 import { Benchmark } from './components/Benchmark';
 import { HowItWorks } from './components/HowItWorks';
@@ -20,9 +20,14 @@ export default function App() {
   const [route, setRoute] = useState<Route>(routeFromHash);
   const [device, setDevice] = useState<DeviceAvailability>('unavailable');
   const [online, setOnline] = useState(navigator.onLine);
+  const [cloud, setCloud] = useState<CloudAccess>('unknown');
 
   const refreshDevice = useCallback(() => {
     choice.engine?.deviceAvailability().then(setDevice).catch(() => setDevice('unavailable'));
+  }, [choice]);
+
+  useEffect(() => {
+    choice.engine?.cloudAccess().then(setCloud).catch(() => setCloud('unknown'));
   }, [choice]);
 
   useEffect(() => {
@@ -73,6 +78,14 @@ export default function App() {
             {DEVICE_LABEL[device]}
           </span>
           <span className={`pill ${online ? 'pill-cloud' : 'pill-off'}`}>{online ? `Cloud: ${choice.engine?.cloudModel ?? 'not set up'}` : 'Offline'}</span>
+          {cloud === 'blocked' && (
+            <span
+              className="pill pill-wait"
+              title="Google's App Check couldn't verify this browser (common on VPNs, privacy or automated browsers). On-device reading, the review screen and the template letter still work."
+            >
+              Cloud blocked in this browser
+            </span>
+          )}
           {choice.engine?.appCheck === 'off' && (
             <span className="pill pill-wait" title="Firebase AI Logic requires App Check; cloud requests will be rejected">
               App Check not configured
@@ -102,8 +115,8 @@ export default function App() {
       </main>
       <footer>
         <span>
-          Built with Firebase AI Logic hybrid inference · App Check: {choice.engine?.appCheck ?? 'n/a'} · Open source (Apache-2.0) · Not legal or
-          medical advice · Sample letters are synthetic
+          Built with Firebase AI Logic hybrid inference · App Check: {choice.engine?.appCheck ?? 'n/a'} ·{' '}
+          <a href="https://github.com/acirema792/overturn">Source (Apache-2.0)</a> · Not legal or medical advice · Sample letters are synthetic
         </span>
       </footer>
     </>

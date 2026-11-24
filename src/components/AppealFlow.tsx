@@ -56,8 +56,17 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
   const topRef = useRef<HTMLDivElement>(null);
   const deviceOk = device === 'available' || device === 'downloadable' || device === 'downloading';
 
+  // A draft can be cancelled by "Start over"; its late result must be ignored.
+  const runRef = useRef(0);
+
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Keyboard and screen-reader users land on the new stage's heading.
+    const h = topRef.current?.querySelector('section h2');
+    if (h instanceof HTMLElement) {
+      h.tabIndex = -1;
+      h.focus({ preventScroll: true });
+    }
   }, [stage]);
 
   const gate = useMemo(() => {
@@ -142,11 +151,21 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
     setError(null);
     setStage('drafting');
     setProgress(preferDevice ? 'Gemini Nano is drafting your appeal on this device…' : 'Gemini is drafting your appeal from the de-identified letter…');
+    const run = ++runRef.current;
     try {
-      const { result, entry } = await engine.draftAppeal({ ...buildAppealRequest(analysis), vault: analysis.redaction.vault }, { preferDevice });
+      const { result, entry } = await engine.draftAppeal(
+        { ...buildAppealRequest(analysis), vault: analysis.redaction.vault },
+        {
+          preferDevice,
+          onAttempt: (n, total) =>
+            run === runRef.current && setProgress(`Google's free Gemini tier is busy. Trying again automatically (attempt ${n} of ${total})…`),
+        },
+      );
+      if (run !== runRef.current) return; // cancelled by "Start over"
       setExtraLedger((l) => [...l, entry]);
       finish(result);
     } catch (e) {
+      if (run !== runRef.current) return; // cancelled by "Start over"
       if (e instanceof EgressBlockedError) {
         setExtraLedger((l) => [...l, ledgerEntry({ step: 'Write the appeal', where: 'blocked', bytesOut: 0, geminiRequests: 0, ms: 0, note: e.message })]);
         setError(`${e.message} Hide them on the left, then try again.`);
@@ -160,13 +179,13 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
               mode: 'PREFER_IN_CLOUD',
               where: 'cloud',
               bytesOut: e.attemptedBytes,
-              geminiRequests: -1, // unknown: the request failed before it could be counted
-              ms: 0,
+              geminiRequests: e.geminiRequests,
+              ms: e.ms,
               note: 'The de-identified prompt was sent, but the request failed; the template letter was used instead.',
             }),
           ]);
         }
-        setError(`The model couldn't write the appeal (${e instanceof Error ? e.message : String(e)}). Here is a template letter instead; nothing was guessed.`);
+        setError(`${friendlyCloudError(e)} Here is a template letter instead; nothing was guessed.`);
         applyTemplate();
       }
     } finally {
@@ -202,6 +221,8 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
   }
 
   function reset() {
+    runRef.current++; // ignore any draft still in flight
+    setProgress('');
     setStage('input');
     setAnalysis(null);
     setAppeal(null);
@@ -454,7 +475,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                 Use a template letter (no AI)
               </button>
               <button className="link" onClick={reset}>
-                Start over
+                {stage === 'drafting' ? 'Cancel and start over' : 'Start over'}
               </button>
             </div>
           </section>
@@ -559,6 +580,21 @@ function DeadlineCard({ analysis }: { analysis: Analysis }) {
       </div>
     </div>
   );
+}
+
+/** Plain words for cloud failures; the technical message stays in the console. */
+function friendlyCloudError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  console.warn('Cloud appeal failed:', msg);
+  if (/App Check|401|403|attestation/i.test(msg)) {
+    return 'Google couldn\u2019t verify this browser (App Check), so the cloud model refused the request. This can happen on VPNs, privacy browsers or automated browsers.';
+  }
+  if (/high demand|\b(?:429|500|503)\b|overloaded|unavailable/i.test(msg)) {
+    const tries = msg.match(/after (\d+) attempts/);
+    return `Google\u2019s free Gemini tier is busy right now${tries ? ` (tried ${tries[1]} times)` : ''}. Try again in a minute.`;
+  }
+  if (/fetch|network|Failed to fetch|offline/i.test(msg)) return 'The cloud model couldn\u2019t be reached (network).';
+  return 'The cloud model couldn\u2019t write the appeal.';
 }
 
 function printLetter(letter: string) {

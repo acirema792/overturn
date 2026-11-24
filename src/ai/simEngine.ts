@@ -26,6 +26,9 @@ export class SimEngine implements Engine {
     return this.device;
   }
   async prepareDevice() {}
+  async cloudAccess() {
+    return 'ok' as const;
+  }
 
   async transcribeImage(): Promise<never> {
     throw new Error('Photo reading needs Gemini Nano in Chrome (not available in simulation).');

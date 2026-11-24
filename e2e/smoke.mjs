@@ -110,6 +110,18 @@ try {
     assert.match(await page.locator('.facts').innerText(), /Rules only/);
   });
 
+  await step('cancelling a draft returns to a working input screen (no stale result)', async () => {
+    await page.goto(`${BASE}?engine=sim`);
+    await page.getByRole('button', { name: /MRI denied/ }).click();
+    await page.getByRole('button', { name: 'Read it on this device' }).click();
+    await page.getByText('Check what leaves your device').waitFor();
+    await page.getByRole('button', { name: 'Send the hidden version to Gemini' }).click();
+    await page.getByRole('button', { name: 'Cancel and start over' }).click();
+    await page.waitForTimeout(1200); // longer than the simulated draft
+    assert.equal(await page.getByText('Paste your denial letter').count(), 1, 'input screen missing');
+    assert.equal(await page.getByText('Your appeal letter').count(), 0, 'stale result shown');
+  });
+
   await step('390px: no horizontal scroll on the review screen', async () => {
     const m = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await m.goto(`${BASE}?engine=sim&device=unavailable`);
@@ -118,6 +130,13 @@ try {
     await m.getByText('Check what leaves your device').waitFor();
     const [sw, iw] = await m.evaluate(() => [document.documentElement.scrollWidth, innerWidth]);
     assert.ok(sw <= iw, `scrollWidth ${sw} > ${iw}`);
+    // The type-to-hide button must sit inside its card.
+    const [btnRight, cardRight] = await m.evaluate(() => {
+      const b = document.querySelector('.type-hide button').getBoundingClientRect();
+      const c = document.querySelector('.type-hide').closest('.card').getBoundingClientRect();
+      return [b.right, c.right];
+    });
+    assert.ok(btnRight <= cardRight, `Hide button overflows its card (${btnRight} > ${cardRight})`);
   });
 
   assert.deepEqual(errors, [], 'console errors');

@@ -44,11 +44,18 @@ export class EgressBlockedError extends Error {
  */
 export class DraftFailedError extends Error {
   attemptedBytes: number;
-  constructor(message: string, attemptedBytes: number) {
+  /** Gemini requests the browser recorded across all attempts (-1 if unknown). */
+  geminiRequests: number;
+  ms: number;
+  constructor(message: string, attemptedBytes: number, geminiRequests = -1, ms = 0) {
     super(message);
     this.attemptedBytes = attemptedBytes;
+    this.geminiRequests = geminiRequests;
+    this.ms = ms;
   }
 }
+
+export type CloudAccess = 'ok' | 'blocked' | 'not-configured' | 'unknown';
 
 export interface Engine {
   readonly kind: 'firebase' | 'simulated';
@@ -62,7 +69,12 @@ export interface Engine {
   findEntities(letter: string): Promise<{ result: EntityResult; entry: LedgerEntry }>;
   readFacts(letter: string): Promise<{ result: FactsResult; entry: LedgerEntry }>;
   /** Runs the egress gate first; throws EgressBlockedError if it fails. */
-  draftAppeal(req: CloudRequest, opts: { preferDevice: boolean }): Promise<{ result: AppealResult; entry: LedgerEntry }>;
+  draftAppeal(
+    req: CloudRequest,
+    opts: { preferDevice: boolean; onAttempt?: (attempt: number, total: number, model: string) => void },
+  ): Promise<{ result: AppealResult; entry: LedgerEntry }>;
+  /** Whether this browser can get an App Check token (the cloud refuses requests without one). */
+  cloudAccess(): Promise<CloudAccess>;
 }
 
 let nextId = 1;
@@ -95,6 +107,10 @@ export async function watchGeminiRequests<T>(fn: () => Promise<T>): Promise<{ va
     // Pick up entries the observer may not have flushed yet.
     performance.getEntriesByType('resource').filter((e) => e.startTime >= start).forEach(record);
     return { value, requests: seen.size };
+  } catch (e) {
+    performance.getEntriesByType('resource').filter((x) => x.startTime >= start).forEach(record);
+    if (e && typeof e === 'object') (e as { geminiRequests?: number }).geminiRequests = seen.size;
+    throw e;
   } finally {
     observer?.disconnect();
   }
