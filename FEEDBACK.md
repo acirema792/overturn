@@ -21,7 +21,7 @@ It falls back to the cloud whenever the model isn't *already* downloaded, or the
 supported on device. That's right for a notes summary and wrong for a medical letter. It would help
 if the docs said in one line: "for data that must not leave the device, use `ONLY_ON_DEVICE`".
 
-## 3. What made the design easy (from the SDK API and source; to be confirmed on the live app)
+## 3. What made the design easy (confirmed on the live app, except the offline fallback)
 
 - `inferenceSource` on every response makes an honest privacy ledger simple.
 - One JSON Schema can drive both paths (`onDeviceParams.promptOptions.responseConstraint` and
@@ -35,7 +35,7 @@ if the docs said in one line: "for data that must not leave the device, use `ONL
   It isn't clear whether web pages may set them, or whether Chrome ignores them there.
 - From the App Check source: in debug mode the SDK exchanges the debug token and never asks the provider
   for a token, but `initializeAppCheck` still needs a provider (we pass a refusing `CustomProvider`).
-  Not yet exercised against a live project. A documented "debug only" provider would save local-dev confusion.
+  Confirmed against the live project (debug-token exchange returned 200). A documented "debug only" provider would save local-dev confusion.
 
 ## 5. From deploying it
 

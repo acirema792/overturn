@@ -2,7 +2,7 @@
 
 **Appeal a health insurance denial. Your identity stays on your device.**
 
-![tests](https://img.shields.io/badge/tests-220%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
+![tests](https://img.shields.io/badge/tests-236%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
 
 Overturn is a web app for #BuildHybridAI 2026 built on **Firebase AI Logic hybrid inference**.
 Gemini Nano reads the denial letter **in Chrome, on the patient's device**. Code replaces
@@ -77,9 +77,9 @@ it yourself in the app's Benchmark tab in desktop Chrome.
 
 ```bash
 npm ci
-npm test          # 220 unit, pipeline, engine (SDK mocked) and adversarial tests
+npm test          # 236 unit, pipeline, engine (SDK mocked) and adversarial tests
 npm run build && npm run e2e   # Playwright UI smoke test (simulated engine; run `npx playwright install chromium` once)
-npm run eval      # rules-only benchmark → eval_results/
+npm run eval      # rules-only benchmark (prints; `npm run eval:write` updates eval_results/)
 npm run dev       # needs .env.local (see .env.example) for real models
 ```
 
@@ -92,8 +92,13 @@ deployed domain; `VITE_APPCHECK_DEBUG=true` locally, then register the printed d
 Gemini Nano, use desktop Chrome 139+; for photos, enable
 `chrome://flags/#prompt-api-for-gemini-nano-multimodal-input`.
 
-**Deploy:** pushes to `main` run tests and the benchmark, then publish `dist/` to GitHub Pages
-(`.github/workflows/deploy.yml`), reading the Firebase settings from repository variables.
+**CI:** pushes to `main` run lint, tests, the benchmark, the build and the Playwright UI test
+(`.github/workflows/deploy.yml`).
+
+**Deploy:** `npm run deploy:pages` builds with the Firebase web config from a git-ignored
+`.env.production.local` and publishes `dist/` to the `gh-pages` branch (GitHub Pages). The web
+config is public by design (it ships in every Firebase web app); App Check (reCAPTCHA Enterprise)
+protects the project, and `main` contains no keys.
 
 ## Project layout
 

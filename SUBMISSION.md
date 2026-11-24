@@ -49,10 +49,10 @@ Offline? **Stay offline** drafts the appeal with Gemini Nano. A **privacy ledger
 - **One JSON Schema, both paths:** `responseConstraint` on device, `responseJsonSchema` in the cloud.
 - **App Check** (reCAPTCHA Enterprise) and **Remote Config** (cloud model, letter length, thinking level).
 - **Measured on the live project:** the default thinking level took ~100 s per appeal; `thinkingLevel: LOW` took ~4 s. Busy-model errors are retried (3 per model, 2 models), and every attempt is counted in the ledger.
-- **A deterministic core** in TypeScript: 14 identifier kinds modelled on HIPAA Safe Harbor, a redaction vault, the egress gate, deadline rules with CFR citations, and a template letter for when no model is reachable. 224 tests, a Playwright UI test, and an independent audit-and-verify loop (three rounds plus verifier passes, all in `loop/`).
+- **A deterministic core** in TypeScript: 14 identifier kinds modelled on HIPAA Safe Harbor, a redaction vault, the egress gate, deadline rules with CFR citations, and a template letter for when no model is reachable. 236 tests, a Playwright UI test, and an independent audit-and-verify loop (three rounds plus verifier passes, all in `loop/`).
 
 ## Measured results
-24 synthetic denial letters with 129 planted identifiers and 80 clinical facts. Expected answers were written before any run, and 8 letters were held out until the rules were frozen.
+24 synthetic denial letters with 129 planted identifiers and 80 clinical facts. Expected answers were written before any run, and 8 letters were held out from rule development (the rules were never tuned on them).
 
 | | Paste into a chatbot | Overturn, rules only (held-out) |
 |---|---|---|
@@ -66,11 +66,11 @@ The rules-only numbers are the floor for browsers without Gemini Nano. The misse
 - `PREFER_ON_DEVICE` is the obvious choice, and it would quietly upload raw letters whenever Nano isn't downloaded yet. Reading the SDK source changed our design.
 - Names hide everywhere: "your son, Mateo", "Ms. Vance's doctor", "CLAIM DETAIL FOR BROWN, JAMES". Relatives who share a surname must keep separate placeholders, or the letter names the wrong person.
 - Over-redaction breaks the appeal: CPT/ICD codes, dollar amounts and policy sections must survive. The benchmark measures both directions.
-- Deadlines: a letter can mention a fair-hearing window, the plan's own decision time and the patient's window. Overturn uses the earliest plausible patient window, so a misread errs earlier, never later.
+- Deadlines: a letter can mention a fair-hearing window, the plan's own decision time and the patient's window. Overturn uses the earliest plausible patient window, so a misread usually errs toward an earlier deadline (see Known gaps in BENCHMARK-RESULTS.md).
 
 ## Accomplishments we're proud of
 - A privacy guarantee you can check yourself: the ledger, the gate and the side-by-side view.
-- Deadlines that never come from a model, and an honest "not sure" when the letter doesn't say.
+- Deadline arithmetic is always code: Gemini Nano only fills a missing date or window, and the card says which. When neither is known, Overturn says "not sure" instead of guessing.
 
 ## What we learned
 Hybrid isn't "on-device when possible". It's deciding which data each model is allowed to see.

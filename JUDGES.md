@@ -24,7 +24,7 @@ still shows the whole flow, with the rules as the on-device layer.
 | Real details are restored only on the device | `src/core/redact.ts` `rehydrate()`, called in `src/components/AppealFlow.tsx`. |
 | The ledger tells the truth | `src/ai/engine.ts` `watchGeminiRequests()` (Resource Timing); `inferenceSource` per response. |
 | UI tested | `npm run e2e`: Playwright smoke test on the simulated engine (flow, hide/undo, no-Nano path, 390px). |
-| Tested | `npm test`: 220 tests, including SDK-mocked engine tests (`src/ai/firebaseEngine.test.ts`) and adversarial inputs (`src/core/adversarial.test.ts`). |
+| Tested | `npm test`: 236 tests, including SDK-mocked engine tests (`src/ai/firebaseEngine.test.ts`) and adversarial inputs (`src/core/adversarial.test.ts`). |
 
 More: [CLAIMS.md](CLAIMS.md) (every claim with its evidence tier),
 [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md), [EVIDENCE.md](EVIDENCE.md) (judging criteria → evidence),
