@@ -214,8 +214,10 @@ export class FirebaseEngine implements Engine {
     try {
       const t = await getToken(this.appCheckInstance);
       return t?.token ? 'ok' : 'blocked';
-    } catch {
-      return 'blocked';
+    } catch (e) {
+      // Not reaching App Check says nothing about this browser; only a refusal does.
+      const code = `${(e as { code?: string }).code ?? ''} ${e instanceof Error ? e.message : ''}`;
+      return /network|Failed to fetch|offline/i.test(code) ? 'unknown' : 'blocked';
     }
   }
 

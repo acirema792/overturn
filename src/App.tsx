@@ -32,9 +32,14 @@ export default function App() {
       if (!navigator.onLine) return setCloud('unknown');
       choice.engine?.cloudAccess().then(setCloud).catch(() => setCloud('unknown'));
     };
+    const offline = () => setCloud('unknown');
     probe();
     window.addEventListener('online', probe);
-    return () => window.removeEventListener('online', probe);
+    window.addEventListener('offline', offline);
+    return () => {
+      window.removeEventListener('online', probe);
+      window.removeEventListener('offline', offline);
+    };
   }, [choice]);
 
   useEffect(() => {

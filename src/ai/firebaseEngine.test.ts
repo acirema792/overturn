@@ -9,8 +9,10 @@ let fallbackOnce = false;
 let failOnce = false;
 let busyCount = 0;
 vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
+const appCheckError: { current: unknown } = { current: null };
 vi.mock('firebase/app-check', () => ({
-  initializeAppCheck: vi.fn(),
+  initializeAppCheck: vi.fn(() => ({})),
+  getToken: vi.fn(() => (appCheckError.current ? Promise.reject(appCheckError.current) : Promise.resolve({ token: 't' }))),
   ReCaptchaEnterpriseProvider: class {},
   ReCaptchaV3Provider: class {},
   CustomProvider: class {},
@@ -184,4 +186,21 @@ const firebaseConfig = {
     expect(settingsFromEnv({ VITE_FIREBASE_CONFIG: pasted, VITE_RECAPTCHA_V3_KEY: 'site' })).toMatchObject({ projectId: 'demo', recaptchaV3Key: 'site' });
   });
   it('returns null when nothing is configured', () => expect(settingsFromEnv({})).toBeNull());
+});
+
+describe('cloudAccess (App Check probe)', () => {
+  const withKey = { ...settings, recaptchaEnterpriseKey: 'site' };
+  it('ok when a token is issued', async () => {
+    appCheckError.current = null;
+    expect(await new FirebaseEngine(withKey).cloudAccess()).toBe('ok');
+  });
+  it('blocked when App Check refuses (403)', async () => {
+    appCheckError.current = Object.assign(new Error('AppCheck: Fetch server returned an HTTP error status. HTTP status: 403.'), { code: 'appCheck/fetch-status-error' });
+    expect(await new FirebaseEngine(withKey).cloudAccess()).toBe('blocked');
+  });
+  it('unknown (not blocked) when App Check can\'t be reached', async () => {
+    appCheckError.current = Object.assign(new Error('AppCheck: Fetch network request failed.'), { code: 'appCheck/fetch-network-error' });
+    expect(await new FirebaseEngine(withKey).cloudAccess()).toBe('unknown');
+    appCheckError.current = null;
+  });
 });
