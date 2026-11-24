@@ -20,9 +20,11 @@ export function friendlyDraftError(e: unknown, preferDevice: boolean): string {
   if (/Failed to fetch|NetworkError|ERR_INTERNET_DISCONNECTED|network request failed/i.test(msg)) {
     return 'The cloud model couldn’t be reached (no network connection).';
   }
+  // An HTTP error from the server is reported as such, even if its text mentions JSON.
+  const status = msg.match(/\[(\d{3}) [^\]]*\]/);
+  if (status) return `The cloud model couldn’t write the appeal (HTTP ${status[1]}).`;
   if (/valid JSON|Unexpected token|JSON/i.test(msg)) {
     return 'The cloud model answered, but its reply couldn’t be used.';
   }
-  const status = msg.match(/\[(\d{3}) [^\]]*\]/);
-  return `The cloud model couldn’t write the appeal${status ? ` (HTTP ${status[1]})` : ''}.`;
+  return 'The cloud model couldn’t write the appeal.';
 }

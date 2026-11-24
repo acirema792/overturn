@@ -25,3 +25,11 @@ describe('friendlyDraftError says where it failed', () => {
   });
   it('real network failures', () => expect(friendlyDraftError(new TypeError('Failed to fetch'), false)).toMatch(/no network/));
 });
+
+describe('verifier 7 N2', () => {
+  it('a 400 that mentions JSON is reported as an HTTP error, not a bad reply', () => {
+    const m = friendlyDraftError(sdk('400 Bad Request', 'Invalid JSON payload received. Unknown name "foo".'), false);
+    expect(m).toMatch(/HTTP 400/);
+    expect(m).not.toMatch(/reply couldn/);
+  });
+});
