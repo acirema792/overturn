@@ -29,3 +29,6 @@ dist-ssr
 
 # agent worktrees
 .claude/
+
+# rendered demo videos (large binaries)
+media/

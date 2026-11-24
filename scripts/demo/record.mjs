@@ -71,7 +71,19 @@ await say('The privacy ledger records where each step ran, bytes sent, and Gemin
 
 await page.getByRole('button', { name: 'Send the hidden version to Gemini' }).click();
 await say('Only the de-identified text goes to Gemini in the cloud (PREFER_IN_CLOUD), which writes the appeal.', 4000);
-await page.getByText('Your appeal letter').waitFor({ timeout: 120000 });
+const waitStart = now();
+await page.getByText('Your appeal letter').waitFor({ timeout: 180000 });
+if (now() - waitStart > 3) {
+  captions.push({ start: waitStart, end: now(), text: 'Waiting for Gemini in the cloud. When the free tier is busy, the app retries automatically.' });
+}
+// Never caption a template fallback as a Gemini appeal: reject the take instead.
+const fallback = await page.locator('.alert').filter({ hasText: 'template letter instead' }).count();
+if (fallback) {
+  await context.close();
+  await browser.close();
+  console.error('TAKE REJECTED: the cloud step fell back to the template letter. Re-run later.');
+  process.exit(3);
+}
 await page.getByText('Your appeal letter').scrollIntoViewIfNeeded();
 await say('Back on the device, your real name and member ID are filled in. The cloud never sees the finished letter.', 6000);
 await page.locator('.side').scrollIntoViewIfNeeded();
