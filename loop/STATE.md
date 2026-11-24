@@ -1,6 +1,6 @@
 # Audit loop state
 
-Round: 4 (extra round on the person's request; PLATEAU: 7.3 for rounds 2-4, loop stops after fixing round-4 findings)
+Round: 4 — DONE. Loop STOPPED (plateau: 7.3 in rounds 2, 3 and 4).
 Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 
 ## Baseline tripwires (2026-11-20)
@@ -17,8 +17,8 @@ Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 | 4 | 7.3 | 7.0 | 7.0 | 7.0 | 8.0 |
 
 ## Open findings
-- Final verifier (2026-11-23) on 90d8f08 / c21bcc8 / 03364f0: c21bcc8 APPROVED; 90d8f08 and 03364f0 REJECTED. Follow-ups: d1f6f1f (deadline: earliest window wins; 'letter dated'), 73f8a07 + 7bc35ad (gate: any separators, money-safe, prefilter), 5db8b81 (capitals in name context), and the applyVault / fallback-bytes commit. 220 tests, eval unchanged. These follow-ups are NOT yet independently verified.
-- Known residual (S3, documented): the gate's placeholder token can hide a label next to a partly redacted value ("Name: [PERSON_1] John Smith"); the offline draft is not cloud-gated and doesn't re-check inferenceSource (the availability guard runs first).
+- Round 4: I1–I10 fixed. Verifier 6: ffffd90 (docs) APPROVED; 99dfb08 and c221d6d REJECTED for two S2s (error messages mislabelled the path; "LAST, First Middle" cut mid-word) plus five S3s. All seven fixed in 101248a, 41803a4, 9c628ac, 3169ae5 with tests (250 unit + 7 e2e), eval unchanged, live smoke-checked. These last four commits are implementer-tested only (no further verifier pass).
+- Needs the person: demo video, Gemini Nano benchmark run, Blaze plan (busy free tier), repo About box, Devpost submit, delete the debug token after Dec 16.
 
 ## Escalations (for the person)
 - F3/G2: the window is now the earliest plausible candidate, so misreads err earlier; skipped categories (later process with no appeal offered; provider-only sentences) could still err later if a letter states only those. Documented in BENCHMARK-RESULTS Known gaps.
