@@ -8,6 +8,7 @@ import { templateAppeal } from '../core/template';
 import { CASES } from '../data/cases';
 import { analyse, buildAppealPrompt, buildAppealRequest, finishAnalysis, patientPlaceholder, applyVault, type Analysis } from '../pipeline';
 import { OriginalWithHighlights, RedactedText } from './Highlight';
+import { friendlyDraftError } from '../ai/errors';
 import { Ledger } from './Ledger';
 
 const SAMPLES = [CASES[0], CASES[1], CASES[13]];
@@ -159,6 +160,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
           preferDevice,
           onAttempt: (n, total) =>
             run === runRef.current && setProgress(`Google's free Gemini tier is busy. Trying again automatically (attempt ${n} of ${total})…`),
+          isCancelled: () => run !== runRef.current,
         },
       );
       if (run !== runRef.current) return; // cancelled by "Start over"
@@ -185,11 +187,12 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
             }),
           ]);
         }
-        setError(`${friendlyCloudError(e)} Here is a template letter instead; nothing was guessed.`);
+        console.warn('Appeal draft failed:', e instanceof Error ? e.message : e);
+        setError(`${friendlyDraftError(e, preferDevice)} Here is a template letter instead; nothing was guessed.`);
         applyTemplate();
       }
     } finally {
-      setProgress('');
+      if (run === runRef.current) setProgress('');
     }
   }
 
@@ -580,21 +583,6 @@ function DeadlineCard({ analysis }: { analysis: Analysis }) {
       </div>
     </div>
   );
-}
-
-/** Plain words for cloud failures; the technical message stays in the console. */
-function friendlyCloudError(e: unknown): string {
-  const msg = e instanceof Error ? e.message : String(e);
-  console.warn('Cloud appeal failed:', msg);
-  if (/App Check|401|403|attestation/i.test(msg)) {
-    return 'Google couldn\u2019t verify this browser (App Check), so the cloud model refused the request. This can happen on VPNs, privacy browsers or automated browsers.';
-  }
-  if (/high demand|\b(?:429|500|503)\b|overloaded|unavailable/i.test(msg)) {
-    const tries = msg.match(/after (\d+) attempts/);
-    return `Google\u2019s free Gemini tier is busy right now${tries ? ` (tried ${tries[1]} times)` : ''}. Try again in a minute.`;
-  }
-  if (/fetch|network|Failed to fetch|offline/i.test(msg)) return 'The cloud model couldn\u2019t be reached (network).';
-  return 'The cloud model couldn\u2019t write the appeal.';
 }
 
 function printLetter(letter: string) {

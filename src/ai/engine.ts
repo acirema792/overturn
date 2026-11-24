@@ -71,7 +71,12 @@ export interface Engine {
   /** Runs the egress gate first; throws EgressBlockedError if it fails. */
   draftAppeal(
     req: CloudRequest,
-    opts: { preferDevice: boolean; onAttempt?: (attempt: number, total: number, model: string) => void },
+    opts: {
+      preferDevice: boolean;
+      onAttempt?: (attempt: number, total: number, model: string) => void;
+      /** Checked before every retry: a cancelled draft sends nothing more. */
+      isCancelled?: () => boolean;
+    },
   ): Promise<{ result: AppealResult; entry: LedgerEntry }>;
   /** Whether this browser can get an App Check token (the cloud refuses requests without one). */
   cloudAccess(): Promise<CloudAccess>;

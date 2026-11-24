@@ -140,6 +140,25 @@ describe('FirebaseEngine', () => {
     expect(r.entry.note).toMatch(/4 attempts/);
   });
 
+  it('a cancelled draft stops retrying (no more requests after cancel)', async () => {
+    vi.useFakeTimers();
+    busyCount = 5;
+    let cancelled = false;
+    const e = new FirebaseEngine(settings);
+    const pending = e
+      .draftAppeal({ prompt: 'Appeal for [PERSON_1]', vault: { '[PERSON_1]': 'Maria Gonzalez' } }, { preferDevice: false, isCancelled: () => cancelled })
+      .catch((x) => x);
+    await vi.advanceTimersByTimeAsync(100); // first attempt failed (busy), waiting to retry
+    cancelled = true;
+    await vi.runAllTimersAsync();
+    const err = await pending;
+    vi.useRealTimers();
+    busyCount = 0;
+    expect(err).toBeInstanceOf(DraftFailedError);
+    expect(err.message).toMatch(/Cancelled/);
+    expect(calls.length).toBe(1);
+  });
+
   it('sends a clean appeal prompt with PREFER_IN_CLOUD', async () => {
     const e = new FirebaseEngine(settings);
     const r = await e.draftAppeal({ prompt: 'Appeal for [PERSON_1]', vault: { '[PERSON_1]': 'Maria Gonzalez' } }, { preferDevice: false });

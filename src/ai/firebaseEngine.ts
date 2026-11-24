@@ -284,7 +284,10 @@ export class FirebaseEngine implements Engine {
     return this.onDevice<FactsResult>('Read the denial', this.factsModel, factsPrompt(letter), parseJson);
   }
 
-  async draftAppeal(req: CloudRequest, opts: { preferDevice: boolean; onAttempt?: (attempt: number, total: number, model: string) => void }) {
+  async draftAppeal(
+    req: CloudRequest,
+    opts: { preferDevice: boolean; onAttempt?: (attempt: number, total: number, model: string) => void; isCancelled?: () => boolean },
+  ) {
     await this.readyRemoteConfig;
     // The gate runs here, inside the engine, so no caller can skip it.
     // Remote Config sets the letter's length (the template says "under 400 words").
@@ -330,11 +333,15 @@ export class FirebaseEngine implements Engine {
     for (const [i, cloudModel] of models.entries()) {
       for (let tryNo = 0; tryNo < BUSY_DELAYS_MS.length + 1 && !watched; tryNo++) {
         try {
+          if (attempts.length > 0 && opts.isCancelled?.()) {
+            throw new DraftFailedError('Cancelled by the user.', opts.preferDevice ? 0 : gate.bytes * attempts.length, requestsSeen, Math.round(performance.now() - t0));
+          }
           attempts.push(cloudModel);
           if (attempts.length > 1) opts.onAttempt?.(attempts.length, totalAttempts, cloudModel);
           watched = await watchGeminiRequests(() => modelFor(cloudModel).generateContent(prompt));
           usedModel = cloudModel;
         } catch (e) {
+          if (e instanceof DraftFailedError) throw e;
           const msg = e instanceof Error ? e.message : String(e);
           requestsSeen += (e as { geminiRequests?: number }).geminiRequests ?? 0;
           const busy = /\b(?:429|500|503)\b|high demand|overloaded|unavailable|resource exhausted/i.test(msg);
@@ -353,8 +360,11 @@ export class FirebaseEngine implements Engine {
       }
       if (watched) break;
     }
-    if (!watched) throw new DraftFailedError('No cloud model answered.', opts.preferDevice ? 0 : gate.bytes * attempts.length);
-    const { value, requests } = watched;
+    if (!watched) {
+      throw new DraftFailedError('No cloud model answered.', opts.preferDevice ? 0 : gate.bytes * attempts.length, requestsSeen, Math.round(performance.now() - t0));
+    }
+    const { value } = watched;
+    const requests = requestsSeen + watched.requests; // every attempt, not just the last
     const onDevice = value.response.inferenceSource === 'on_device';
     let result: AppealResult;
     try {
@@ -362,7 +372,12 @@ export class FirebaseEngine implements Engine {
       result = parseJson<AppealResult>(value.response.text());
     } catch (e) {
       // With PREFER_IN_CLOUD the prompt was sent even if the SDK then fell back to Nano.
-      throw new DraftFailedError(e instanceof Error ? e.message : String(e), opts.preferDevice ? 0 : gate.bytes);
+      throw new DraftFailedError(
+        e instanceof Error ? e.message : String(e),
+        opts.preferDevice ? 0 : gate.bytes * attempts.length,
+        requests,
+        Math.round(performance.now() - t0),
+      );
     }
     return {
       result,

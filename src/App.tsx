@@ -27,7 +27,14 @@ export default function App() {
   }, [choice]);
 
   useEffect(() => {
-    choice.engine?.cloudAccess().then(setCloud).catch(() => setCloud('unknown'));
+    // Offline, App Check can't be reached: that says nothing about this browser.
+    const probe = () => {
+      if (!navigator.onLine) return setCloud('unknown');
+      choice.engine?.cloudAccess().then(setCloud).catch(() => setCloud('unknown'));
+    };
+    probe();
+    window.addEventListener('online', probe);
+    return () => window.removeEventListener('online', probe);
   }, [choice]);
 
   useEffect(() => {
