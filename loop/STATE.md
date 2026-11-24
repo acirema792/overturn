@@ -17,10 +17,11 @@ Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 | 4 | 7.3 | 7.0 | 7.0 | 7.0 | 8.0 |
 
 ## Open findings
-- Round 4: I1–I10 fixed. Verifier 6: ffffd90 (docs) APPROVED; 99dfb08 and c221d6d REJECTED for two S2s (error messages mislabelled the path; "LAST, First Middle" cut mid-word) plus five S3s. All seven fixed in 101248a, 41803a4, 9c628ac, 3169ae5 with tests (250 unit + 7 e2e), eval unchanged, live smoke-checked. These last four commits are implementer-tested only (no further verifier pass).
-- Needs the person: demo video, Gemini Nano benchmark run, Blaze plan (busy free tier), repo About box, Devpost submit, delete the debug token after Dec 16.
+- Verifier 7: 101248a APPROVED, 9c628ac APPROVED, 41803a4 REJECTED for history only (build fails at that single commit because one line landed in 9c628ac; code correct; main builds), 3169ae5 ESCALATED (run-log/CLAIMS live-evidence wording). Follow-ups for N1–N4 + the wording: this commit set, tests 256, eval unchanged.
+- Needs the person: demo video, Gemini Nano benchmark run, Blaze plan, repo About box, Devpost submit, delete the debug token after Dec 16.
 
 ## Escalations (for the person)
+- History: commit 41803a4 doesn't build on its own (fixed by the next commit). Fixing that, or the "Unverified" label on 372d9ed, needs a rewrite of main + force-push: the person's call.
 - F3/G2: the window is now the earliest plausible candidate, so misreads err earlier; skipped categories (later process with no appeal offered; provider-only sentences) could still err later if a letter states only those. Documented in BENCHMARK-RESULTS Known gaps.
 - F5 expectation change: APPROVED by the person (2026-11-23).
 - H3 (rule change): Medicaid 10-day continuation-of-benefits window read as the appeal window when it comes first; dd-Mon-yyyy / dotted / yyyy/mm/dd notice dates not parsed.
