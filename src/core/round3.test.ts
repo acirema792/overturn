@@ -86,3 +86,11 @@ describe('verifier 6: "LAST, First Middle" is hidden whole, never cut mid-word',
     expect(redact(text).redacted).not.toMatch(new RegExp(`\\]${frag}`));
   });
 });
+
+describe('verifier 7 N3: double initials are hidden with the name', () => {
+  it.each(['Patient Name: SMITH, John A.B.', 'Patient Name: Smith, John A.B.'])('%s', (t) => {
+    const out = redact(t).redacted;
+    expect(out).not.toMatch(/\]\.?B\./);
+    expect(out).not.toMatch(/John|SMITH|Smith/);
+  });
+});

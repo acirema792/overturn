@@ -83,9 +83,9 @@ const LABELED_ID_KIND = (label: string): IdKind => {
 };
 
 // Building blocks for Unicode name rules.
-const NW = String.raw`\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|\.|(?=['’]))(?:['’-]\p{L}\p{Ll}+)*`; // Name, O’Brien, McGregor, M.
+const NW = String.raw`\p{Lu}(?:\p{Ll}+(?:\p{Lu}\p{Ll}+)?|(?:\.\p{Lu})*\.|(?=['’]))(?:['’-]\p{L}\p{Ll}+)*`; // Name, O’Brien, McGregor, M.
 const CW = String.raw`\p{Lu}{2,}(?:['’-]\p{Lu}{2,})*`; // ALL-CAPS word
-const CI = String.raw`(?:${CW}|\p{Lu}\.?)`; // ALL-CAPS word or initial
+const CI = String.raw`(?:${CW}|\p{Lu}(?:\.\p{Lu})*\.?)`; // ALL-CAPS word or initial
 // Lowercase surname particles: "Maria de la Cruz", "Vincent van Gogh".
 const PART = String.raw`(?:[ ](?:de|del|della|da|di|do|dos|das|du|van|von|der|den|ter|ten|le|la|bin|ibn|al|el))*`;
 const TITLE = String.raw`(?:(?:Mr|Mrs|Ms|Miss|Dr)\.?[ ])?`;
