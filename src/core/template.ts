@@ -44,6 +44,33 @@ export function insurerFromLetter(letter: string, people: string[] = []): string
 const firstOf = (vault: Record<string, string>, label: string) =>
   Object.keys(vault).find((k) => k.startsWith(`[${label}_`));
 
+/** What the patient encloses, in the letter's own voice (the checklist on screen keeps the advice wording). */
+const ENCLOSURES: Record<DenialCategory, string[]> = {
+  medical_necessity: [
+    'A letter of medical necessity from my doctor that addresses your criteria point by point',
+    'My chart notes showing my symptoms, how long they have lasted and the treatments already tried',
+  ],
+  prior_authorization: [
+    'Records showing that my provider requested authorization, or why the care was urgent',
+    'My provider\u2019s request for retroactive authorization',
+  ],
+  out_of_network: [
+    'Records showing that no in-network provider could give this care within a reasonable time or distance',
+    'Details of the emergency or referral that led to this provider',
+  ],
+  experimental: [
+    'Published studies and guidelines showing this treatment is standard of care for my condition',
+    'A letter from my doctor explaining why the standard options failed or are unsuitable for me',
+  ],
+  not_covered: ['The section of my plan documents that I believe covers this service', 'A letter from my provider supporting the service'],
+  coding_or_billing: ['An itemized bill with the procedure and diagnosis codes', 'A corrected claim from my provider\u2019s billing office'],
+  step_therapy: [
+    'Records of the medications I have already tried, with dates and why they failed or caused side effects',
+    'My doctor\u2019s step-therapy exception request',
+  ],
+  other: ['A letter from my provider supporting this service', 'Relevant medical records'],
+};
+
 export function templateAppeal(t: TemplateInput): AppealResult {
   // Only a placeholder the on-device model labelled "patient". Guessing the
   // first name in the letter can pick the doctor or a family member.
@@ -66,8 +93,8 @@ To whom it may concern,
 
 I am writing to appeal your decision to deny coverage for ${service}. Your notice gives the reason as "${reason}". I disagree with this decision and ask for a full and fair review.${t.urgent ? ' Because waiting could seriously harm my health, I ask that this appeal be expedited and decided within 72 hours.' : ''}
 
-My treating provider recommended this care because it is appropriate for my condition. I am enclosing supporting documents, including:
-${CATEGORY_PLAYBOOK[t.category].map((e) => `- ${e}`).join('\n')}
+My treating provider recommended this care because it is appropriate for my condition. I am enclosing:
+${ENCLOSURES[t.category].map((e) => `- ${e}`).join('\n')}
 
 Please also send me, free of charge, a complete copy of my claim file and the criteria, clinical policy or plan provision you relied on to make this decision.
 

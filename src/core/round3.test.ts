@@ -46,3 +46,25 @@ describe('H2 the offline draft does not go through the cloud gate', () => {
     expect(r.entry.where).toBe('on-device');
   });
 });
+
+import { templateAppeal } from './template';
+import { DENIAL_CATEGORIES } from './categories';
+
+describe('I3 the template letter speaks to the insurer, not to the patient', () => {
+  it.each(DENIAL_CATEGORIES.map((c) => [c]))('%s', (category) => {
+    const letter = templateAppeal({ category, serviceDenied: '', insurer: 'Acme Health', vault: {}, urgent: false }).appealLetter;
+    expect(letter).not.toMatch(/\byour doctor\b|ask for it|you are entitled|\(request the/i);
+  });
+});
+
+describe('I4 rules-only: "LAST, First" and particle surnames after a title', () => {
+  it.each([
+    ['Patient Name: SMITH, John A', ['SMITH', 'John']],
+    ['Subscriber Name: GARCIA, Maria', ['GARCIA', 'Maria']],
+    ['Dear Ms. de la Torre,\nWe denied', ['Torre']],
+    ['Dear Dr. van der Berg,\nWe denied', ['Berg']],
+  ])('%s', (text, values) => {
+    const r = redact(text);
+    for (const v of values) expect(r.redacted, v).not.toContain(v);
+  });
+});

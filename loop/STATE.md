@@ -1,6 +1,6 @@
 # Audit loop state
 
-Round: 3 (DONE: max rounds reached; loop stopped)
+Round: 4 (extra round on the person's request; PLATEAU: 7.3 for rounds 2-4, loop stops after fixing round-4 findings)
 Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 
 ## Baseline tripwires (2026-11-20)
@@ -14,6 +14,7 @@ Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 | 1 | 6.9 | 6.5 | 7.0 | 6.5 | 7.5 |
 | 2 | 7.3 | 7.0 | 7.5 | 6.5 | 8.0 |
 | 3 | 7.3 | 7.0 | 7.5 | 6.5 | 8.0 |
+| 4 | 7.3 | 7.0 | 7.0 | 7.0 | 8.0 |
 
 ## Open findings
 - Final verifier (2026-11-23) on 90d8f08 / c21bcc8 / 03364f0: c21bcc8 APPROVED; 90d8f08 and 03364f0 REJECTED. Follow-ups: d1f6f1f (deadline: earliest window wins; 'letter dated'), 73f8a07 + 7bc35ad (gate: any separators, money-safe, prefilter), 5db8b81 (capitals in name context), and the applyVault / fallback-bytes commit. 220 tests, eval unchanged. These follow-ups are NOT yet independently verified.

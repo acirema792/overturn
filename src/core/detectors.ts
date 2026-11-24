@@ -198,13 +198,13 @@ const RULES: Rule[] = [
   { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR|Attn|To|cc)[ \\t]*[:,]?)[ \\t]+(${TITLE}(?:${NW},[ ]?${NW}(?:[ ]${NW})?|${NW}(?:${PART}[ ]${NW}){1,3}))`, 'gu'), group: 1, accept: acceptName },
   // ALL-CAPS names, only after a patient field label or "Dear" ("MEMBER NAME: JOHN Q
   // PUBLIC", "Member: DE LA CRUZ, ANA"); "To: CIGNA HEALTHCARE" is an insurer, not a person.
-  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR)[ \\t]*[:,]?)[ \\t]+(${CW}(?:[ ]${CW}){0,2},[ ]?${CW}(?:[ ]${CI})?)`, 'gu'), group: 1, accept: acceptName },
+  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR)[ \\t]*[:,]?)[ \\t]+(${CW}(?:[ ]${CW}){0,2},[ ]?(?:${CW}|${NW})(?:[ ](?:${CI}|${NW}))?)`, 'gu'), group: 1, accept: acceptName },
   // "First Last" in capitals after a person field label or "Dear" ("MEMBER: JOHN SMITH").
   // "MEMBER: KAISER PERMANENTE" is hidden too: over-redaction is acceptable, a leak
   // is not (the insurer name is restored on the device). Not after "To:".
   { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR)[ \\t]*[:,]?)[ \\t]+(${CW}(?:[ ]${CI})?(?:[ ]${CW}){1,2})`, 'gu'), group: 1, accept: acceptName },
   // Titles before any name form, including initials ("Dr. J. R. Okafor").
-  { kind: 'PERSON', re: new RegExp(`\\b(?:Dr|Mr|Mrs|Ms|Miss|DR|MR|MRS|MS)\\.?[ ]+(${NW}(?:[ ]${NW}){0,3}|${CW}(?:[ ]${CW}){0,2})`, 'gu'), group: 1, accept: acceptName },
+  { kind: 'PERSON', re: new RegExp(`\\b(?:Dr|Mr|Mrs|Ms|Miss|DR|MR|MRS|MS)\\.?[ ]+((?:(?:de|del|della|da|di|do|dos|das|du|van|von|der|den|ter|ten|le|la|bin|ibn|al|el)[ ])*${NW}(?:[ ]${NW}){0,3}|${CW}(?:[ ]${CW}){0,2})`, 'gu'), group: 1, accept: acceptName },
   // A single surname after "Dear" ("Dear Okonkwo,").
   { kind: 'PERSON', re: new RegExp(`\\b(?:Dear|DEAR)[ \\t]+${TITLE}(${NW}|${CW}),`, 'gu'), group: 1, accept: acceptName },
   // "Dear MS. GONZALEZ," — a capitals surname only with a title ("Dear AETNA," is not a person).
