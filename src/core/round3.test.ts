@@ -68,3 +68,21 @@ describe('I4 rules-only: "LAST, First" and particle surnames after a title', () 
     for (const v of values) expect(r.redacted, v).not.toContain(v);
   });
 });
+
+describe('verifier 6: "LAST, First Middle" is hidden whole, never cut mid-word', () => {
+  it.each([
+    ['Patient Name: SMITH, John Andrew', ['SMITH', 'John', 'Andrew', 'ndrew']],
+    ['Patient Name: NGUYEN, Thi Bich', ['NGUYEN', 'Thi', 'Bich', 'ich']],
+    ['Patient Name: SMITH, John A', ['SMITH', 'John']],
+    ['Patient Name: SMITH, John A.', ['SMITH', 'John']],
+  ])('%s', (text, values) => {
+    const out = redact(text).redacted;
+    for (const v of values) expect(out, v).not.toContain(v);
+  });
+  it.each([
+    ['Patient: JONES, Prior Authorization required', 'uthorization'],
+    ['Member: AETNA, Medicare Advantage HMO', 'dvantage'],
+  ])('never leaves a broken word: %s', (text, frag) => {
+    expect(redact(text).redacted).not.toMatch(new RegExp(`\\]${frag}`));
+  });
+});

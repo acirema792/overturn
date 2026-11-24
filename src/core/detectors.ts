@@ -198,7 +198,7 @@ const RULES: Rule[] = [
   { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR|Attn|To|cc)[ \\t]*[:,]?)[ \\t]+(${TITLE}(?:${NW},[ ]?${NW}(?:[ ]${NW})?|${NW}(?:${PART}[ ]${NW}){1,3}))`, 'gu'), group: 1, accept: acceptName },
   // ALL-CAPS names, only after a patient field label or "Dear" ("MEMBER NAME: JOHN Q
   // PUBLIC", "Member: DE LA CRUZ, ANA"); "To: CIGNA HEALTHCARE" is an insurer, not a person.
-  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR)[ \\t]*[:,]?)[ \\t]+(${CW}(?:[ ]${CW}){0,2},[ ]?(?:${CW}|${NW})(?:[ ](?:${CI}|${NW}))?)`, 'gu'), group: 1, accept: acceptName },
+  { kind: 'PERSON', re: new RegExp(`(?<![\\p{L}])(?:${FIELD}|(?:Dear|DEAR)[ \\t]*[:,]?)[ \\t]+(${CW}(?:[ ]${CW}){0,2},[ ]?(?:${CW}|${NW})(?:[ ](?:${NW}|${CI}))?)(?![\\p{L}])`, 'gu'), group: 1, accept: acceptName },
   // "First Last" in capitals after a person field label or "Dear" ("MEMBER: JOHN SMITH").
   // "MEMBER: KAISER PERMANENTE" is hidden too: over-redaction is acceptable, a leak
   // is not (the insurer name is restored on the device). Not after "To:".
