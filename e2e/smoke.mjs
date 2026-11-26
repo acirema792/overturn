@@ -137,6 +137,18 @@ try {
     assert.match(text, /Member ID: NWH448812901/);
     assert.match(text, /within 180 days/);
     assert.deepEqual(offOrigin, [], 'requests left the origin while reading the PDF');
+    // The reading step stays in the privacy ledger after the letter is read.
+    await page.getByRole('button', { name: /Hide my details/ }).click();
+    await page.getByText('Check what leaves your device').waitFor();
+    assert.match(await page.locator('.ledger').innerText(), /Read the PDF/);
+    // A PDF longer than the page cap says so instead of silently dropping pages.
+    const longMaker = await browser.newPage();
+    await longMaker.setContent(Array.from({ length: 22 }, (_, i) => `<p style="page-break-after:always">Page ${i + 1} of a synthetic letter.</p>`).join(''));
+    const longPdf = await longMaker.pdf({ format: 'Letter' });
+    await longMaker.close();
+    await page.getByRole('button', { name: 'Start over' }).click();
+    await page.locator('input[type=file][accept*="pdf"]').setInputFiles({ name: 'long.pdf', mimeType: 'application/pdf', buffer: longPdf });
+    await page.getByText(/has 22 pages; only the first 20 were read/).waitFor({ timeout: 30000 });
   });
 
   await step('Español: the interface is Spanish, the appeal letter stays English, and the choice is remembered', async () => {

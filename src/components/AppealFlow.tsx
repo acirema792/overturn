@@ -10,7 +10,7 @@ import { CASES } from '../data/cases';
 import { analyse, buildAppealPrompt, buildAppealRequest, finishAnalysis, patientPlaceholder, applyVault, type Analysis } from '../pipeline';
 import { OriginalWithHighlights, RedactedText } from './Highlight';
 import { friendlyDraftError } from '../ai/errors';
-import { readPdfText } from '../pdf/readPdf';
+import { MAX_PDF_PAGES, readPdfText } from '../pdf/readPdf';
 import { Ledger } from './Ledger';
 import { deadlineExplanation, externalReviewText } from '../deadlineText';
 
@@ -56,6 +56,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
   const [unknownPh, setUnknownPh] = useState<string[]>([]);
   const [extraLedger, setExtraLedger] = useState<LedgerEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [pdfPages, setPdfPages] = useState(0); // > 0: a PDF was cut at MAX_PDF_PAGES
   const [progress, setProgress] = useState<string>('');
   const [selection, setSelection] = useState('');
   const [typedHide, setTypedHide] = useState('');
@@ -85,8 +86,8 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
 
   async function read(raw: string, useDevice: boolean) {
     setError(null);
-    // Keep the photo-reading row: it is part of this letter's history.
-    setExtraLedger((l) => l.filter((e) => e.step === 'Read the photo'));
+    // Keep the photo- or PDF-reading row: it is part of this letter's history.
+    setExtraLedger((l) => l.filter((e) => e.step === 'Read the photo' || e.step === 'Read the PDF'));
     setStage('reading');
     try {
       let prepareError: string | undefined;
@@ -127,6 +128,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
       } else {
         setText(pdf.text);
         setSampleId(null);
+        setPdfPages(pdf.truncated ? pdf.pages : 0);
         setExtraLedger([
           ledgerEntry({
             step: 'Read the PDF',
@@ -375,6 +377,11 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
             </label>
             {text.trim().length > 0 && text.trim().length < 40 && <span className="muted small">{t('tooShort')}</span>}
           </div>
+          {pdfPages > 0 && extraLedger.some((e) => e.step === 'Read the PDF') && (
+            <p className="note" role="status">
+              {t('pdfTruncated', { n: pdfPages, max: MAX_PDF_PAGES })}
+            </p>
+          )}
           {!deviceOk && (
             <p className="note">{t('noNanoNote')}</p>
           )}

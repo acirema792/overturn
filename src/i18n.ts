@@ -61,6 +61,7 @@ const EN = {
   // errors
   errPdfScan: 'This PDF has no text layer (it is a scan). Use a photo of the letter with Gemini Nano, or paste the text.',
   errPdf: 'Couldn’t read that PDF on this device: {msg}. You can paste the letter instead.',
+  pdfTruncated: 'This PDF has {n} pages; only the first {max} were read. Check that the denial and its appeal instructions are in the text above, or paste the missing part.',
   errPhoto: 'Couldn’t read the photo on this device: {msg}. You can paste or type the letter instead.',
   errBlocked: '{msg} Hide them on the left, then try again.',
   templateInstead: '{msg} Here is a template letter instead; nothing was guessed.',
@@ -203,6 +204,7 @@ const ES: Record<Key, string> = {
   progBusy: 'El nivel gratuito de Gemini está saturado. Reintentando automáticamente (intento {n} de {total})…',
   errPdfScan: 'Este PDF no tiene texto (es una imagen escaneada). Usa una foto de la carta con Gemini Nano o pega el texto.',
   errPdf: 'No se pudo leer ese PDF en este dispositivo: {msg}. Puedes pegar la carta.',
+  pdfTruncated: 'Este PDF tiene {n} páginas; solo se leyeron las primeras {max}. Revisa que la negación y las instrucciones para apelar estén en el texto de arriba, o pega la parte que falta.',
   errPhoto: 'No se pudo leer la foto en este dispositivo: {msg}. Puedes pegar o escribir la carta.',
   errBlocked: '{msg} Ocúltalos a la izquierda y vuelve a intentarlo.',
   templateInstead: '{msg} Aquí tienes una carta modelo; no se inventó nada.',
