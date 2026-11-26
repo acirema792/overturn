@@ -72,6 +72,7 @@ amounts, a medical-policy reference ("Medical Policy MP-204"), section and versi
 ## Known gaps (open, escalated)
 
 - The appeal window is the earliest plausible patient window in the letter, so a misread errs toward an earlier deadline. Some plan-timeline phrasings ("Most appeals are decided within 30 days") can still count as candidates and make the deadline too early. Windows we skip outright (a later process such as a State Fair Hearing with no appeal offered in the same clause, or a provider's deadline in a sentence without "you") could make it later if a letter states only those.
+- Letters written in Spanish: the Spanish UI explains English letters. A denial letter written in Spanish isn't covered by the rules (Spanish salutations such as "Estimada Sra." and dates such as "1 de octubre de 2026" are not detected rules-only), so the patient must review names and dates on the review screen; the app says so in Spanish mode.
 - Capitals names after "Member:" or "Dear" are hidden even when they are an insurer ("MEMBER: KAISER PERMANENTE"): over-redaction is preferred to a leak.
 - The eval counts a leak only when a whole planted value survives; a surviving surname fragment is not counted.
 - Rules-only formats still known to leak (Gemini Nano and the review screen are the backstop): a name in running text with no label ("The patient, Sofia Marquez, age 34" is only flagged as a possible name), a lowercase name, and unusual label words the rules don't use (as in the held-out letters).
