@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DraftFailedError, EgressBlockedError, ledgerEntry, type DeviceAvailability, type Engine, type LedgerEntry } from '../ai/engine';
+import { DraftFailedError, EgressBlockedError, ledgerEntry, watchGeminiRequests, type DeviceAvailability, type Engine, type LedgerEntry } from '../ai/engine';
 import type { AppealResult } from '../ai/schemas';
 import { CATEGORY_LABEL, CATEGORY_PLAYBOOK } from '../core/categories';
 import { checkEgress } from '../core/egressGate';
@@ -9,6 +9,7 @@ import { CASES } from '../data/cases';
 import { analyse, buildAppealPrompt, buildAppealRequest, finishAnalysis, patientPlaceholder, applyVault, type Analysis } from '../pipeline';
 import { OriginalWithHighlights, RedactedText } from './Highlight';
 import { friendlyDraftError } from '../ai/errors';
+import { readPdfText } from '../pdf/readPdf';
 import { Ledger } from './Ledger';
 
 const SAMPLES = [CASES[0], CASES[1], CASES[13]];
@@ -106,6 +107,37 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
       setError(e instanceof Error ? e.message : String(e));
       setStage('input');
     } finally {
+      setProgress('');
+    }
+  }
+
+  async function onPdf(file: File) {
+    setError(null);
+    setStage('reading');
+    setProgress('Reading the PDF on this device…');
+    const t0 = performance.now();
+    try {
+      const { value: pdf, requests } = await watchGeminiRequests(() => readPdfText(file));
+      if (pdf.textless) {
+        setError('This PDF has no text layer (it is a scan). Use a photo of the letter with Gemini Nano, or paste the text.');
+      } else {
+        setText(pdf.text);
+        setSampleId(null);
+        setExtraLedger([
+          ledgerEntry({
+            step: 'Read the PDF',
+            where: 'code',
+            bytesOut: 0,
+            geminiRequests: requests,
+            ms: Math.round(performance.now() - t0),
+            note: `pdf.js on this device; ${pdf.pages} page${pdf.pages === 1 ? '' : 's'}${pdf.truncated ? ' (first 20 read)' : ''}. The file was not uploaded.`,
+          }),
+        ]);
+      }
+    } catch (e) {
+      setError(`Couldn't read that PDF on this device: ${e instanceof Error ? e.message : String(e)}. You can paste the letter instead.`);
+    } finally {
+      setStage('input');
       setProgress('');
     }
   }
@@ -327,6 +359,10 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                 Hide my details on this device
               </button>
             )}
+            <label className="secondary file">
+              Open a PDF
+              <input type="file" accept="application/pdf,.pdf" onChange={(e) => e.target.files?.[0] && onPdf(e.target.files[0])} />
+            </label>
             <label className={`secondary file ${device !== 'available' ? 'disabled' : ''}`} title={device !== 'available' ? 'Photo reading needs Gemini Nano in Chrome' : ''}>
               Use a photo (PNG/JPEG)
               <input

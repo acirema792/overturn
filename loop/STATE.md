@@ -1,6 +1,6 @@
 # Audit loop state
 
-Round: 4 — DONE. Loop STOPPED (plateau: 7.3 in rounds 2, 3 and 4).
+Round: 5 (resumed 2026-11-26 at the person's request). Target: above 7.3. Max rounds: 6. Freeze: 2026-11-29 14:00 PT.
 Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 
 ## Baseline tripwires (2026-11-20)
@@ -33,5 +33,6 @@ Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 - Live-only checks (need your Firebase project and a Chrome with Gemini Nano): App Check with reCAPTCHA, Remote Config fetch, real ONLY_ON_DEVICE runs and JSON output, cloud appeal quality, PREFER_IN_CLOUD → Nano fallback, Resource Timing counts, the Nano benchmark row.
 
 ## Rulings
+- 2026-11-26, the person (answers to one batched question): YES to on-device PDF reading with the new dependency pdfjs-dist; YES to README screenshots + architecture diagram, a fresh audit + verifier, and a Spanish UI; "increase score as a new round of checking, even more than 7.3 is possible".
 - 2026-11-23, the person approved: (a) the F5 trade-off (capitals names after "Dear"/"Member:" hidden even when an insurer); (b) F13 (eval writes results only with --write); (c) G12/H9 (CI runs lint and the e2e UI test).
 - Never add detector rules derived from held-out misses (src/data/heldout.ts). Held-out numbers must stay out-of-sample. (Round 1, after a reverted F6 attempt.)

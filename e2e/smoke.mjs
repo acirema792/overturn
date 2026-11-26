@@ -122,6 +122,23 @@ try {
     assert.equal(await page.getByText('Your appeal letter').count(), 0, 'stale result shown');
   });
 
+  await step('PDF letter is read on the device: text extracted, no request to any other host', async () => {
+    // Make a real text PDF of a synthetic sample letter with Chromium.
+    const maker = await browser.newPage();
+    await maker.setContent(`<pre style="font:14px monospace">Northwind Health Plan\nOctober 28, 2026\n\nMember ID: NWH448812901\nDear Maria L. Gonzalez,\nThe lumbar MRI (CPT 72148) is not medically necessary.\nYour appeal must be received within 180 days of the date of this notice.</pre>`);
+    const pdf = await maker.pdf({ format: 'Letter' });
+    await maker.close();
+    const offOrigin = [];
+    page.on('request', (r) => { if (!r.url().startsWith(BASE)) offOrigin.push(r.url()); });
+    await page.goto(`${BASE}?engine=sim&device=unavailable`);
+    await page.locator('input[type=file][accept*="pdf"]').setInputFiles({ name: 'letter.pdf', mimeType: 'application/pdf', buffer: pdf });
+    await page.waitForFunction(() => document.querySelector('#letter')?.value.includes('NWH448812901'), null, { timeout: 30000 });
+    const text = await page.locator('#letter').inputValue();
+    assert.match(text, /Member ID: NWH448812901/);
+    assert.match(text, /within 180 days/);
+    assert.deepEqual(offOrigin, [], 'requests left the origin while reading the PDF');
+  });
+
   await step('390px: no horizontal scroll on the review screen', async () => {
     const m = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await m.goto(`${BASE}?engine=sim&device=unavailable`);
