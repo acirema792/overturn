@@ -465,21 +465,84 @@
    "finding": "R5-PDF",
    "action": "ee9682f: open a PDF, text read on the device with pdf.js (lazy-loaded); unit test + e2e check with no off-origin request",
    "outcome": "success",
-   "note": "committed locally; independent verifier pending"
+   "note": "verifier pass 1: 458572f APPROVED; ee9682f, 87a6f19, e96980e REJECTED (defects fixed in K1-K9); d6769ee ESCALATED (claims, fixed in K8)"
   },
   {
    "round": 5,
    "finding": "R5-ES",
    "action": "458572f + 87a6f19: English/Espa\u00f1ol UI; explanation in Spanish, appeal letter in English; gate passes for all 24 letters with the Spanish prompt; e2e check; nav wraps at 390px; gate memo depends on lang",
    "outcome": "success",
-   "note": "committed locally; independent verifier pending"
+   "note": "verifier pass 1: 458572f APPROVED; ee9682f, 87a6f19, e96980e REJECTED (defects fixed in K1-K9); d6769ee ESCALATED (claims, fixed in K8)"
   },
   {
    "round": 5,
    "finding": "R5-DOCS",
    "action": "e96980e + d6769ee: architecture SVG, screenshots from the real build (rules-only), docs updated with PDF/Spanish, tests 263 + 9 e2e",
    "outcome": "success",
-   "note": "committed locally; independent verifier pending"
+   "note": "verifier pass 1: 458572f APPROVED; ee9682f, 87a6f19, e96980e REJECTED (defects fixed in K1-K9); d6769ee ESCALATED (claims, fixed in K8)"
+  },
+  {
+   "round": 5,
+   "finding": "K1",
+   "action": "839ad32 Spanish deadline sentence branches on the window",
+   "outcome": "success",
+   "note": "verifier pass 2 pending"
+  },
+  {
+   "round": 5,
+   "finding": "K2",
+   "action": "196643f PDF ledger row kept; >20-page notice",
+   "outcome": "success",
+   "note": "verifier pass 2 pending"
+  },
+  {
+   "round": 5,
+   "finding": "K3",
+   "action": "diagram wording + README caveat/caption",
+   "outcome": "success",
+   "note": "verifier pass 2 pending"
+  },
+  {
+   "round": 5,
+   "finding": "K4",
+   "action": "8687a20 PDF error kinds, translated, task destroyed on failure",
+   "outcome": "success",
+   "note": "verifier pass 2 pending"
+  },
+  {
+   "round": 5,
+   "finding": "K5",
+   "action": "06875ff no English on the Spanish flow (noteEs, footer, banner, samples)",
+   "outcome": "success",
+   "note": "verifier pass 2 pending"
+  },
+  {
+   "round": 5,
+   "finding": "K6",
+   "action": "eacd751 Nano en+es outputs only in Spanish mode; serviceDenied English",
+   "outcome": "success",
+   "note": "verifier pass 2 pending"
+  },
+  {
+   "round": 5,
+   "finding": "K7",
+   "action": "89f6891 note when result language differs after a switch",
+   "outcome": "success",
+   "note": "verifier pass 2 pending"
+  },
+  {
+   "round": 5,
+   "finding": "K9",
+   "action": "b5cd53f Spanish-mode note: letters expected in English",
+   "outcome": "success",
+   "note": "verifier pass 2 pending"
+  },
+  {
+   "round": 5,
+   "finding": "K8",
+   "action": "c3515d8 claims scoped; counts 267 + 9 e2e",
+   "outcome": "success",
+   "note": "verifier pass 2 pending"
   }
  ]
 }
