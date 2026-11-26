@@ -29,6 +29,8 @@ export interface CloudRequest {
   vault: Record<string, string>;
   /** Per-letter text the gate searches for identifiers (defaults to the prompt). */
   checkText?: string;
+  /** UI language: 'es' lets Gemini Nano answer in Spanish as well as English. */
+  lang?: 'en' | 'es';
 }
 
 export class EgressBlockedError extends Error {

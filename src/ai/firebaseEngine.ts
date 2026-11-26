@@ -100,6 +100,13 @@ const TEXT_IO = {
   expectedInputs: [{ type: 'text' as const, languages: ['en'] }],
   expectedOutputs: [{ type: 'text' as const, languages: ['en'] }],
 };
+// Spanish UI: the letter and prompt are English; Gemini Nano may answer in Spanish
+// (the explanation) and English (the appeal letter). Only used when the UI is Spanish,
+// so the English path's session options are unchanged.
+const TEXT_IO_ES = {
+  expectedInputs: [{ type: 'text' as const, languages: ['en'] }],
+  expectedOutputs: [{ type: 'text' as const, languages: ['en', 'es'] }],
+};
 
 // The free Gemini Developer API has short "high demand" spikes: each model is
 // tried up to 3 times (pauses below), then the next model.
@@ -137,6 +144,7 @@ export class FirebaseEngine implements Engine {
   private ai;
   private entityModel: GenerativeModel;
   private factsModel: GenerativeModel;
+  private factsModelEs: GenerativeModel;
   private imageModel: GenerativeModel;
   private readyRemoteConfig: Promise<void>;
 
@@ -183,6 +191,7 @@ export class FirebaseEngine implements Engine {
     });
     this.entityModel = getGenerativeModel(this.ai, onDeviceJson(ENTITY_SCHEMA));
     this.factsModel = getGenerativeModel(this.ai, onDeviceJson(FACTS_SCHEMA));
+    this.factsModelEs = getGenerativeModel(this.ai, onDeviceJson(FACTS_SCHEMA, TEXT_IO_ES));
     this.imageModel = getGenerativeModel(this.ai, {
       mode: InferenceMode.ONLY_ON_DEVICE,
       onDeviceParams: {
@@ -283,7 +292,7 @@ export class FirebaseEngine implements Engine {
   }
 
   readFacts(letter: string, lang: 'en' | 'es' = 'en') {
-    return this.onDevice<FactsResult>('Read the denial', this.factsModel, factsPrompt(letter, lang), parseJson);
+    return this.onDevice<FactsResult>('Read the denial', lang === 'es' ? this.factsModelEs : this.factsModel, factsPrompt(letter, lang), parseJson);
   }
 
   async draftAppeal(
@@ -318,7 +327,7 @@ export class FirebaseEngine implements Engine {
           },
         },
         onDeviceParams: {
-          createOptions: { ...TEXT_IO, temperature: 0.4, topK: 3 } as never,
+          createOptions: { ...(req.lang === 'es' ? TEXT_IO_ES : TEXT_IO), temperature: 0.4, topK: 3 } as never,
           promptOptions: { responseConstraint: APPEAL_SCHEMA },
         },
       });

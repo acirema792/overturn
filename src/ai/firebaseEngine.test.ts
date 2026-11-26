@@ -4,7 +4,7 @@
 // any cloud-capable request, and each step asks for the right mode.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const calls: { mode: string; prompt: unknown }[] = [];
+const calls: { mode: string; prompt: unknown; outLangs?: string[] }[] = [];
 let fallbackOnce = false;
 let failOnce = false;
 let busyCount = 0;
@@ -26,10 +26,10 @@ vi.mock('firebase/ai', () => ({
   getAI: () => ({}),
   GoogleAIBackend: class {},
   InferenceMode: { PREFER_ON_DEVICE: 'prefer_on_device', ONLY_ON_DEVICE: 'only_on_device', ONLY_IN_CLOUD: 'only_in_cloud', PREFER_IN_CLOUD: 'prefer_in_cloud' },
-  getGenerativeModel: (_ai: unknown, params: { mode: string }) => ({
+  getGenerativeModel: (_ai: unknown, params: { mode: string; onDeviceParams?: { createOptions?: { expectedOutputs?: { languages?: string[] }[] } } }) => ({
     initializeDeviceModel: () => Promise.resolve(),
     generateContent: (prompt: unknown) => {
-      calls.push({ mode: params.mode, prompt });
+      calls.push({ mode: params.mode, prompt, outLangs: params.onDeviceParams?.createOptions?.expectedOutputs?.[0]?.languages });
       if (busyCount > 0) {
         busyCount--;
         return Promise.reject(new Error('[500 Internal Server Error] This model is currently experiencing high demand.'));
@@ -70,6 +70,15 @@ describe('FirebaseEngine', () => {
     const e = new FirebaseEngine(settings);
     await expect(e.findEntities('Dear Maria Gonzalez')).rejects.toThrow(/on-device/i);
     expect(calls).toEqual([]);
+  });
+
+  it('declares Spanish output to Gemini Nano only when the UI is Spanish', async () => {
+    (globalThis as Record<string, unknown>).LanguageModel = { availability: () => Promise.resolve('available') };
+    const e = new FirebaseEngine(settings);
+    await e.readFacts('The MRI was denied.', 'en').catch(() => undefined);
+    await e.readFacts('The MRI was denied.', 'es').catch(() => undefined);
+    await e.draftAppeal({ prompt: 'p', vault: {}, lang: 'es' }, { preferDevice: true }).catch(() => undefined);
+    expect(calls.map((c) => c.outLangs)).toEqual([['en'], ['en', 'es'], ['en', 'es']]);
   });
 
   it('uses ONLY_ON_DEVICE for raw-letter steps when Nano is present', async () => {

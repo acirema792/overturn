@@ -221,8 +221,9 @@ export function buildAppealPrompt(a: Analysis, lang: 'en' | 'es' = 'en'): string
  * searches for names and IDs (the redacted letter, the model-written service
  * description and the role lines), as opposed to Overturn's fixed wording.
  */
-export function buildAppealRequest(a: Analysis, lang: 'en' | 'es' = 'en'): { prompt: string; checkText: string } {
+export function buildAppealRequest(a: Analysis, lang: 'en' | 'es' = 'en'): { prompt: string; checkText: string; lang: 'en' | 'es' } {
   return {
+    lang,
     prompt: buildAppealPrompt(a, lang),
     checkText: [a.redaction.redacted, applyVault(a.facts.serviceDenied, a.redaction.vault), ...roleLines(a)].join('\n'),
   };

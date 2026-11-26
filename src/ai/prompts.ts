@@ -18,6 +18,7 @@ export const factsPrompt = (letter: string, lang: 'en' | 'es' = 'en') => `You re
 Extract the facts as JSON.
 - planType: "employer" for job-based / ERISA / group plans, "marketplace" for HealthCare.gov / ACA individual plans, "medicare_advantage", "medicaid", otherwise "unknown".
 - denialCategory: the main reason for the denial.
+- serviceDenied: the service, drug or item that was denied, in English as the letter names it (keep CPT/ICD codes).
 - noticeDate: the date printed on the notice, as YYYY-MM-DD; empty if none.
 - appealWindowDays: the number of days the letter gives to appeal; 0 if the letter does not say.
 - reasonInPlainWords: explain the reason to a worried patient in one or two short sentences, without any names or ID numbers${lang === 'es' ? ', written in Spanish' : ''}.
