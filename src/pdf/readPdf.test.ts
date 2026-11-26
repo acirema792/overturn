@@ -15,3 +15,18 @@ describe('itemsToText rebuilds letter lines from pdf.js items', () => {
     expect(itemsToText([{ str: '' }, { str: 'Hello' }, { str: ' world' }])).toBe('Hello world');
   });
 });
+
+describe('PDF errors', () => {
+  it('maps pdf.js exceptions to a kind the UI explains in both languages', async () => {
+    const { pdfErrorKind, PdfReadError } = await import('./readPdf');
+    expect(pdfErrorKind(Object.assign(new Error('No password given'), { name: 'PasswordException' }))).toBe('password');
+    expect(pdfErrorKind(Object.assign(new Error('Invalid PDF structure.'), { name: 'InvalidPDFException' }))).toBe('invalid');
+    expect(pdfErrorKind(new PdfReadError('tooLarge', 'x'))).toBe('tooLarge');
+    expect(pdfErrorKind(new Error('something else'))).toBe('other');
+  });
+  it('refuses a file over 15 MB before loading pdf.js', async () => {
+    const { readPdfText, PdfReadError } = await import('./readPdf');
+    const big = { size: 16 * 1024 * 1024 } as File;
+    await expect(readPdfText(big)).rejects.toBeInstanceOf(PdfReadError);
+  });
+});

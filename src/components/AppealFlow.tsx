@@ -10,7 +10,7 @@ import { CASES } from '../data/cases';
 import { analyse, buildAppealPrompt, buildAppealRequest, finishAnalysis, patientPlaceholder, applyVault, type Analysis } from '../pipeline';
 import { OriginalWithHighlights, RedactedText } from './Highlight';
 import { friendlyDraftError } from '../ai/errors';
-import { MAX_PDF_PAGES, readPdfText } from '../pdf/readPdf';
+import { MAX_PDF_PAGES, pdfErrorKind, readPdfText } from '../pdf/readPdf';
 import { Ledger } from './Ledger';
 import { deadlineExplanation, externalReviewText } from '../deadlineText';
 
@@ -141,7 +141,11 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
         ]);
       }
     } catch (e) {
-      setError(t('errPdf', { msg: e instanceof Error ? e.message : String(e) }));
+      const kind = pdfErrorKind(e);
+      if (kind === 'tooLarge') setError(t('errPdfLarge'));
+      else if (kind === 'password') setError(t('errPdfPassword'));
+      else if (kind === 'invalid') setError(t('errPdfInvalid'));
+      else setError(t('errPdf', { msg: (e instanceof Error ? e.message : String(e)).replace(/[.\s]+$/, '') }));
     } finally {
       setStage('input');
       setProgress('');

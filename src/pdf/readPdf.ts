@@ -39,15 +39,36 @@ export function itemsToText(items: TextItemLike[]): string {
     .trim();
 }
 
+export type PdfErrorKind = 'tooLarge' | 'password' | 'invalid' | 'other';
+
+/** A PDF that couldn't be read; `kind` picks the message in the user's language. */
+export class PdfReadError extends Error {
+  readonly kind: PdfErrorKind;
+  constructor(kind: PdfErrorKind, message: string) {
+    super(message);
+    this.kind = kind;
+    this.name = 'PdfReadError';
+  }
+}
+
+/** Maps pdf.js exceptions (by name) to a kind the UI can explain. */
+export function pdfErrorKind(e: unknown): PdfErrorKind {
+  if (e instanceof PdfReadError) return e.kind;
+  const name = (e as { name?: string } | null)?.name ?? '';
+  if (name === 'PasswordException') return 'password';
+  if (name === 'InvalidPDFException' || name === 'FormatError') return 'invalid';
+  return 'other';
+}
+
 export async function readPdfText(file: File): Promise<PdfText> {
-  if (file.size > MAX_PDF_BYTES) throw new Error('This PDF is larger than 15 MB. Paste the letter text instead.');
+  if (file.size > MAX_PDF_BYTES) throw new PdfReadError('tooLarge', 'This PDF is larger than 15 MB');
   const pdfjs = await import('pdfjs-dist');
   const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
   const data = new Uint8Array(await file.arrayBuffer());
   const task = pdfjs.getDocument({ data, disableAutoFetch: true, disableStream: true });
-  const doc = await task.promise;
   try {
+    const doc = await task.promise;
     const pages = Math.min(doc.numPages, MAX_PDF_PAGES);
     const parts: string[] = [];
     for (let i = 1; i <= pages; i++) {
@@ -58,6 +79,7 @@ export async function readPdfText(file: File): Promise<PdfText> {
     const text = parts.filter(Boolean).join('\n\n');
     return { text, pages: doc.numPages, textless: text.replace(/\s/g, '').length < 40, truncated: doc.numPages > MAX_PDF_PAGES };
   } finally {
+    // Also when opening fails (corrupt or password-protected file).
     await task.destroy();
   }
 }
