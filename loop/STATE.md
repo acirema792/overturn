@@ -17,11 +17,12 @@ Round: 5 (resumed 2026-11-26 at the person's request). Target: above 7.3. Max ro
 | 5 | 7.8 | 7.5 | 8.0 | 7.5 | 8.0 |
 
 ## Open findings
-- Round 5 (2026-11-26): PDF (ee9682f), Spanish UI (458572f, 87a6f19), diagram + screenshots (e96980e), docs (d6769ee). Tests 263, e2e 9, eval unchanged. Round-5 audit 7.8 (loop/audits/round-5.md). Verifier pass 1: 1 approved, 3 rejected, 1 escalated; all defects and audit findings J2–J10 fixed in K1–K9 (267 tests, 9 e2e, eval unchanged); verifier pass 2 running. J1 (live site not redeployed) waits for pass 2.
+- Round 5 (2026-11-26): PDF (ee9682f), Spanish UI (458572f, 87a6f19), diagram + screenshots (e96980e), docs (d6769ee). Tests 263, e2e 9, eval unchanged. Round-5 audit 7.8 (loop/audits/round-5.md). Verifier pass 1: 1 approved, 3 rejected, 1 escalated; all defects and audit findings J2–J10 fixed in K1–K9 (267 tests, 9 e2e, eval unchanged); verifier pass 2: 8 approved, K8 (c3515d8) escalated for your approval of the final claims; its follow-ups R1 (d019e48) and R3 (0abdab8) done. Deployed 0abdab8 to the live site and checked it live (J1 closed).
 - Verifier 7: 101248a APPROVED, 9c628ac APPROVED, 41803a4 REJECTED for history only (build fails at that single commit because one line landed in 9c628ac; code correct; main builds), 3169ae5 ESCALATED (run-log/CLAIMS live-evidence wording). Follow-ups for N1–N4 + the wording: this commit set, tests 256, eval unchanged.
 - Needs the person: demo video, Gemini Nano benchmark run, Blaze plan, repo About box, Devpost submit, delete the debug token after Dec 16.
 
 ## Escalations (for the person)
+- Claims (c3515d8, 0abdab8): please read and approve the final published wording on Spanish (README Input line, SUBMISSION steps/Accomplishments, CLAIMS rows). Gemini Nano's Spanish output (K6) can only be checked in Chrome with Nano.
 - J3 (rule change): Spanish-language denial letters ("Estimada Sra. …", "1 de octubre de 2026") aren't detected rules-only. Documented in Known gaps and noted in the Spanish UI; adding Spanish detector rules is your call.
 - History: commit 41803a4 doesn't build on its own (fixed by the next commit). Fixing that, or the "Unverified" label on 372d9ed, needs a rewrite of main + force-push: the person's call.
 - F3/G2: the window is now the earliest plausible candidate, so misreads err earlier; skipped categories (later process with no appeal offered; provider-only sentences) could still err later if a letter states only those. Documented in BENCHMARK-RESULTS Known gaps.

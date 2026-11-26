@@ -486,63 +486,81 @@
    "finding": "K1",
    "action": "839ad32 Spanish deadline sentence branches on the window",
    "outcome": "success",
-   "note": "verifier pass 2 pending"
+   "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K2",
    "action": "196643f PDF ledger row kept; >20-page notice",
    "outcome": "success",
-   "note": "verifier pass 2 pending"
+   "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K3",
    "action": "diagram wording + README caveat/caption",
    "outcome": "success",
-   "note": "verifier pass 2 pending"
+   "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K4",
    "action": "8687a20 PDF error kinds, translated, task destroyed on failure",
    "outcome": "success",
-   "note": "verifier pass 2 pending"
+   "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K5",
    "action": "06875ff no English on the Spanish flow (noteEs, footer, banner, samples)",
    "outcome": "success",
-   "note": "verifier pass 2 pending"
+   "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K6",
    "action": "eacd751 Nano en+es outputs only in Spanish mode; serviceDenied English",
    "outcome": "success",
-   "note": "verifier pass 2 pending"
+   "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K7",
    "action": "89f6891 note when result language differs after a switch",
    "outcome": "success",
-   "note": "verifier pass 2 pending"
+   "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K9",
    "action": "b5cd53f Spanish-mode note: letters expected in English",
    "outcome": "success",
-   "note": "verifier pass 2 pending"
+   "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K8",
    "action": "c3515d8 claims scoped; counts 267 + 9 e2e",
    "outcome": "success",
-   "note": "verifier pass 2 pending"
+   "note": "verifier pass 2: ESCALATE_HUMAN (final published claims are the person's call); R3 wording follow-up in 0abdab8"
+  },
+  {
+   "round": 5,
+   "finding": "R1",
+   "action": "d019e48 evidence checklist stays in the result language after a switch",
+   "outcome": "success"
+  },
+  {
+   "round": 5,
+   "finding": "R3",
+   "action": "0abdab8 \"letter stays English\" scoped to match CLAIMS.md",
+   "outcome": "success"
+  },
+  {
+   "round": 5,
+   "finding": "J1",
+   "action": "deployed 0abdab8 to GitHub Pages; live check: PDF read with 0 off-origin requests, gate passes, PDF ledger row, Spanish flow with English letter, 0 page errors",
+   "outcome": "success"
   }
  ]
 }
