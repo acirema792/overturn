@@ -115,3 +115,34 @@ describe('Spanish-language denial letters, rules only', () => {
     });
   }
 });
+
+// Verifier pass 5 repros: each Spanish phrasing must behave like its English equivalent,
+// and English letters must not change.
+import { detect } from './detectors';
+import { findNoticeDate, findWindowDays, guessPlanType } from './deadline';
+
+describe('Spanish rules: verifier repros', () => {
+  const persons = (t: string) => detect(t).filter((d) => d.kind === 'PERSON').map((d) => d.text);
+  it('English "Sr." (Senior) is not a Spanish title', () => {
+    expect(persons('Reviewed by: Sr. Medical Director')).toEqual([]);
+    expect(persons('Sr. Vice President Clinical Operations')).toEqual([]);
+    expect(persons('Admitted to John Smith Sr. Memorial Hospital').some((p) => /Memorial/.test(p))).toBe(false);
+  });
+  it('"el Sr. y la Sra. Pérez" hides Pérez', () => {
+    expect(persons('Escribimos al Sr. Ruiz. El Sr. y la Sra. Pérez llamaron.')).toEqual(expect.arrayContaining(['Ruiz', 'Pérez']));
+  });
+  it('the plan’s own response time and someone else’s deadline are not the patient’s window', () => {
+    expect(findWindowDays('Recibirá una respuesta a su apelación dentro de 30 días. Tiene 180 días para apelar esta decisión.')).toBe(180);
+    expect(findWindowDays('El plan tiene 30 días para responder a su apelación. Usted tiene 180 días para apelar.')).toBe(180);
+    expect(findWindowDays('Su proveedor tiene 90 días para enviar una reclamación corregida. Tiene 180 días para apelar esta decisión.')).toBe(180);
+  });
+  it('a window written in words and digits counts ("sesenta (60) días")', () => {
+    expect(findWindowDays('Tiene sesenta (60) días a partir de la fecha de este aviso para pedir una reconsideración.')).toBe(60);
+  });
+  it('service and admission dates are not the notice date', () => {
+    expect(findNoticeDate('Aviso\nFecha de los servicios: 3 de octubre de 2026\nFecha de admisión: 1 de octubre de 2026\nTexto')).toBeNull();
+  });
+  it('"plan individual" is a Marketplace signal', () => {
+    expect(guessPlanType('Su plan individual de salud niega el servicio.')).toBe('marketplace');
+  });
+});

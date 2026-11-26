@@ -257,7 +257,8 @@ const RULES: Rule[] = [
   // Spanish titles and relatives: "la Dra. Elena Paredes", "Sra. Gutiérrez", "su hijo, Mateo".
   {
     kind: 'PERSON',
-    re: new RegExp(`(?<![\\p{L}])(?:Sra|Srta|Dra|Sr)\\.[ ]+((?:(?:de|del|la|las|los|y)[ ])*${NW}(?:${PART}[ ]${NW}){0,3})`, 'gu'),
+    // "Sr." only after a Spanish article or "y" ("el Sr. Pérez"): in English "Sr." means Senior ("Sr. Medical Director").
+    re: new RegExp(`(?:(?<![\\p{L}])(?:Sra|Srta|Dra)|(?<=(?:^|[^\\p{L}])(?:[Ee]l|al|del|[Yy])[ ])Sr)\\.[ ]+((?:(?:de|del)(?:[ ](?:la|las|los))?[ ])?${NW}(?:${PART}[ ]${NW}){0,3})`, 'gu'),
     group: 1,
     accept: acceptNameEs,
   },

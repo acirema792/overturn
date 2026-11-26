@@ -206,10 +206,13 @@ export function findWindowDays(text: string): number | null {
 // a partir de la fecha de este aviso". Same rules as English: appeal sentences
 // only, not a later process (fair hearing, external review) unless an appeal is
 // offered, not the plan's own timeline ("tomaremos una decisión en 30 días").
-const DIAS_ES = /\b(?:dentro\s+de(?:\s+los)?|tiene(?:s|n)?|plazo\s+de|hasta|en\s+un\s+plazo\s+de)\s+\(?(\d{2,3})\)?\s*d[íi]as\b|\b(\d{2,3})\s+d[íi]as\s+(?:calendario\s+|naturales\s+)?(?:a\s+partir|desde|despu[ée]s|contados)\b/gi;
+const DIAS_ES = /\b(?:dentro\s+de(?:\s+los)?|tiene(?:s|n)?|plazo\s+de|hasta|en\s+un\s+plazo\s+de)\s+(?:(?:treinta|sesenta(?:\s+y\s+cinco)?|noventa|ciento\s+ochenta)\s+)?\(?(\d{2,3})\)?\s*d[íi]as\b|\b(\d{2,3})\s+d[íi]as\s+(?:calendario\s+|naturales\s+)?(?:a\s+partir|desde|despu[ée]s|contados)\b/gi;
 const APELAR_ES = /\b(?:apela|apelaci[óo]n|reconsideraci[óo]n|revisi[óo]n|queja|audiencia|solicitud|aviso|carta|decisi[óo]n)/i;
 const SIGUIENTE_NIVEL_ES = /\b(?:audiencia imparcial|audiencia estatal|revisi[óo]n externa|revisi[óo]n independiente|entidad de revisi[óo]n)\b/i;
-const PLAN_ES = /\b(?:tomaremos|decidiremos|responderemos|revisaremos|le (?:notificaremos|enviaremos|informaremos)|el plan (?:decidir[áa]|tomar[áa]|responder[áa])|se (?:tomar[áa]|enviar[áa]) una decisi[óo]n)\b/i;
+// The plan's own timeline: "tomaremos…", "recibirá una respuesta…", "el plan tiene 30 días para responder".
+const PLAN_ES = /\b(?:tomaremos|decidiremos|responderemos|revisaremos|le (?:notificaremos|enviaremos|informaremos)|el plan (?:decidir[áa]|tomar[áa]|responder[áa]|tiene)|se (?:tomar[áa]|enviar[áa]) una decisi[óo]n|recibir[áa]|para (?:responder|decidir|tomar una decisi[óo]n|revisar))(?![\p{L}])/iu;
+// Someone else's deadline: "su proveedor tiene 90 días para enviar…".
+const OTRO_ES = /\b(?:su|el|la) (?:proveedor|m[ée]dic[oa]|doctor[a]?|farmacia|farmac[ée]utic[oa]|hospital|empleador|centro)\b/i;
 function findWindowDaysEs(sentences: string[]): number[] {
   const out: number[] = [];
   for (const sentence of sentences) {
@@ -219,9 +222,13 @@ function findWindowDaysEs(sentences: string[]): number[] {
       if (!n || n < 10 || n > 400) continue;
       const before = sentence.slice(0, m.index);
       const breaks = [...before.matchAll(/[,;]|\b(?:si|y|pero|o)\b/gi)];
-      const clause = sentence.slice(breaks.length ? breaks[breaks.length - 1].index! : 0, m.index! + m[0].length + 80);
+      // The clause runs from the last break before the number to the next comma or semicolon after it.
+      const after = sentence.slice(m.index! + m[0].length);
+      const end = m.index! + m[0].length + (after.search(/[,;]/) >= 0 ? after.search(/[,;]/) : after.length);
+      const clause = sentence.slice(breaks.length ? breaks[breaks.length - 1].index! : 0, end);
       if (SIGUIENTE_NIVEL_ES.test(clause) && !/\bapel(?:ar|aci[óo]n)\b/i.test(clause.replace(SIGUIENTE_NIVEL_ES, ''))) continue;
       if (PLAN_ES.test(clause)) continue;
+      if (OTRO_ES.test(clause) && !/\busted\b/i.test(clause)) continue;
       out.push(n);
     }
   }
@@ -272,7 +279,7 @@ const DATE_IN_TEXT =
 // care, never the notice. Only the label right before the date counts, so
 // "Customer Service   Date: 11/02/2026" keeps its notice date.
 const NOT_NOTICE_BEFORE =
-  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|(?<!(?:notice|determination|decision|this|is) )dated|expires?|expiration|renewal|enrolled|enrollment|nacimiento|servicio|ingreso|alta|vence|vencimiento)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
+  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|(?<!(?:notice|determination|decision|this|is) )dated|expires?|expiration|renewal|enrolled|enrollment|nacimiento|servicios?|ingreso|admisi[óo]n|de alta|vence|vencimiento)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
 // "10/01/2026 - 10/03/2026": the second date of a skipped range is skipped too.
 const RANGE_JOINER = /^\s*(?:-|–|to|through|thru|and|,)\s*$/i;
 const NOTICE_LABEL =
@@ -330,7 +337,7 @@ const PLAN_SIGNALS: Record<Exclude<PlanType, 'unknown'>, RegExp[]> = {
   medicare_advantage: [/medicare advantage/, /\bpart c\b/, /independent review entity/, /medicare (?:number|id)\b/, /\bmbi\b/, /integrated denial notice/, /notice of denial of (?:medical coverage|payment)/],
   medicaid: [/medicaid/, /medi-cal/, /state fair hearing/, /\bchip\b/, /managed care organization/, /audiencia imparcial estatal/],
   employer: [/\berisa\b/, /employer/, /group health plan/, /plan administrator/, /section 502\(a\)/, /summary plan description/, /employee (?:health|benefits?)/, /empleador/, /plan (?:de salud )?(?:grupal|colectivo)/],
-  marketplace: [/marketplace/, /healthcare\.gov/, /affordable care act/, /individual (?:health )?plans?\b/, /covered california/, /mercado de seguros/, /planes? (?:de salud )?individual(?:es)?\b/],
+  marketplace: [/marketplace/, /healthcare\.gov/, /affordable care act/, /individual (?:health )?plans?\b/, /covered california/, /mercado de seguros/, /\bplan(?:es)? individual(?:es)? (?:de salud|del mercado)\b|\bplan(?:es)? de salud individual(?:es)?\b/],
 };
 
 /**
