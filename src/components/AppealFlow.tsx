@@ -391,6 +391,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
             </label>
             {text.trim().length > 0 && text.trim().length < 40 && <span className="muted small">{t('tooShort')}</span>}
           </div>
+          {lang === 'es' && <p className="note">{t('englishLettersNote')}</p>}
           {pdfPages > 0 && extraLedger.some((e) => e.step === 'Read the PDF') && (
             <p className="note" role="status">
               {t('pdfTruncated', { n: pdfPages, max: MAX_PDF_PAGES })}

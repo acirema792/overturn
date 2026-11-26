@@ -45,6 +45,7 @@ const EN = {
   trySample: 'Try a sample (synthetic, not a real person):',
   letterLabel: 'Denial letter text',
   letterPlaceholder: 'Paste the text of the letter from your insurer, or an Explanation of Benefits, here…',
+  englishLettersNote: '',
   readOnDevice: 'Read it on this device',
   rulesOnlyNow: 'Hide my details now (rules only)',
   downloadNano: 'Download Gemini Nano (once), then read',
@@ -205,6 +206,7 @@ const ES: Record<Key, string> = {
   trySample: 'Prueba un ejemplo (ficticio, no es una persona real):',
   letterLabel: 'Texto de la carta de negación',
   letterPlaceholder: 'Pega aquí el texto de la carta de tu aseguradora o de la Explicación de Beneficios (EOB)…',
+  englishLettersNote: 'Overturn está hecho para cartas de aseguradoras de EE. UU. escritas en inglés. Si tu carta está en español, revisa con cuidado los nombres y las fechas en el siguiente paso: las reglas podrían no encontrarlos.',
   readOnDevice: 'Leerla en este dispositivo',
   rulesOnlyNow: 'Ocultar mis datos ahora (solo reglas)',
   downloadNano: 'Descargar Gemini Nano (una vez) y leer',
@@ -323,7 +325,7 @@ const ES: Record<Key, string> = {
 const DICT: Record<Lang, Record<Key, string>> = { en: EN, es: ES };
 
 /** Keys that are intentionally empty in English (Spanish-only notes). */
-export const ES_ONLY: Key[] = ['englishOnlyPage', 'letterInEnglish'];
+export const ES_ONLY: Key[] = ['englishOnlyPage', 'letterInEnglish', 'englishLettersNote'];
 export const ALL_KEYS = Object.keys(EN) as Key[];
 
 export function translate(lang: Lang, key: Key, vars: Record<string, string | number> = {}): string {
