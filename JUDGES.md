@@ -26,7 +26,7 @@ still shows the whole flow, with the rules as the on-device layer.
 | UI tested | `npm run e2e`: 9 Playwright checks on the simulated engine (flow, hide/undo, no-Nano path, cancel, PDF read with no off-origin request, Español with an English letter, 390px). |
 | PDF read on the device | `src/pdf/readPdf.ts`: pdf.js and its worker are bundled and loaded only when a PDF is opened; the file is read from memory. The e2e check fails if any request leaves the origin while a PDF is read. |
 | Spanish UI | `src/i18n.ts`: the type requires a Spanish text for every key. The cloud prompt asks for the explanation in Spanish and the letter in English; `src/i18n.test.ts` checks the gate still passes for all 24 letters with the Spanish prompt. |
-| Tested | `npm test`: 282 tests, including SDK-mocked engine tests (`src/ai/firebaseEngine.test.ts`) and adversarial inputs (`src/core/adversarial.test.ts`). |
+| Tested | `npm test`: 285 tests, including SDK-mocked engine tests (`src/ai/firebaseEngine.test.ts`) and adversarial inputs (`src/core/adversarial.test.ts`). |
 
 More: [CLAIMS.md](CLAIMS.md) (every claim with its evidence tier),
 [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md), [EVIDENCE.md](EVIDENCE.md) (judging criteria → evidence),
