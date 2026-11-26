@@ -139,6 +139,26 @@ try {
     assert.deepEqual(offOrigin, [], 'requests left the origin while reading the PDF');
   });
 
+  await step('Español: the interface is Spanish, the appeal letter stays English, and the choice is remembered', async () => {
+    const es = await browser.newPage(); // own context: the saved language must not leak into other checks
+    es.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+    await es.goto(`${BASE}?engine=sim&device=unavailable`);
+    await es.getByRole('button', { name: 'Español' }).click();
+    await es.getByText('Pega tu carta de negación').waitFor();
+    assert.equal(await es.evaluate(() => document.documentElement.lang), 'es');
+    await es.getByRole('button', { name: /bariatric/ }).click();
+    await es.getByRole('button', { name: 'Ocultar mis datos en este dispositivo' }).click();
+    await es.getByText('Revisa lo que sale de tu dispositivo').waitFor();
+    await es.getByRole('button', { name: /carta modelo/ }).click();
+    await es.getByText('Tu carta de apelación').waitFor();
+    const letter = await es.getByLabel('Carta de apelación').inputValue();
+    assert.match(letter, /I am writing to appeal/, 'the letter to the insurer must stay in English');
+    assert.match(await es.locator('main').innerText(), /La carta está en inglés/);
+    await es.reload();
+    await es.getByText('Pega tu carta de negación').waitFor();
+    await es.close();
+  });
+
   await step('390px: no horizontal scroll on the review screen', async () => {
     const m = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await m.goto(`${BASE}?engine=sim&device=unavailable`);

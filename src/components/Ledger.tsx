@@ -1,48 +1,49 @@
 import type { LedgerEntry } from '../ai/engine';
+import { stepName, useLang, useT, type Key } from '../i18n';
 
-const WHERE_LABEL: Record<LedgerEntry['where'], string> = {
-  'on-device': 'On this device',
-  cloud: 'Cloud',
-  code: 'Plain code',
-  blocked: 'Blocked',
+const WHERE_LABEL: Record<LedgerEntry['where'], Key> = {
+  'on-device': 'whereDevice',
+  cloud: 'whereCloud',
+  code: 'whereCode',
+  blocked: 'whereBlocked',
 };
 
 export function Ledger({ entries }: { entries: LedgerEntry[] }) {
+  const t = useT();
+  const lang = useLang();
   if (!entries.length) return null;
   const bytes = entries.reduce((a, e) => a + e.bytesOut, 0);
   const sentSteps = entries.filter((e) => e.bytesOut > 0).length;
   return (
     <section className="ledger" aria-labelledby="ledger-h">
       <div className="ledger-head">
-        <h3 id="ledger-h">Privacy ledger</h3>
+        <h3 id="ledger-h">{t('ledgerTitle')}</h3>
         <p>
-          {sentSteps === 0
-            ? 'No part of your letter has left this device.'
-            : `${sentSteps} step sent ${bytes.toLocaleString()} bytes of de-identified text to the cloud. The original letter stayed here.`}
+          {sentSteps === 0 ? t('ledgerNothing') : t('ledgerSent', { steps: sentSteps, bytes: bytes.toLocaleString() })}
         </p>
       </div>
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Step</th>
-              <th>Ran</th>
-              <th>Mode requested</th>
-              <th>Model</th>
-              <th className="num">Bytes sent</th>
-              <th className="num">Gemini requests seen</th>
-              <th className="num">Time</th>
+              <th>{t('colStep')}</th>
+              <th>{t('colRan')}</th>
+              <th>{t('colMode')}</th>
+              <th>{t('colModel')}</th>
+              <th className="num">{t('colBytes')}</th>
+              <th className="num">{t('colRequests')}</th>
+              <th className="num">{t('colTime')}</th>
             </tr>
           </thead>
           <tbody>
             {entries.map((e) => (
               <tr key={e.id}>
                 <td>
-                  {e.step}
+                  {stepName(lang, e.step)}
                   {e.note && <div className="muted small">{e.note}</div>}
                 </td>
                 <td>
-                  <span className={`where where-${e.where}`}>{WHERE_LABEL[e.where]}</span>
+                  <span className={`where where-${e.where}`}>{t(WHERE_LABEL[e.where])}</span>
                 </td>
                 <td className="mono small">{e.mode ?? '—'}</td>
                 <td className="small">{e.model ?? '—'}</td>
@@ -54,11 +55,7 @@ export function Ledger({ entries }: { entries: LedgerEntry[] }) {
           </tbody>
         </table>
       </div>
-      <p className="muted small">
-        "Ran" comes from Firebase AI Logic's <code>inferenceSource</code> on each response. "Gemini requests seen" counts
-        requests to Gemini endpoints recorded by your browser (Resource Timing) while the step ran. Separately, the app talks to
-        Firebase for App Check and Remote Config when it loads; those requests carry no letter content.
-      </p>
+      <p className="muted small">{t('ledgerFoot')}</p>
     </section>
   );
 }

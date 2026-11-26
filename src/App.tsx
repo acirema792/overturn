@@ -4,15 +4,16 @@ import { AppealFlow } from './components/AppealFlow';
 import { Benchmark } from './components/Benchmark';
 import { HowItWorks } from './components/HowItWorks';
 import { chooseEngine } from './engineFactory';
+import { initialLang, LangContext, saveLang, translate, type Key, type Lang } from './i18n';
 
 type Route = 'appeal' | 'benchmark' | 'how';
 const routeFromHash = (): Route => (location.hash === '#/benchmark' ? 'benchmark' : location.hash === '#/how' ? 'how' : 'appeal');
 
-const DEVICE_LABEL: Record<DeviceAvailability, string> = {
-  available: 'Gemini Nano ready on this device',
-  downloadable: 'Gemini Nano can be downloaded',
-  downloading: 'Gemini Nano is downloading',
-  unavailable: 'Gemini Nano not available in this browser',
+const DEVICE_LABEL: Record<DeviceAvailability, Key> = {
+  available: 'nanoAvailable',
+  downloadable: 'nanoDownloadable',
+  downloading: 'nanoDownloading',
+  unavailable: 'nanoUnavailable',
 };
 
 export default function App() {
@@ -21,6 +22,12 @@ export default function App() {
   const [device, setDevice] = useState<DeviceAvailability>('unavailable');
   const [online, setOnline] = useState(navigator.onLine);
   const [cloud, setCloud] = useState<CloudAccess>('unknown');
+  const [lang, setLang] = useState<Lang>(initialLang);
+  const t = (key: Key, vars?: Record<string, string | number>) => translate(lang, key, vars);
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    saveLang(lang);
+  }, [lang]);
 
   const refreshDevice = useCallback(() => {
     choice.engine?.deviceAvailability().then(setDevice).catch(() => setDevice('unavailable'));
@@ -58,7 +65,7 @@ export default function App() {
   }, [refreshDevice]);
 
   return (
-    <>
+    <LangContext.Provider value={lang}>
       {choice.engine?.kind === 'simulated' && (
         <div className="sim-banner" role="note">
           SIMULATED ENGINE: no AI model is running. For UI testing only; nothing here is a real result.
@@ -72,35 +79,43 @@ export default function App() {
             </span>
             Overturn
           </a>
-          <span className="tagline">Appeal a health insurance denial. Your identity stays on your device.</span>
+          <span className="tagline">{t('tagline')}</span>
         </div>
         <nav>
           <a href="#/" className={route === 'appeal' ? 'on' : ''}>
-            Appeal
+            {t('navAppeal')}
           </a>
           <a href="#/how" className={route === 'how' ? 'on' : ''}>
-            How it works
+            {t('navHow')}
           </a>
           <a href="#/benchmark" className={route === 'benchmark' ? 'on' : ''}>
-            Benchmark
+            {t('navBenchmark')}
           </a>
+          <span className="lang-switch" role="group" aria-label="Language / Idioma">
+            <button className={lang === 'en' ? 'on' : ''} aria-pressed={lang === 'en'} onClick={() => setLang('en')} lang="en">
+              English
+            </button>
+            <button className={lang === 'es' ? 'on' : ''} aria-pressed={lang === 'es'} onClick={() => setLang('es')} lang="es">
+              Español
+            </button>
+          </span>
         </nav>
         <div className="status" aria-live="polite">
           <span className={`pill ${device === 'available' ? 'pill-ok' : device === 'unavailable' ? 'pill-off' : 'pill-wait'}`}>
-            {DEVICE_LABEL[device]}
+            {t(DEVICE_LABEL[device])}
           </span>
-          <span className={`pill ${online ? 'pill-cloud' : 'pill-off'}`}>{online ? `Cloud: ${choice.engine?.cloudModel ?? 'not set up'}` : 'Offline'}</span>
+          <span className={`pill ${online ? 'pill-cloud' : 'pill-off'}`}>{online ? t('cloudPill', { model: choice.engine?.cloudModel ?? '—' }) : t('offlinePill')}</span>
           {cloud === 'blocked' && (
             <span
               className="pill pill-wait"
-              title="Google's App Check couldn't verify this browser (common on VPNs, privacy or automated browsers). On-device reading, the review screen and the template letter still work."
+              title={t('cloudBlockedTitle')}
             >
-              Cloud blocked in this browser
+              {t('cloudBlocked')}
             </span>
           )}
           {choice.engine?.appCheck === 'off' && (
             <span className="pill pill-wait" title="Firebase AI Logic requires App Check; cloud requests will be rejected">
-              App Check not configured
+              {t('appCheckOff')}
             </span>
           )}
         </div>
@@ -118,9 +133,15 @@ export default function App() {
             <HowItWorks />
           </div>
         ) : route === 'benchmark' ? (
-          <Benchmark engine={choice.engine} device={device} />
+          <>
+            {lang === 'es' && <p className="note">{t('englishOnlyPage')}</p>}
+            <Benchmark engine={choice.engine} device={device} />
+          </>
         ) : route === 'how' ? (
-          <HowItWorks />
+          <>
+            {lang === 'es' && <p className="note">{t('englishOnlyPage')}</p>}
+            <HowItWorks />
+          </>
         ) : (
           <AppealFlow engine={choice.engine} device={device} onDeviceChange={refreshDevice} />
         )}
@@ -131,6 +152,6 @@ export default function App() {
           <a href="https://github.com/acirema792/overturn">Source (Apache-2.0)</a> · Not legal or medical advice · Sample letters are synthetic
         </span>
       </footer>
-    </>
+    </LangContext.Provider>
   );
 }

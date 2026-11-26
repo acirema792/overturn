@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DraftFailedError, EgressBlockedError, ledgerEntry, watchGeminiRequests, type DeviceAvailability, type Engine, type LedgerEntry } from '../ai/engine';
 import type { AppealResult } from '../ai/schemas';
-import { CATEGORY_LABEL, CATEGORY_PLAYBOOK } from '../core/categories';
+import { categoryLabel, categoryPlaybook } from '../core/categories';
+import { useLang, useT, type Key, type Lang } from '../i18n';
 import { checkEgress } from '../core/egressGate';
 import { rehydrate } from '../core/redact';
 import { templateAppeal } from '../core/template';
@@ -16,8 +17,8 @@ const SAMPLES = [CASES[0], CASES[1], CASES[13]];
 
 type Stage = 'input' | 'reading' | 'review' | 'drafting' | 'result';
 
-const fmtDate = (iso: string) =>
-  new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const fmtDate = (iso: string, lang: 'en' | 'es' = 'en') =>
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString(lang === 'es' ? 'es-US' : 'en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
 function icsFor(deadline: string, title: string): string {
   const d = deadline.replace(/-/g, '');
@@ -43,6 +44,8 @@ function download(name: string, content: string, type: string) {
 }
 
 export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine; device: DeviceAvailability; onDeviceChange: () => void }) {
+  const t = useT();
+  const lang = useLang();
   const [stage, setStage] = useState<Stage>('input');
   const [text, setText] = useState('');
   const [sampleId, setSampleId] = useState<string | null>(null);
@@ -73,9 +76,9 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
 
   const gate = useMemo(() => {
     if (!analysis) return null;
-    const req = buildAppealRequest(analysis);
+    const req = buildAppealRequest(analysis, lang);
     return checkEgress(req.prompt, analysis.redaction.vault, req.checkText);
-  }, [analysis]);
+  }, [analysis, lang]);
 
   const ledger = [...(analysis?.ledger ?? []), ...extraLedger];
 
@@ -87,10 +90,10 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
     try {
       let prepareError: string | undefined;
       if (useDevice) {
-        setProgress('Preparing Gemini Nano on this device…');
+        setProgress(t('progPrepareNano'));
         try {
           // Must run inside the click handler's task chain (user activation).
-          await engine.prepareDevice((f) => setProgress(`Downloading Gemini Nano to this device: ${Math.round(f * 100)}%`));
+          await engine.prepareDevice((f) => setProgress(t('progDownloadNano', { pct: Math.round(f * 100) })));
           onDeviceChange();
         } catch (err) {
           // Don't block the patient: fall back to the on-device rules.
@@ -98,8 +101,8 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
         }
       }
       const withNano = useDevice && !prepareError;
-      setProgress(withNano ? 'Gemini Nano is reading the letter on this device…' : 'Finding personal details with on-device rules…');
-      const result = await analyse(engine, raw, withNano);
+      setProgress(withNano ? t('progNanoReading') : t('progRulesReading'));
+      const result = await analyse(engine, raw, withNano, lang);
       const a = prepareError ? { ...result, deviceError: `Gemini Nano couldn't be prepared (${prepareError}); rules only` } : result;
       setAnalysis(a);
       setStage('review');
@@ -114,12 +117,12 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
   async function onPdf(file: File) {
     setError(null);
     setStage('reading');
-    setProgress('Reading the PDF on this device…');
+    setProgress(t('progPdf'));
     const t0 = performance.now();
     try {
       const { value: pdf, requests } = await watchGeminiRequests(() => readPdfText(file));
       if (pdf.textless) {
-        setError('This PDF has no text layer (it is a scan). Use a photo of the letter with Gemini Nano, or paste the text.');
+        setError(t('errPdfScan'));
       } else {
         setText(pdf.text);
         setSampleId(null);
@@ -135,7 +138,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
         ]);
       }
     } catch (e) {
-      setError(`Couldn't read that PDF on this device: ${e instanceof Error ? e.message : String(e)}. You can paste the letter instead.`);
+      setError(t('errPdf', { msg: e instanceof Error ? e.message : String(e) }));
     } finally {
       setStage('input');
       setProgress('');
@@ -145,7 +148,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
   async function onPhoto(file: File) {
     setError(null);
     setStage('reading');
-    setProgress('Gemini Nano is reading the photo on this device…');
+    setProgress(t('progPhoto'));
     try {
       await engine.prepareDevice();
       const { text: t, entry } = await engine.transcribeImage(file);
@@ -154,7 +157,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
       setExtraLedger([entry]);
       setStage('input');
     } catch (e) {
-      setError(`Couldn't read the photo on this device: ${e instanceof Error ? e.message : String(e)}. You can paste or type the letter instead.`);
+      setError(t('errPhoto', { msg: e instanceof Error ? e.message : String(e) }));
       setStage('input');
     } finally {
       setProgress('');
@@ -183,15 +186,15 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
     if (!analysis) return;
     setError(null);
     setStage('drafting');
-    setProgress(preferDevice ? 'Gemini Nano is drafting your appeal on this device…' : 'Gemini is drafting your appeal from the de-identified letter…');
+    setProgress(preferDevice ? t('progNanoDraft') : t('progCloudDraft'));
     const run = ++runRef.current;
     try {
       const { result, entry } = await engine.draftAppeal(
-        { ...buildAppealRequest(analysis), vault: analysis.redaction.vault },
+        { ...buildAppealRequest(analysis, lang), vault: analysis.redaction.vault },
         {
           preferDevice,
           onAttempt: (n, total) =>
-            run === runRef.current && setProgress(`Google's free Gemini tier is busy. Trying again automatically (attempt ${n} of ${total})…`),
+            run === runRef.current && setProgress(t('progBusy', { n, total })),
           isCancelled: () => run !== runRef.current,
         },
       );
@@ -202,7 +205,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
       if (run !== runRef.current) return; // cancelled by "Start over"
       if (e instanceof EgressBlockedError) {
         setExtraLedger((l) => [...l, ledgerEntry({ step: 'Write the appeal', where: 'blocked', bytesOut: 0, geminiRequests: 0, ms: 0, note: e.message })]);
-        setError(`${e.message} Hide them on the left, then try again.`);
+        setError(t('errBlocked', { msg: e.message }));
         setStage('review');
       } else {
         if (e instanceof DraftFailedError && e.attemptedBytes > 0) {
@@ -220,7 +223,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
           ]);
         }
         console.warn('Appeal draft failed:', e instanceof Error ? e.message : e);
-        setError(`${friendlyDraftError(e, preferDevice)} Here is a template letter instead; nothing was guessed.`);
+        setError(t('templateInstead', { msg: friendlyDraftError(e, preferDevice, lang) }));
         applyTemplate();
       }
     } finally {
@@ -232,6 +235,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
     if (!analysis) return;
     const t0 = performance.now();
     const result = templateAppeal({
+      lang,
       category: analysis.facts.category,
       serviceDenied: applyVault(analysis.facts.serviceDenied, analysis.redaction.vault),
       insurer: analysis.facts.insurer,
@@ -274,7 +278,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
   return (
     <div ref={topRef} className="flow">
       <ol className="steps" aria-label="Progress">
-        {['Your letter', 'Check what leaves', 'Your appeal'].map((label, i) => {
+        {[t('stepLetter'), t('stepCheck'), t('stepAppeal')].map((label, i) => {
           const idx = stage === 'input' || stage === 'reading' ? 0 : stage === 'review' || stage === 'drafting' ? 1 : 2;
           return (
             <li key={label} className={i === idx ? 'current' : i < idx ? 'done' : ''}>
@@ -292,20 +296,16 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
 
       {(stage === 'reading' || stage === 'drafting') && (
         <div className="working" role="status" aria-live="polite">
-          <span className="spinner" aria-hidden /> {progress || 'Working…'}
+          <span className="spinner" aria-hidden /> {progress || t('working')}
         </div>
       )}
 
       {stage === 'input' && (
         <section className="card">
-          <h2>Paste your denial letter</h2>
-          <p className="lede">
-            Your letter is read <strong>on this device</strong>{device === 'available' ? ' by Gemini Nano' : ''}. Names, member IDs,
-            addresses and other identifiers it finds are replaced before anything goes to the cloud, and you check exactly what will be
-            sent.
-          </p>
+          <h2>{t('inputTitle')}</h2>
+          <p className="lede">{device === 'available' ? t('inputLedeNano') : t('inputLede')}</p>
           <div className="samples">
-            <span className="muted small">Try a sample (synthetic, not a real person):</span>
+            <span className="muted small">{t('trySample')}</span>
             {SAMPLES.map((s) => (
               <button
                 key={s.id}
@@ -321,7 +321,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
             ))}
           </div>
           <label className="sr-only" htmlFor="letter">
-            Denial letter text
+            {t('letterLabel')}
           </label>
           <textarea
             id="letter"
@@ -332,39 +332,39 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
               if (!e.target.value.trim()) setExtraLedger([]);
             }}
             onPaste={() => setExtraLedger([])} // a pasted letter replaces any photo-read text
-            placeholder="Paste the text of the letter from your insurer, or an Explanation of Benefits, here…"
+            placeholder={t('letterPlaceholder')}
             rows={14}
           />
           <div className="actions">
             {device === 'available' ? (
               <button className="primary" disabled={text.trim().length < 40} onClick={() => read(text, true)}>
-                Read it on this device
+                {t('readOnDevice')}
               </button>
             ) : deviceOk ? (
               <>
                 <button className="primary" disabled={text.trim().length < 40} onClick={() => read(text, false)}>
-                  Hide my details now (rules only)
+                  {t('rulesOnlyNow')}
                 </button>
                 <button
                   className="secondary"
                   disabled={text.trim().length < 40}
                   onClick={() => read(text, true)}
-                  title="Chrome downloads the on-device model once; it can take several minutes"
+                  title={t('downloadNanoTitle')}
                 >
-                  {device === 'downloading' ? 'Wait for Gemini Nano, then read' : 'Download Gemini Nano (once), then read'}
+                  {device === 'downloading' ? t('waitNano') : t('downloadNano')}
                 </button>
               </>
             ) : (
               <button className="primary" disabled={text.trim().length < 40} onClick={() => read(text, false)}>
-                Hide my details on this device
+                {t('hideOnDevice')}
               </button>
             )}
             <label className="secondary file">
-              Open a PDF
+              {t('openPdf')}
               <input type="file" accept="application/pdf,.pdf" onChange={(e) => e.target.files?.[0] && onPdf(e.target.files[0])} />
             </label>
-            <label className={`secondary file ${device !== 'available' ? 'disabled' : ''}`} title={device !== 'available' ? 'Photo reading needs Gemini Nano in Chrome' : ''}>
-              Use a photo (PNG/JPEG)
+            <label className={`secondary file ${device !== 'available' ? 'disabled' : ''}`} title={device !== 'available' ? t('photoNeedsNano') : ''}>
+              {t('usePhoto')}
               <input
                 type="file"
                 accept="image/png,image/jpeg"
@@ -372,14 +372,10 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                 onChange={(e) => e.target.files?.[0] && onPhoto(e.target.files[0])}
               />
             </label>
-            {text.trim().length > 0 && text.trim().length < 40 && <span className="muted small">That looks too short to be a letter.</span>}
+            {text.trim().length > 0 && text.trim().length < 40 && <span className="muted small">{t('tooShort')}</span>}
           </div>
           {!deviceOk && (
-            <p className="note">
-              Gemini Nano isn't available in this browser, so only Overturn's built-in rules will find your details. You'll review the
-              result and can hide anything they missed before sending. For the full on-device experience, use Chrome on desktop (see
-              "How it works").
-            </p>
+            <p className="note">{t('noNanoNote')}</p>
           )}
         </section>
       )}
@@ -389,45 +385,45 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
           <section className="facts">
             <DeadlineCard analysis={analysis} />
             <div className="card fact">
-              <div className="eyebrow">Why they said no</div>
-              <div className="big">{CATEGORY_LABEL[analysis.facts.category]}</div>
+              <div className="eyebrow">{t('whyNo')}</div>
+              <div className="big">{categoryLabel(analysis.facts.category, lang)}</div>
               {analysis.facts.reasonInPlainWords && <p>{rehydrate(analysis.facts.reasonInPlainWords, analysis.redaction.vault).text}</p>}
-              <div className="muted small">Source: {analysis.facts.categorySource}</div>
+              <div className="muted small">{t('source', { source: sourceLabel(analysis.facts.categorySource, t) })}</div>
             </div>
             <div className="card fact">
-              <div className="eyebrow">Read by</div>
-              <div className="big">{analysis.deviceRan ? 'Gemini Nano, on this device' : 'Rules only, on this device'}</div>
+              <div className="eyebrow">{t('readBy')}</div>
+              <div className="big">{analysis.deviceRan ? t('readByNano') : t('readByRules')}</div>
               <p className="small">
                 {analysis.deviceRan
-                  ? `${analysis.modelEntities.length} details found by the on-device model, plus rule-based checks.`
+                  ? t('readByNanoDetail', { n: analysis.modelEntities.length })
                   : analysis.deviceError
-                    ? `The on-device model didn't run (${analysis.deviceError}). Nothing was sent to the cloud instead.`
+                    ? t('readByError', { err: analysis.deviceError })
                     : device === 'unavailable'
-                      ? 'No on-device model in this browser. Check the outgoing text carefully.'
-                      : 'You chose rules only. Check the outgoing text carefully.'}
+                      ? t('readByNoNano')
+                      : t('readByChoseRules')}
               </p>
             </div>
           </section>
 
           <section className="card">
             <div className="split-head">
-              <h2>Check what leaves your device</h2>
+              <h2>{t('checkTitle')}</h2>
               <div className={`gate ${gate.allowed ? 'gate-ok' : 'gate-bad'}`} role="status">
                 {gate.allowed
-                  ? `Egress check passed: no known or detectable identifiers in ${gate.bytes.toLocaleString()} bytes.`
-                  : `Egress check blocked: ${gate.findings.length} identifier(s) still present (${gate.findings.map((f) => f.excerpt).join(', ')}). Hide them on the left.`}
+                  ? t('gateOk', { bytes: gate.bytes.toLocaleString() })
+                  : t('gateBad', { n: gate.findings.length, list: gate.findings.map((f) => f.excerpt).join(', ') })}
               </div>
             </div>
             <div className="legend small">
-              Highlighted by: <mark className="hl hl-on-device">Gemini Nano</mark> <mark className="hl hl-rule">rules</mark>{' '}
-              <mark className="hl hl-propagated">repeat of a found value</mark> <mark className="hl hl-user">you</mark>
+              {t('legend')} <mark className="hl hl-on-device">Gemini Nano</mark> <mark className="hl hl-rule">{t('legendRules')}</mark>{' '}
+              <mark className="hl hl-propagated">{t('legendRepeat')}</mark> <mark className="hl hl-user">{t('legendYou')}</mark>
             </div>
             <div className="panes">
               <div>
-                <h3>Your letter <span className="muted small">(stays here)</span></h3>
+                <h3>{t('yourLetter')} <span className="muted small">{t('staysHere')}</span></h3>
                 <div
                   tabIndex={0}
-                  aria-label="Your original letter. Select text to hide it."
+                  aria-label={t('originalAria')}
                   onMouseUp={() => setSelection(window.getSelection()?.toString().trim() ?? '')}
                   onKeyUp={() => setSelection(window.getSelection()?.toString().trim() ?? '')}
                 >
@@ -435,7 +431,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                 </div>
                 <div className="hide-row">
                   <button className="secondary" disabled={!selection || selection.length > 80} onClick={() => hide(selection)}>
-                    {selection ? `Hide “${selection.slice(0, 30)}${selection.length > 30 ? '…' : ''}”` : 'Select text above to hide it'}
+                    {selection ? t('hideSelection', { text: `${selection.slice(0, 30)}${selection.length > 30 ? '…' : ''}` }) : t('selectToHide')}
                   </button>
                   <form
                     className="type-hide"
@@ -448,31 +444,31 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                     }}
                   >
                     <label className="sr-only" htmlFor="type-hide">
-                      Type a word or name from your letter to hide it
+                      {t('typeHideLabel')}
                     </label>
                     <input
                       id="type-hide"
                       value={typedHide}
                       onChange={(e) => setTypedHide(e.target.value)}
-                      placeholder="…or type text to hide"
+                      placeholder={t('typeHidePlaceholder')}
                     />
                     <button className="secondary" type="submit" disabled={!typedHide.trim() || !analysis.raw.toLowerCase().includes(typedHide.trim().toLowerCase())}>
-                      Hide
+                      {t('hide')}
                     </button>
                   </form>
                 </div>
               </div>
               <div>
-                <h3>What the cloud model will see</h3>
+                <h3>{t('cloudWillSee')}</h3>
                 <RedactedText text={analysis.redaction.redacted} />
               </div>
             </div>
             {analysis.modelEntities.length > 0 && (
               <details className="small model-found">
-                <summary>Found by Gemini Nano ({analysis.modelEntities.length}). Remove any that aren't personal.</summary>
+                <summary>{t('foundByNano', { n: analysis.modelEntities.length })}</summary>
                 <div className="suspects">
                   {analysis.modelEntities.map((m) => (
-                    <button key={`${m.kind}:${m.text}`} className="chip" onClick={() => unhideModel(m.text)} aria-label={`“${m.text}” is not personal: stop hiding it`}>
+                    <button key={`${m.kind}:${m.text}`} className="chip" onClick={() => unhideModel(m.text)} aria-label={t('notPersonalAria', { text: m.text })}>
                       “{m.text}” ✕
                     </button>
                   ))}
@@ -481,9 +477,9 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
             )}
             {analysis.userEntities.length > 0 && (
               <div className="suspects user-hides">
-                <span className="small">Hidden by you:</span>
+                <span className="small">{t('hiddenByYou')}</span>
                 {analysis.userEntities.map((u) => (
-                  <button key={u.text} className="chip" onClick={() => unhide(u.text)} aria-label={`Show “${u.text}” again`}>
+                  <button key={u.text} className="chip" onClick={() => unhide(u.text)} aria-label={t('showAgainAria', { text: u.text })}>
                     “{u.text}” ✕
                   </button>
                 ))}
@@ -491,30 +487,30 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
             )}
             {analysis.suspects.length > 0 && (
               <div className="suspects">
-                <span className="small">Possible names still visible. Hide any that are people:</span>
+                <span className="small">{t('possibleNames')}</span>
                 {analysis.suspects.slice(0, 12).map((s) => (
                   <button key={s} className="chip" onClick={() => hide(s)}>
-                    + hide “{s}”
+                    {t('hideSuspect', { text: s })}
                   </button>
                 ))}
               </div>
             )}
             <details className="small">
-              <summary>See the full prompt that would be sent ({gate.bytes.toLocaleString()} bytes)</summary>
-              <pre className="letter outgoing">{buildAppealPrompt(analysis)}</pre>
+              <summary>{t('fullPrompt', { bytes: gate.bytes.toLocaleString() })}</summary>
+              <pre className="letter outgoing">{buildAppealPrompt(analysis, lang)}</pre>
             </details>
             <div className="actions">
               <button className="primary" disabled={!gate.allowed || stage === 'drafting'} onClick={() => draft(false)}>
-                Send the hidden version to Gemini
+                {t('sendCloud')}
               </button>
-              <button className="secondary" disabled={device !== 'available' || stage === 'drafting'} onClick={() => draft(true)} title={device !== 'available' ? 'Needs Gemini Nano in Chrome' : ''}>
-                Stay offline: draft on this device
+              <button className="secondary" disabled={device !== 'available' || stage === 'drafting'} onClick={() => draft(true)} title={device !== 'available' ? t('needsNano') : ''}>
+                {t('stayOffline')}
               </button>
               <button className="link" disabled={stage === 'drafting'} onClick={applyTemplate}>
-                Use a template letter (no AI)
+                {t('useTemplate')}
               </button>
               <button className="link" onClick={reset}>
-                {stage === 'drafting' ? 'Cancel and start over' : 'Start over'}
+                {stage === 'drafting' ? t('cancelStartOver') : t('startOver')}
               </button>
             </div>
           </section>
@@ -527,47 +523,46 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
           <section className="facts">
             <DeadlineCard analysis={analysis} />
             <div className="card fact wide">
-              <div className="eyebrow">What happened</div>
+              <div className="eyebrow">{t('whatHappened')}</div>
               <p>{appeal.plainExplanation}</p>
             </div>
           </section>
           <section className="result-grid">
             <div className="card">
-              <h2>Your appeal letter</h2>
+              <h2>{t('appealLetter')}</h2>
               <p className="muted small">
-                Names and numbers were put back <strong>on this device</strong>. Edit anything, then print, sign and send it before the
-                deadline.
+                {t('appealLetterNote')} {t('letterInEnglish')}
               </p>
               {unknownPh.length > 0 && (
                 <div className="alert small">
-                  The model used {unknownPh.join(', ')}, which we never issued. Replace {unknownPh.length > 1 ? 'them' : 'it'} by hand.
+                  {t('unknownPh', { list: unknownPh.join(', ') })}
                 </div>
               )}
-              <textarea className="letter-edit" value={letter} onChange={(e) => setLetter(e.target.value)} rows={24} aria-label="Appeal letter" />
+              <textarea className="letter-edit" value={letter} onChange={(e) => setLetter(e.target.value)} rows={24} aria-label={t('appealLetterAria')} />
               <div className="actions">
                 <button className="primary" onClick={() => navigator.clipboard?.writeText(letter)}>
-                  Copy letter
+                  {t('copyLetter')}
                 </button>
                 <button className="secondary" onClick={() => download('appeal-letter.txt', letter, 'text/plain')}>
-                  Download .txt
+                  {t('downloadTxt')}
                 </button>
                 <button className="secondary" onClick={() => printLetter(letter)}>
-                  Print
+                  {t('print')}
                 </button>
                 <button className="link" onClick={reset}>
-                  Start a new letter
+                  {t('newLetter')}
                 </button>
               </div>
             </div>
             <div className="side">
               <div className="card">
-                <h3>Strongest arguments</h3>
+                <h3>{t('strongestArguments')}</h3>
                 <ol>{appeal.strongestArguments.map((a, i) => <li key={i}>{rehydrate(a, analysis.redaction.vault).text}</li>)}</ol>
               </div>
               <div className="card">
-                <h3>Gather this evidence</h3>
+                <h3>{t('gatherEvidence')}</h3>
                 <ul className="checklist">
-                  {[...new Set([...appeal.evidenceToGather, ...CATEGORY_PLAYBOOK[analysis.facts.category]])].slice(0, 8).map((e, i) => (
+                  {[...new Set([...appeal.evidenceToGather, ...categoryPlaybook(analysis.facts.category, lang)])].slice(0, 8).map((e, i) => (
                     <li key={i}>
                       <label>
                         <input type="checkbox" /> {rehydrate(e, analysis.redaction.vault).text}
@@ -577,14 +572,14 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                 </ul>
               </div>
               <div className="card">
-                <h3>Ask your doctor</h3>
+                <h3>{t('askDoctor')}</h3>
                 <ul>{appeal.questionsForDoctor.map((q, i) => <li key={i}>{rehydrate(q, analysis.redaction.vault).text}</li>)}</ul>
               </div>
-              <div className="card muted small">{analysis.deadline.externalReview}</div>
+              <div className="card muted small">{externalReviewText(analysis, lang)}</div>
             </div>
           </section>
           <Ledger entries={ledger} />
-          <p className="disclaimer">Overturn is not a lawyer or your insurer. It helps you write and send your own appeal.</p>
+          <p className="disclaimer">{t('disclaimer')}</p>
         </>
       )}
     </div>
@@ -592,33 +587,76 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
 }
 
 function DeadlineCard({ analysis }: { analysis: Analysis }) {
+  const t = useT();
+  const lang = useLang();
   const d = analysis.deadline;
+  const explanation = deadlineExplanation(analysis, lang);
   return (
     <div className={`card fact deadline ${d.daysLeft !== null && d.daysLeft < 30 ? 'urgent' : ''}`}>
-      <div className="eyebrow">Appeal deadline</div>
+      <div className="eyebrow">{t('deadlineTitle')}</div>
       {d.deadline ? (
         <>
-          <div className="big">{fmtDate(d.deadline)}</div>
-          <div className="days">{d.daysLeft !== null && d.daysLeft >= 0 ? `${d.daysLeft} days left` : 'This date has passed: call your plan today'}</div>
+          <div className="big">{fmtDate(d.deadline, lang)}</div>
+          <div className="days">{d.daysLeft !== null && d.daysLeft >= 0 ? t('daysLeft', { n: d.daysLeft }) : t('datePassed')}</div>
           <p className="small">
-            {d.explanation} {d.citation && <span className="mono">({d.citation})</span>}
+            {explanation} {d.citation && <span className="mono">({d.citation})</span>}
           </p>
-          <button className="link small" onClick={() => download('appeal-deadline.ics', icsFor(d.deadline!, 'Insurance appeal deadline'), 'text/calendar')}>
-            Add to calendar (.ics)
+          <button className="link small" onClick={() => download('appeal-deadline.ics', icsFor(d.deadline!, t('calendarTitle')), 'text/calendar')}>
+            {t('addCalendar')}
           </button>
         </>
       ) : (
         <>
-          <div className="big">Not sure: we won't guess</div>
-          <p className="small">{d.explanation}</p>
+          <div className="big">{t('notSure')}</div>
+          <p className="small">{explanation}</p>
         </>
       )}
       <div className="muted small">
-        Notice date from {analysis.facts.noticeDateSource}; appeal window from{' '}
-        {d.basis === 'default-rule' ? 'the legal default' : analysis.facts.windowSource}. The date arithmetic is plain code on this device.
+        {t('deadlineSources', {
+          notice: sourceLabel(analysis.facts.noticeDateSource, t),
+          window: d.basis === 'default-rule' ? t('legalDefault') : sourceLabel(analysis.facts.windowSource, t),
+        })}
       </div>
     </div>
   );
+}
+
+type T = (key: Key, vars?: Record<string, string | number>) => string;
+
+function sourceLabel(src: string, t: T): string {
+  return src === 'letter text (code)' ? t('srcCode') : src === 'Gemini Nano' ? t('srcNano') : src === 'legal default' ? t('srcDefault') : t('srcNone');
+}
+
+const PLAN_RULE_ES: Record<string, string> = {
+  employer: 'Los planes de salud de empleadores (ERISA) deben dar al menos 180 días para apelar.',
+  marketplace: 'Los planes individuales y del Mercado de Seguros (ACA) deben dar 180 días para una apelación interna.',
+  medicare_advantage: 'Las solicitudes de reconsideración de Medicare Advantage vencen 65 días después del aviso.',
+  medicaid: 'Las apelaciones de Medicaid (atención administrada) vencen 60 días después de la decisión.',
+};
+
+/** The deadline sentence, built from the code's structured result (never machine-translated). */
+function deadlineExplanation(a: Analysis, lang: Lang): string {
+  const d = a.deadline;
+  if (lang === 'en') return d.explanation;
+  let base: string;
+  if (d.basis === 'stated-in-letter') base = `Tu carta dice que tienes ${d.windowDays} días para apelar.`;
+  else if (d.basis === 'default-rule')
+    base = `La carta no indica un plazo, así que usamos el mínimo legal: ${PLAN_RULE_ES[a.facts.planType] ?? ''} Confírmalo con tu plan.`;
+  else
+    base =
+      'No encontramos un plazo para apelar en la carta ni pudimos saber qué tipo de plan es. Llama al número de tu tarjeta del seguro y pregunta: "¿Cuál es mi fecha límite para apelar esta decisión?"';
+  return d.deadline ? base : `${base}${a.facts.noticeDate ? '' : ' Tampoco pudimos leer la fecha del aviso, así que no podemos calcular la fecha exacta.'}`;
+}
+
+const EXTERNAL_ES: Record<string, string> = {
+  employer: 'Si niegan tu apelación interna, normalmente puedes pedir una revisión externa independiente dentro de 4 meses.',
+  marketplace: 'Si niegan tu apelación interna, puedes pedir una revisión externa independiente dentro de 4 meses.',
+  medicare_advantage: 'Si el plan mantiene la negación, el caso se envía automáticamente a una Entidad de Revisión Independiente.',
+  medicaid: 'Si el plan mantiene la negación, puedes pedir una Audiencia Imparcial Estatal (normalmente dentro de 120 días).',
+  unknown: 'Si niegan tu apelación interna, pregunta a tu plan cómo pedir una revisión externa independiente.',
+};
+function externalReviewText(a: Analysis, lang: Lang): string {
+  return lang === 'es' ? (EXTERNAL_ES[a.facts.planType] ?? EXTERNAL_ES.unknown) : a.deadline.externalReview;
 }
 
 function printLetter(letter: string) {
