@@ -23,7 +23,7 @@ No account, key or install needed.
 3. If Gemini Nano is available, click **Read it on this device**. Otherwise click **Hide my details now (rules only)**, or **Download Gemini Nano (once), then read** (a few minutes, once).
 4. Review **Check what leaves your device**: left is your letter, right is exactly what the cloud will see; the green **Egress check** must pass.
 5. Click **Send the hidden version to Gemini**. The free Gemini tier is occasionally busy: the app retries automatically and otherwise shows an honest template letter; the **Privacy ledger** shows every attempt.
-6. Optional: switch to **Español** in the top bar: the explanation is Spanish, the letter stays English.
+6. Optional: switch to **Español** in the top bar: the explanation is Spanish; the appeal letter is written in English for the insurer.
 7. Optional: **Benchmark** tab → run the 24-letter benchmark in your own browser.
 
 Five-minute guide with what to look for: https://github.com/acirema792/overturn/blob/main/JUDGES.md
@@ -70,7 +70,7 @@ The rules-only numbers are the floor for browsers without Gemini Nano. The misse
 - Deadlines: a letter can mention a fair-hearing window, the plan's own decision time and the patient's window. Overturn uses the earliest plausible patient window, so a misread usually errs toward an earlier deadline (see Known gaps in BENCHMARK-RESULTS.md).
 
 ## Accomplishments we're proud of
-- **English and Español.** Many people who get a denial read Spanish first. Overturn explains the denial, the arguments and the evidence in Spanish, while the appeal letter stays in English for the US insurer.
+- **English and Español.** Many people who get a denial read Spanish first. Overturn explains the denial, the arguments and the evidence in Spanish, while the appeal letter is written in English for the US insurer (the template always; Gemini is instructed to).
 - A privacy guarantee you can check yourself: the ledger, the gate and the side-by-side view.
 - Deadline arithmetic is always code: Gemini Nano only fills a missing date or window, and the card says which. When neither is known, Overturn says "not sure" instead of guessing.
 

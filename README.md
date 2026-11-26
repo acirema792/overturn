@@ -12,7 +12,7 @@ writes the appeal. The real details are filled back in on the device.
 
 - **Live app:** https://acirema792.github.io/overturn/ · **Demo video:** _added at submission_
 - **Review in five minutes:** [JUDGES.md](JUDGES.md) · **Measured results:** [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md) · **Claims and evidence:** [CLAIMS.md](CLAIMS.md) · **SDK feedback:** [FEEDBACK.md](FEEDBACK.md)
-- **Input:** paste the letter, open a **PDF** (read on the device with pdf.js), or a photo (Gemini Nano transcribes it on the device). **Languages:** English and **Español** (the explanation is in Spanish; the appeal letter stays in English for the US insurer).
+- **Input:** paste the letter, open a **PDF** (read on the device with pdf.js), or a photo (Gemini Nano transcribes it on the device). **Languages:** English and **Español** (the explanation is in Spanish; the appeal letter is meant for the US insurer, so the template letter is always English and the models are told to write it in English).
 
 ![Overturn architecture: the letter is read and de-identified on the device, a code gate checks the outgoing text, only de-identified text reaches Gemini in the cloud, and the real details are put back on the device](docs/architecture.svg)
 
