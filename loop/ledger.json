@@ -567,42 +567,62 @@
    "finding": "L1",
    "action": "09db281 reading rows first in the ledger",
    "outcome": "success",
-   "note": "verifier pass 3 pending"
+   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 09db281 REJECTED for L3 (wrong code on multi-code letters) and bundling"
   },
   {
    "round": 6,
    "finding": "L2",
    "action": "09db281 fill-in-blanks note",
    "outcome": "success",
-   "note": "verifier pass 3 pending"
+   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 09db281 REJECTED for L3 (wrong code on multi-code letters) and bundling"
   },
   {
    "round": 6,
    "finding": "L3",
    "action": "09db281 rules-only serviceDenied = first CPT/HCPCS code",
    "outcome": "success",
-   "note": "verifier pass 3 pending"
+   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 09db281 REJECTED for L3 (wrong code on multi-code letters) and bundling"
   },
   {
    "round": 6,
    "finding": "L4",
    "action": "09db281 photo error period",
    "outcome": "success",
-   "note": "verifier pass 3 pending"
+   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 09db281 REJECTED for L3 (wrong code on multi-code letters) and bundling"
   },
   {
    "round": 6,
    "finding": "L6",
    "action": "09db281 visible photo-disabled hint",
    "outcome": "success",
-   "note": "verifier pass 3 pending"
+   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 09db281 REJECTED for L3 (wrong code on multi-code letters) and bundling"
   },
   {
    "round": 6,
    "finding": "L5",
    "action": "0759d3e counts 270 + 9 e2e; six rounds",
    "outcome": "success",
-   "note": "verifier pass 3 pending"
+   "note": "verifier pass 3: APPROVED"
+  },
+  {
+   "round": 6,
+   "finding": "L3",
+   "action": "attempt 2 (07d2006): code only when exactly one distinct code; skip codes inside identifiers",
+   "outcome": "success",
+   "note": "verifier pass 4: APPROVED; 09db281+07d2006 approvable as the change set"
+  },
+  {
+   "round": 6,
+   "finding": "L3",
+   "action": "attempt 3 (ca464bb): hardening from verifier pass 4: any code overlapping an identifier -> no code",
+   "outcome": "success",
+   "note": "suggested by the verifier; tests 272, e2e 9, eval unchanged"
+  },
+  {
+   "round": 6,
+   "finding": "deploy",
+   "action": "deployed ca464bb; live: PDF 0 off-origin requests, gate passes, Spanish flow with English letter, 0 page errors",
+   "outcome": "success"
   }
  ]
 }

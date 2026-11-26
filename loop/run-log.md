@@ -8,3 +8,4 @@
 - Round 5 (requested, 2026-11-26): score 7.8 (+0.5) · PDF, Español, diagram, screenshots · verifier pass 1: 1 approved, 3 rejected, 1 escalated · audit J1–J10 · K1–K9 fixes (267 tests, 9 e2e, eval unchanged) · J3 rule change escalated · outcome: verifier pass 2, then deploy
 - Round 5 verifier pass 2: 8 approved, 1 escalated (claims) · R1, R3 follow-ups · deployed 0abdab8 · live: PDF 0 off-origin requests, Spanish flow OK, 0 page errors · 267 tests, 9 e2e, eval unchanged
 - Round 6 (final): score 7.9 (+0.1) · J1–J10 fixed except J3 (escalated) · L1–L6 (S1) fixed in 09db281, 0759d3e · 270 tests, 9 e2e, eval unchanged · outcome: STOP (max rounds) after verifier pass 3 and deploy
+- Round 6 close: verifier pass 3 rejected L3 v1; L3 v2 (07d2006) + v3 (ca464bb) approved/applied; deployed ca464bb; live OK · final 7.9 · 272 tests, 9 e2e, eval unchanged · outcome: STOP (max rounds)
