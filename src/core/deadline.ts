@@ -210,7 +210,7 @@ const DIAS_ES = /\b(?:dentro\s+de(?:\s+los)?|tiene(?:s|n)?|plazo\s+de|hasta|en\s
 const APELAR_ES = /\b(?:apela|apelaci[óo]n|reconsideraci[óo]n|revisi[óo]n|queja|audiencia|solicitud|aviso|carta|decisi[óo]n)/i;
 const SIGUIENTE_NIVEL_ES = /\b(?:audiencia imparcial|audiencia estatal|revisi[óo]n externa|revisi[óo]n independiente|entidad de revisi[óo]n)\b/i;
 // The plan's own timeline: "tomaremos…", "recibirá una respuesta…", "el plan tiene 30 días para responder".
-const PLAN_ES = /\b(?:tomaremos|decidiremos|responderemos|revisaremos|le (?:notificaremos|enviaremos|informaremos)|el plan (?:decidir[áa]|tomar[áa]|responder[áa]|tiene)|se (?:tomar[áa]|enviar[áa]) una decisi[óo]n|recibir[áa]|para (?:responder|decidir|tomar una decisi[óo]n|revisar))(?![\p{L}])/iu;
+const PLAN_ES = /\b(?:tomaremos|decidiremos|responderemos|revisaremos|le (?:notificaremos|enviaremos|informaremos)|el plan (?:decidir[áa]|tomar[áa]|responder[áa]|tiene)|se (?:tomar[áa]|enviar[áa]) una decisi[óo]n|recibir[áa] (?:una|nuestra|la) (?:respuesta|decisi[óo]n|carta)|para (?:responder|decidir|tomar una decisi[óo]n|revisar))(?![\p{L}])/iu;
 // Someone else's deadline: "su proveedor tiene 90 días para enviar…".
 const OTRO_ES = /\b(?:su|el|la) (?:proveedor|m[ée]dic[oa]|doctor[a]?|farmacia|farmac[ée]utic[oa]|hospital|empleador|centro)\b/i;
 function findWindowDaysEs(sentences: string[]): number[] {
@@ -228,7 +228,9 @@ function findWindowDaysEs(sentences: string[]): number[] {
       const clause = sentence.slice(breaks.length ? breaks[breaks.length - 1].index! : 0, end);
       if (SIGUIENTE_NIVEL_ES.test(clause) && !/\bapel(?:ar|aci[óo]n)\b/i.test(clause.replace(SIGUIENTE_NIVEL_ES, ''))) continue;
       if (PLAN_ES.test(clause)) continue;
-      if (OTRO_ES.test(clause) && !/\busted\b/i.test(clause)) continue;
+      // Someone else's deadline, unless the clause is about the appeal or names the patient
+      // ("Usted o su médico pueden pedir una apelación dentro de 60 días").
+      if (OTRO_ES.test(clause) && !/\b(?:usted|apel|reconsideraci)/i.test(clause)) continue;
       out.push(n);
     }
   }
@@ -279,7 +281,7 @@ const DATE_IN_TEXT =
 // care, never the notice. Only the label right before the date counts, so
 // "Customer Service   Date: 11/02/2026" keeps its notice date.
 const NOT_NOTICE_BEFORE =
-  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|(?<!(?:notice|determination|decision|this|is) )dated|expires?|expiration|renewal|enrolled|enrollment|nacimiento|servicios?|ingreso|admisi[óo]n|de alta|vence|vencimiento)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
+  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|(?<!(?:notice|determination|decision|this|is) )dated|expires?|expiration|renewal|enrolled|enrollment|nacimiento|servicios?|ingreso|admisi[óo]n|de alta|vence|vencimiento|(?:solicitud|recibid[oa]s?|recibimos)(?: el)?)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
 // "10/01/2026 - 10/03/2026": the second date of a skipped range is skipped too.
 const RANGE_JOINER = /^\s*(?:-|–|to|through|thru|and|,)\s*$/i;
 const NOTICE_LABEL =

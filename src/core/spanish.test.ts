@@ -146,3 +146,18 @@ describe('Spanish rules: verifier repros', () => {
     expect(guessPlanType('Su plan individual de salud niega el servicio.')).toBe('marketplace');
   });
 });
+
+describe('Spanish rules: verifier pass 6 repros', () => {
+  it('a patient-or-doctor appeal sentence keeps its window', () => {
+    expect(findWindowDays('Usted o su médico pueden pedir una apelación dentro de 60 días a partir de la fecha de este aviso.')).toBe(60);
+    expect(findWindowDays('Su médico puede pedir una apelación en su nombre dentro de 60 días a partir de la fecha de este aviso.')).toBe(60);
+    // A provider's own claim deadline still doesn't count.
+    expect(findWindowDays('Su proveedor tiene 90 días para enviar una reclamación corregida. Tiene 180 días para apelar esta decisión.')).toBe(180);
+  });
+  it('"recibirá este aviso" is not the plan’s timeline', () => {
+    expect(findWindowDays('Puede apelar dentro de 60 días a partir de la fecha en que recibirá este aviso.')).toBe(60);
+  });
+  it('the date the plan received the request is not the notice date', () => {
+    expect(findNoticeDate('Plan Sol\nRecibimos su solicitud el 5 de septiembre de 2026.\nNegamos el servicio.')).toBeNull();
+  });
+});
