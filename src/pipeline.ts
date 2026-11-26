@@ -81,7 +81,8 @@ export function billedCode(raw: string): string {
   const ids = detect(raw).map((d) => d.text);
   const codes = new Set<string>();
   for (const m of raw.matchAll(/\b(CPT|HCPCS)(?:\s+code)?[\s:#]*([A-Z]\d{4}|\d{4}[0-9A-Z])\b/g)) {
-    if (ids.some((id) => id.includes(m[2]))) continue;
+    // A code whose digits sit inside an identifier is ambiguous: name none.
+    if (ids.some((id) => id.includes(m[2]))) return '';
     codes.add(`${m[1]} ${m[2]}`);
   }
   return codes.size === 1 ? [...codes][0] : '';

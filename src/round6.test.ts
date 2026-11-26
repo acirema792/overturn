@@ -19,6 +19,8 @@ describe('L3: a rules-only appeal names what was denied', () => {
   });
   it('ignores a "code" that is part of a detected identifier', () => {
     expect(billedCode('Member ID: CPT 55555\nThe MRI was denied.')).toBe('');
+    // The denied code's digits also inside an identifier must not leave the paid code as the only one.
+    expect(billedCode('Member ID: XQZ8872148\nThe office visit (CPT 99213) was paid. The MRI (CPT 72148) is denied.')).toBe('');
   });
   it('the template letter says "the service billed as CPT 72148" (and Spanish explains it in Spanish)', () => {
     const en = templateAppeal({ category: 'medical_necessity', serviceDenied: 'CPT 72148', insurer: 'Acme', vault: {}, urgent: false });
