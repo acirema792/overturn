@@ -2,7 +2,7 @@
 
 **Appeal a health insurance denial. Your identity stays on your device.**
 
-![tests](https://img.shields.io/badge/tests-272%20%2B%209%20e2e%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
+![tests](https://img.shields.io/badge/tests-276%20%2B%209%20e2e%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
 
 Overturn is a web app for #BuildHybridAI 2026 built on **Firebase AI Logic hybrid inference**.
 Gemini Nano reads the denial letter **in Chrome, on the patient's device**. Code replaces
@@ -12,7 +12,7 @@ writes the appeal. The real details are filled back in on the device.
 
 - **Live app:** https://acirema792.github.io/overturn/ · **Demo video:** _added at submission_
 - **Review in five minutes:** [JUDGES.md](JUDGES.md) · **Measured results:** [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md) · **Claims and evidence:** [CLAIMS.md](CLAIMS.md) · **SDK feedback:** [FEEDBACK.md](FEEDBACK.md)
-- **Input:** paste the letter, open a **PDF** (read on the device with pdf.js), or a photo (Gemini Nano transcribes it on the device). **Languages:** English and **Español** (the explanation is in Spanish; the appeal letter is meant for the US insurer, so the template letter is always English and the models are told to write it in English).
+- **Input:** paste the letter, open a **PDF** (read on the device with pdf.js), or a photo (Gemini Nano transcribes it on the device). **Languages:** English and **Español**: Spanish-language denial letters are read too (rules tested on 4 synthetic letters; see Known gaps), and the explanation is in Spanish; the appeal letter is meant for the US insurer, so the template letter is always English and the models are told to write it in English.
 
 ![Overturn architecture: the letter is read and de-identified on the device, a code gate checks the outgoing text, only de-identified text reaches Gemini in the cloud, and the real details are put back on the device](docs/architecture.svg)
 
@@ -96,7 +96,7 @@ it yourself in the app's Benchmark tab in desktop Chrome.
 
 ```bash
 npm ci
-npm test          # 272 unit, pipeline, engine (SDK mocked), Spanish UI and adversarial tests
+npm test          # 276 unit, pipeline, engine (SDK mocked), Spanish UI and adversarial tests
 npm run build && npm run e2e   # 9 Playwright UI checks (simulated engine; PDF, Español, 390px; run `npx playwright install chromium` once)
 npm run eval      # rules-only benchmark (prints; `npm run eval:write` updates eval_results/)
 npm run dev       # needs .env.local (see .env.example) for real models

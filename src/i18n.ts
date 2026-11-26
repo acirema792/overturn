@@ -207,7 +207,7 @@ const ES: Record<Key, string> = {
   trySample: 'Prueba un ejemplo (ficticio, no es una persona real):',
   letterLabel: 'Texto de la carta de negación',
   letterPlaceholder: 'Pega aquí el texto de la carta de tu aseguradora o de la Explicación de Beneficios (EOB)…',
-  englishLettersNote: 'Overturn está hecho para cartas de aseguradoras de EE. UU. escritas en inglés. Si tu carta está en español, revisa con cuidado los nombres y las fechas en el siguiente paso: las reglas podrían no encontrarlos.',
+  englishLettersNote: 'Overturn lee cartas de aseguradoras de EE. UU. en inglés y en español. Las reglas para cartas en español son nuevas: revisa con cuidado los nombres y las fechas en el siguiente paso.',
   readOnDevice: 'Leerla en este dispositivo',
   rulesOnlyNow: 'Ocultar mis datos ahora (solo reglas)',
   downloadNano: 'Descargar Gemini Nano (una vez) y leer',

@@ -50,7 +50,7 @@ Offline? **Stay offline** drafts the appeal with Gemini Nano. A **privacy ledger
 - **One JSON Schema, both paths:** `responseConstraint` on device, `responseJsonSchema` in the cloud.
 - **App Check** (reCAPTCHA Enterprise) and **Remote Config** (cloud model, letter length, thinking level).
 - **Measured on the live project:** the default thinking level took ~100 s per appeal; `thinkingLevel: LOW` took ~4 s. Busy-model errors are retried (3 per model, 2 models), and every attempt is counted in the ledger.
-- **A deterministic core** in TypeScript: 14 identifier kinds modelled on HIPAA Safe Harbor, a redaction vault, the egress gate, deadline rules with CFR citations, and a template letter for when no model is reachable. 272 tests, 9 Playwright UI checks, and an independent audit-and-verify loop (six audit rounds plus verifier passes, all in `loop/`).
+- **A deterministic core** in TypeScript: 14 identifier kinds modelled on HIPAA Safe Harbor, a redaction vault, the egress gate, deadline rules with CFR citations, and a template letter for when no model is reachable. 276 tests, 9 Playwright UI checks, and an independent audit-and-verify loop (six audit rounds plus verifier passes, all in `loop/`).
 
 ## Measured results
 24 synthetic denial letters with 129 planted identifiers and 80 clinical facts. Expected answers were written before any run, and 8 letters were held out from rule development (the rules were never tuned on them).
@@ -70,7 +70,7 @@ The rules-only numbers are the floor for browsers without Gemini Nano. The misse
 - Deadlines: a letter can mention a fair-hearing window, the plan's own decision time and the patient's window. Overturn uses the earliest plausible patient window, so a misread usually errs toward an earlier deadline (see Known gaps in BENCHMARK-RESULTS.md).
 
 ## Accomplishments we're proud of
-- **English and Español.** Many people who get a denial read Spanish first. Overturn explains the denial, the arguments and the evidence in Spanish, while the appeal letter is written in English for the US insurer (the template always; Gemini is instructed to).
+- **English and Español.** Many people who get a denial read Spanish first, and plans must send Spanish notices on request in some counties. Overturn reads Spanish-language letters too (new rules, tested on synthetic letters) and explains the denial, the arguments and the evidence in Spanish, while the appeal letter is written in English for the US insurer (the template always; Gemini is instructed to).
 - A privacy guarantee you can check yourself: the ledger, the gate and the side-by-side view.
 - Deadline arithmetic is always code: Gemini Nano only fills a missing date or window, and the card says which. When neither is known, Overturn says "not sure" instead of guessing.
 
