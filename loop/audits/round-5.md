@@ -1,10 +1,10 @@
-# Round 5 audit (independent auditor at d6769ee, production build, live site)
+# Round 5 audit (independent auditor at e0e995a, production build, live site)
 
 Saved by the loop from the auditor's report file.
 
-# Round 5 audit: Overturn at d6769ee
+# Round 5 audit: Overturn at e0e995a
 
-Independent read-only auditor. The worktree was at 38f8c8e, so I detached it at d6769ee; nothing was edited, committed or pushed in the repo. The UI was checked on the main clone's `dist/`, served with `vite preview --port 4190 --outDir /home/user/overturn/dist`. It now uses lazy chunks `pdf-YwugTw7Y.js` and `pdf.worker.min-*.mjs`, so it is the round-5 build. The preview server has been stopped.
+Independent read-only auditor. The worktree was at 38f8c8e, so I detached it at e0e995a; nothing was edited, committed or pushed in the repo. The UI was checked on the main clone's `dist/`, served with `vite preview --port 4190 --outDir /home/user/overturn/dist`. It now uses lazy chunks `pdf-YwugTw7Y.js` and `pdf.worker.min-*.mjs`, so it is the round-5 build. The preview server has been stopped.
 
 ## Scores
 
@@ -28,7 +28,7 @@ Extras:
 | Code Quality | 7.5 | Clean i18n with `Record<Key,string>` typing. Three old lint warnings. `tsc -b` is clean. |
 | Compliance/Honesty | 7 | The diagram overclaims (J4), EVIDENCE.md is stale (J8), and the "letter stays English" claim is proven only for the template (J7). CLAIMS adds a fair NOT-CLAIMED row for the translation. |
 
-## Tripwires (run at d6769ee)
+## Tripwires (run at e0e995a)
 
 - `npx vitest run --pool=forks --poolOptions.forks.maxForks=2`: **Test Files 11 passed (11); Tests 263 passed (263)**
 - `npx tsx scripts/eval.ts`:

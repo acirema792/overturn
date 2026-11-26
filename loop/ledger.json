@@ -463,35 +463,35 @@
   {
    "round": 5,
    "finding": "R5-PDF",
-   "action": "ee9682f: open a PDF, text read on the device with pdf.js (lazy-loaded); unit test + e2e check with no off-origin request",
+   "action": "c4215c6: open a PDF, text read on the device with pdf.js (lazy-loaded); unit test + e2e check with no off-origin request",
    "outcome": "success",
-   "note": "verifier pass 1: 458572f APPROVED; ee9682f, 87a6f19, e96980e REJECTED (defects fixed in K1-K9); d6769ee ESCALATED (claims, fixed in K8)"
+   "note": "verifier pass 1: 638e6d9 APPROVED; c4215c6, 0bdbfc0, df97251 REJECTED (defects fixed in K1-K9); e0e995a ESCALATED (claims, fixed in K8)"
   },
   {
    "round": 5,
    "finding": "R5-ES",
-   "action": "458572f + 87a6f19: English/Espa\u00f1ol UI; explanation in Spanish, appeal letter in English; gate passes for all 24 letters with the Spanish prompt; e2e check; nav wraps at 390px; gate memo depends on lang",
+   "action": "638e6d9 + 0bdbfc0: English/Espa\u00f1ol UI; explanation in Spanish, appeal letter in English; gate passes for all 24 letters with the Spanish prompt; e2e check; nav wraps at 390px; gate memo depends on lang",
    "outcome": "success",
-   "note": "verifier pass 1: 458572f APPROVED; ee9682f, 87a6f19, e96980e REJECTED (defects fixed in K1-K9); d6769ee ESCALATED (claims, fixed in K8)"
+   "note": "verifier pass 1: 638e6d9 APPROVED; c4215c6, 0bdbfc0, df97251 REJECTED (defects fixed in K1-K9); e0e995a ESCALATED (claims, fixed in K8)"
   },
   {
    "round": 5,
    "finding": "R5-DOCS",
-   "action": "e96980e + d6769ee: architecture SVG, screenshots from the real build (rules-only), docs updated with PDF/Spanish, tests 263 + 9 e2e",
+   "action": "df97251 + e0e995a: architecture SVG, screenshots from the real build (rules-only), docs updated with PDF/Spanish, tests 263 + 9 e2e",
    "outcome": "success",
-   "note": "verifier pass 1: 458572f APPROVED; ee9682f, 87a6f19, e96980e REJECTED (defects fixed in K1-K9); d6769ee ESCALATED (claims, fixed in K8)"
+   "note": "verifier pass 1: 638e6d9 APPROVED; c4215c6, 0bdbfc0, df97251 REJECTED (defects fixed in K1-K9); e0e995a ESCALATED (claims, fixed in K8)"
   },
   {
    "round": 5,
    "finding": "K1",
-   "action": "839ad32 Spanish deadline sentence branches on the window",
+   "action": "54dd8fa Spanish deadline sentence branches on the window",
    "outcome": "success",
    "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K2",
-   "action": "196643f PDF ledger row kept; >20-page notice",
+   "action": "d2e1483 PDF ledger row kept; >20-page notice",
    "outcome": "success",
    "note": "verifier pass 2: APPROVED"
   },
@@ -505,123 +505,123 @@
   {
    "round": 5,
    "finding": "K4",
-   "action": "8687a20 PDF error kinds, translated, task destroyed on failure",
+   "action": "fec6e7e PDF error kinds, translated, task destroyed on failure",
    "outcome": "success",
    "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K5",
-   "action": "06875ff no English on the Spanish flow (noteEs, footer, banner, samples)",
+   "action": "0571418 no English on the Spanish flow (noteEs, footer, banner, samples)",
    "outcome": "success",
    "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K6",
-   "action": "eacd751 Nano en+es outputs only in Spanish mode; serviceDenied English",
+   "action": "220870d Nano en+es outputs only in Spanish mode; serviceDenied English",
    "outcome": "success",
    "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K7",
-   "action": "89f6891 note when result language differs after a switch",
+   "action": "03bee59 note when result language differs after a switch",
    "outcome": "success",
    "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K9",
-   "action": "b5cd53f Spanish-mode note: letters expected in English",
+   "action": "8e434f5 Spanish-mode note: letters expected in English",
    "outcome": "success",
    "note": "verifier pass 2: APPROVED"
   },
   {
    "round": 5,
    "finding": "K8",
-   "action": "c3515d8 claims scoped; counts 267 + 9 e2e",
+   "action": "ebcf0b4 claims scoped; counts 267 + 9 e2e",
    "outcome": "success",
-   "note": "verifier pass 2: ESCALATE_HUMAN (final published claims are the person's call); R3 wording follow-up in 0abdab8"
+   "note": "verifier pass 2: ESCALATE_HUMAN (final published claims are the person's call); R3 wording follow-up in e8b0a98"
   },
   {
    "round": 5,
    "finding": "R1",
-   "action": "d019e48 evidence checklist stays in the result language after a switch",
+   "action": "47df745 evidence checklist stays in the result language after a switch",
    "outcome": "success"
   },
   {
    "round": 5,
    "finding": "R3",
-   "action": "0abdab8 \"letter stays English\" scoped to match CLAIMS.md",
+   "action": "e8b0a98 \"letter stays English\" scoped to match CLAIMS.md",
    "outcome": "success"
   },
   {
    "round": 5,
    "finding": "J1",
-   "action": "deployed 0abdab8 to GitHub Pages; live check: PDF read with 0 off-origin requests, gate passes, PDF ledger row, Spanish flow with English letter, 0 page errors",
+   "action": "deployed e8b0a98 to GitHub Pages; live check: PDF read with 0 off-origin requests, gate passes, PDF ledger row, Spanish flow with English letter, 0 page errors",
    "outcome": "success"
   },
   {
    "round": 6,
    "finding": "L1",
-   "action": "09db281 reading rows first in the ledger",
+   "action": "45acda9 reading rows first in the ledger",
    "outcome": "success",
-   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 09db281 REJECTED for L3 (wrong code on multi-code letters) and bundling"
+   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 45acda9 REJECTED for L3 (wrong code on multi-code letters) and bundling"
   },
   {
    "round": 6,
    "finding": "L2",
-   "action": "09db281 fill-in-blanks note",
+   "action": "45acda9 fill-in-blanks note",
    "outcome": "success",
-   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 09db281 REJECTED for L3 (wrong code on multi-code letters) and bundling"
+   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 45acda9 REJECTED for L3 (wrong code on multi-code letters) and bundling"
   },
   {
    "round": 6,
    "finding": "L3",
-   "action": "09db281 rules-only serviceDenied = first CPT/HCPCS code",
+   "action": "45acda9 rules-only serviceDenied = first CPT/HCPCS code",
    "outcome": "success",
-   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 09db281 REJECTED for L3 (wrong code on multi-code letters) and bundling"
+   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 45acda9 REJECTED for L3 (wrong code on multi-code letters) and bundling"
   },
   {
    "round": 6,
    "finding": "L4",
-   "action": "09db281 photo error period",
+   "action": "45acda9 photo error period",
    "outcome": "success",
-   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 09db281 REJECTED for L3 (wrong code on multi-code letters) and bundling"
+   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 45acda9 REJECTED for L3 (wrong code on multi-code letters) and bundling"
   },
   {
    "round": 6,
    "finding": "L6",
-   "action": "09db281 visible photo-disabled hint",
+   "action": "45acda9 visible photo-disabled hint",
    "outcome": "success",
-   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 09db281 REJECTED for L3 (wrong code on multi-code letters) and bundling"
+   "note": "verifier pass 3: L1, L2, L4, L6 checked OK; 45acda9 REJECTED for L3 (wrong code on multi-code letters) and bundling"
   },
   {
    "round": 6,
    "finding": "L5",
-   "action": "0759d3e counts 270 + 9 e2e; six rounds",
+   "action": "4c2abb1 counts 270 + 9 e2e; six rounds",
    "outcome": "success",
    "note": "verifier pass 3: APPROVED"
   },
   {
    "round": 6,
    "finding": "L3",
-   "action": "attempt 2 (07d2006): code only when exactly one distinct code; skip codes inside identifiers",
+   "action": "attempt 2 (ae92ff3): code only when exactly one distinct code; skip codes inside identifiers",
    "outcome": "success",
-   "note": "verifier pass 4: APPROVED; 09db281+07d2006 approvable as the change set"
+   "note": "verifier pass 4: APPROVED; 45acda9+ae92ff3 approvable as the change set"
   },
   {
    "round": 6,
    "finding": "L3",
-   "action": "attempt 3 (ca464bb): hardening from verifier pass 4: any code overlapping an identifier -> no code",
+   "action": "attempt 3 (5a1f50c): hardening from verifier pass 4: any code overlapping an identifier -> no code",
    "outcome": "success",
    "note": "suggested by the verifier; tests 272, e2e 9, eval unchanged"
   },
   {
    "round": 6,
    "finding": "deploy",
-   "action": "deployed ca464bb; live: PDF 0 off-origin requests, gate passes, Spanish flow with English letter, 0 page errors",
+   "action": "deployed 5a1f50c; live: PDF 0 off-origin requests, gate passes, Spanish flow with English letter, 0 page errors",
    "outcome": "success"
   }
  ]

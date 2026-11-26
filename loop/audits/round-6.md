@@ -1,10 +1,10 @@
-# Round 6 audit (independent auditor at 8fcbf67, live site from 0abdab8)
+# Round 6 audit (independent auditor at ca3dd62, live site from e8b0a98)
 
 Saved by the loop from the auditor's report file.
 
-# Round 6 audit: Overturn at 8fcbf67 (live site from 0abdab8)
+# Round 6 audit: Overturn at ca3dd62 (live site from e8b0a98)
 
-Independent read-only auditor. The worktree was at 38f8c8e, so I fetched origin/main and detached at **8fcbf67**. Nothing in the repo was edited, committed or pushed. The production build went to the scratchpad only. The live site was checked with Playwright (Chromium, deviceScaleFactor 1, through the session proxy).
+Independent read-only auditor. The worktree was at 38f8c8e, so I fetched origin/main and detached at **ca3dd62**. Nothing in the repo was edited, committed or pushed. The production build went to the scratchpad only. The live site was checked with Playwright (Chromium, deviceScaleFactor 1, through the session proxy).
 
 ## Scores
 
@@ -23,12 +23,12 @@ Independent read-only auditor. The worktree was at 38f8c8e, so I fetched origin/
 | Security | 7.5 | The pdf.js task is destroyed on every path (J9 fixed). The PDF stays in memory and is never uploaded (verified live). `printLetter` uses `textContent`. There is no CSP: the site is on GitHub Pages and has no `<meta http-equiv>` in `index.html`. |
 | Reliability | 7.5 | Corrupt, password-protected, over-15-MB and over-20-page PDFs all get a specific message. In the template fallback, the cloud failure row is kept. |
 | Observability | 7.0 | The "Read the PDF" row now survives (live: "pdf.js on this device; 1 page. The file was not uploaded. · 0 requests"). It is listed out of order (L1). Ledger notes are translated (`Ledger.tsx:43`). |
-| Testing | 8.0 | 267 unit tests. e2e now also covers the ledger row, the truncation notice, Spanish ledger and footer text, and the language-switch notice (`e2e/smoke.mjs:140-151,169-178`). 9 steps (`grep -c "await step("` = 9). CI is green on 8fcbf67 (run 45762673347). |
+| Testing | 8.0 | 267 unit tests. e2e now also covers the ledger row, the truncation notice, Spanish ledger and footer text, and the language-switch notice (`e2e/smoke.mjs:140-151,169-178`). 9 steps (`grep -c "await step("` = 9). CI is green on ca3dd62 (run 45762673347). |
 | Infrastructure/Deploy | 7.5 | Live = round-5 code: bundle `index-B9G0xlWb.js`, with the Español button, the PDF input and the translated chips (J1 closed). The repo About box (description, homepage, topics) is still empty (`gh api repos/acirema792/overturn`); this is the person's known task. |
 | Code Quality | 7.5 | `tsc -b` is clean. oxlint shows the same 3 old warnings (`redact.ts:103`, `Highlight.tsx:40`, `scripts/demo/record.mjs:137`). The Spanish deadline text moved into `src/deadlineText.ts` and has its own test. |
 | Compliance/Honesty | 8.0 | The diagram no longer overclaims (`architecture.svg:17,21,54-55`). README has a "Redaction isn't perfect: 7/34" caption under the diagram. CLAIMS splits the template letter (REPRODUCIBLE) from model letters (NOT-CLAIMED) and adds "reads Spanish letters: NOT-CLAIMED". EVIDENCE, JUDGES, SUBMISSION and README all say 267 tests and 9 e2e. One small nit remains (L5). |
 
-## Tripwires (run at 8fcbf67)
+## Tripwires (run at ca3dd62)
 
 - `npx vitest run --pool=forks --poolOptions.forks.maxForks=2`: **Test Files 12 passed (12); Tests 267 passed (267)**.
 - `npx tsx scripts/eval.ts`: both sets match the baseline exactly.
@@ -39,7 +39,7 @@ Independent read-only auditor. The worktree was at 38f8c8e, so I fetched origin/
 | Held-out | **7/34** | **23/23** | 0/8 | **8/8** | **7/8** (H06 `coding_or_billing → other`) |
 
 - `tsc -b --noEmit`: clean. `oxlint`: 3 old warnings. `vite build` to the scratchpad: OK; `pdf-YwugTw7Y.js` is lazy.
-- The diff since d6769ee touches no protected path: no `src/data/*`, `eval_results/**`, `scripts/eval.ts`, `src/eval/runEval.ts`, `.github/workflows/**` or `LICENSE`.
+- The diff since e0e995a touches no protected path: no `src/data/*`, `eval_results/**`, `scripts/eval.ts`, `src/eval/runEval.ts`, `.github/workflows/**` or `LICENSE`.
 - e2e was not run, as instructed.
 
 ## Live site check (https://acirema792.github.io/overturn/)
