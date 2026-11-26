@@ -2,7 +2,7 @@
 
 **Appeal a health insurance denial. Your identity stays on your device.**
 
-![tests](https://img.shields.io/badge/tests-256%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
+![tests](https://img.shields.io/badge/tests-263%20%2B%209%20e2e%20passing-1f7a4d) ![held-out](https://img.shields.io/badge/held--out%20deadlines-8%2F8%20correct-1f7a4d) ![facts](https://img.shields.io/badge/clinical%20facts%20kept-80%2F80-1f7a4d) ![license](https://img.shields.io/badge/license-Apache--2.0-2457a6)
 
 Overturn is a web app for #BuildHybridAI 2026 built on **Firebase AI Logic hybrid inference**.
 Gemini Nano reads the denial letter **in Chrome, on the patient's device**. Code replaces
@@ -12,6 +12,23 @@ writes the appeal. The real details are filled back in on the device.
 
 - **Live app:** https://acirema792.github.io/overturn/ · **Demo video:** _added at submission_
 - **Review in five minutes:** [JUDGES.md](JUDGES.md) · **Measured results:** [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md) · **Claims and evidence:** [CLAIMS.md](CLAIMS.md) · **SDK feedback:** [FEEDBACK.md](FEEDBACK.md)
+- **Input:** paste the letter, open a **PDF** (read on the device with pdf.js), or a photo (Gemini Nano transcribes it on the device). **Languages:** English and **Español** (the explanation is in Spanish; the appeal letter stays in English for the US insurer).
+
+![Overturn architecture: the letter is read and de-identified on the device, a code gate checks the outgoing text, only de-identified text reaches Gemini in the cloud, and the real details are put back on the device](docs/architecture.svg)
+
+| Your letter, with the identifiers found | What leaves vs. what stays |
+|---|---|
+| ![The input screen with a synthetic sample letter loaded](docs/img/1-input.png) | ![Side-by-side review: the letter on the left, the de-identified text the cloud will see on the right, and the passed egress check](docs/img/2-review.png) |
+| **The deadline, computed by code** | **Privacy ledger** |
+| ![Deadline card: the date and the days left, from the 180-day window the letter states](docs/img/3-deadline.png) | ![Privacy ledger: one plain-code step, 0 prompt bytes sent](docs/img/4-ledger.png) |
+
+<details><summary>En español</summary>
+
+![The review screen in Spanish](docs/img/5-espanol.png)
+
+</details>
+
+<sub>Screenshots: the real production build on the rules-only path (headless Chromium has no Gemini Nano), synthetic sample letter, cropped below the status bar. Regenerate with `npm run build && node scripts/screenshots.mjs`.</sub>
 
 ## Why
 
@@ -27,7 +44,7 @@ That split is exactly what hybrid inference is for.
 
 | Step | Where | Firebase AI Logic mode | Why this mode |
 |---|---|---|---|
-| 1. Read the letter (or a photo of it): find every person, ID, address, contact; read the denial reason | Gemini Nano in Chrome | `ONLY_ON_DEVICE` + our own availability check first | `PREFER_ON_DEVICE` would silently fall back to the cloud when Nano isn't ready, which would upload the raw letter. And in SDK 13.4.0, even `ONLY_ON_DEVICE` goes to the cloud when Chrome lacks the Prompt API ([FEEDBACK.md](FEEDBACK.md)), so we check first and fail closed. |
+| 1. Read the letter (pasted, a PDF read on the device by pdf.js, or a photo): find every person, ID, address, contact; read the denial reason | Gemini Nano in Chrome | `ONLY_ON_DEVICE` + our own availability check first | `PREFER_ON_DEVICE` would silently fall back to the cloud when Nano isn't ready, which would upload the raw letter. And in SDK 13.4.0, even `ONLY_ON_DEVICE` goes to the cloud when Chrome lacks the Prompt API ([FEEDBACK.md](FEEDBACK.md)), so we check first and fail closed. |
 | 2. Replace identifiers with placeholders (`[PERSON_1]`, `[MEMBER_ID_1]`); compute the appeal deadline | Plain code on the device | none | Deterministic rules for 14 identifier kinds, plus every value Nano found, everywhere it appears. The deadline arithmetic is code: the window the letter states, or the federal minimum (ERISA 180 days, Medicare Advantage 65, Medicaid 60). If code can't find the notice date or window, Gemini Nano's reading is used and the deadline card says so. |
 | 3. Egress gate + the patient's approval | Plain code on the device | none | The request is blocked if any known identifier (even reformatted) or any detectable new one is in the outgoing text. The patient sees the exact text and approves it. |
 | 4. Write the explanation, arguments and appeal letter | Gemini in the cloud | `PREFER_IN_CLOUD` | The stronger model does the hard writing from de-identified text. If the network fails, the SDK falls back to Gemini Nano. |
@@ -77,8 +94,8 @@ it yourself in the app's Benchmark tab in desktop Chrome.
 
 ```bash
 npm ci
-npm test          # 256 unit, pipeline, engine (SDK mocked) and adversarial tests
-npm run build && npm run e2e   # Playwright UI smoke test (simulated engine; run `npx playwright install chromium` once)
+npm test          # 263 unit, pipeline, engine (SDK mocked), Spanish UI and adversarial tests
+npm run build && npm run e2e   # 9 Playwright UI checks (simulated engine; PDF, Español, 390px; run `npx playwright install chromium` once)
 npm run eval      # rules-only benchmark (prints; `npm run eval:write` updates eval_results/)
 npm run dev       # needs .env.local (see .env.example) for real models
 ```
@@ -108,6 +125,8 @@ src/ai/          Firebase AI Logic engine, prompts, JSON schemas, simulated engi
 src/pipeline.ts  read on device → redact → facts (code first, model second) → cloud prompt
 src/data/        synthetic evaluation letters (tuning set + held-out set)
 src/components/  appeal flow, privacy ledger, benchmark, how it works
+src/pdf/         on-device PDF text extraction (pdf.js, loaded only when a PDF is opened)
+src/i18n.ts      English and Spanish UI text
 ```
 
 Built during #BuildHybridAI 2026 (Nov 11–30, 2026). Apache-2.0.

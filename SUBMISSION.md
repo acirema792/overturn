@@ -9,7 +9,7 @@ Deadline: **Mon Nov 30, 2026, 2:00 pm PT**. Submit by Sun Nov 29 evening PT.
 | Platform | **Web (Chrome)** |
 | New or existing | **New** (built Nov 11–30, 2026) |
 | Submitter type | Individual |
-| Built with (tags) | `firebase`, `firebase-ai-logic`, `gemini`, `gemini-nano`, `firebase-app-check`, `firebase-remote-config`, `chrome`, `typescript`, `react`, `vite`, `playwright`, `github-pages` |
+| Built with (tags) | `firebase`, `firebase-ai-logic`, `gemini`, `gemini-nano`, `firebase-app-check`, `firebase-remote-config`, `chrome`, `typescript`, `react`, `vite`, `pdf.js`, `playwright`, `github-pages` |
 | Try it out | https://acirema792.github.io/overturn/ · https://github.com/acirema792/overturn |
 | Video | _YouTube link (public)_ |
 | Testing instructions | See below |
@@ -23,7 +23,8 @@ No account, key or install needed.
 3. If Gemini Nano is available, click **Read it on this device**. Otherwise click **Hide my details now (rules only)**, or **Download Gemini Nano (once), then read** (a few minutes, once).
 4. Review **Check what leaves your device**: left is your letter, right is exactly what the cloud will see; the green **Egress check** must pass.
 5. Click **Send the hidden version to Gemini**. The free Gemini tier is occasionally busy: the app retries automatically and otherwise shows an honest template letter; the **Privacy ledger** shows every attempt.
-6. Optional: **Benchmark** tab → run the 24-letter benchmark in your own browser.
+6. Optional: switch to **Español** in the top bar: the explanation is Spanish, the letter stays English.
+7. Optional: **Benchmark** tab → run the 24-letter benchmark in your own browser.
 
 Five-minute guide with what to look for: https://github.com/acirema792/overturn/blob/main/JUDGES.md
 
@@ -35,7 +36,7 @@ In 2024, insurers on HealthCare.gov denied **19% of in-network claims**, and few
 The appeal needs the **medicine**: what was denied, and why. It doesn't need the **identity**. That split is exactly what hybrid inference is for.
 
 ## What it does
-1. **Paste the letter or take a photo.** Gemini Nano, running in Chrome through Firebase AI Logic, finds every person, member ID, address and contact detail, and reads the denial reason, **on the device**.
+1. **Paste the letter, open a PDF or take a photo.** The PDF is read on the device with pdf.js. Gemini Nano, running in Chrome through Firebase AI Logic, finds every person, member ID, address and contact detail, and reads the denial reason, **on the device**.
 2. **Code hides and decides.** Each identifier becomes a placeholder (`[PERSON_1]`, `[MEMBER_ID_1]`) everywhere it appears. The **appeal deadline** is computed by code from the letter and federal rules (ERISA 180 days, Medicare Advantage 65, Medicaid 60). When it isn't sure, it says so instead of guessing.
 3. **You see exactly what leaves.** A side-by-side view shows your letter and the de-identified text. An **egress gate** (plain code) blocks the request if any identifier is still in it, even reformatted. You can hide anything else with a click or by typing.
 4. **The cloud argues.** Gemini in the cloud writes a plain-English explanation, the strongest arguments, an evidence checklist, questions for your doctor and a ready-to-sign appeal letter, **from the de-identified text only**.
@@ -49,7 +50,7 @@ Offline? **Stay offline** drafts the appeal with Gemini Nano. A **privacy ledger
 - **One JSON Schema, both paths:** `responseConstraint` on device, `responseJsonSchema` in the cloud.
 - **App Check** (reCAPTCHA Enterprise) and **Remote Config** (cloud model, letter length, thinking level).
 - **Measured on the live project:** the default thinking level took ~100 s per appeal; `thinkingLevel: LOW` took ~4 s. Busy-model errors are retried (3 per model, 2 models), and every attempt is counted in the ledger.
-- **A deterministic core** in TypeScript: 14 identifier kinds modelled on HIPAA Safe Harbor, a redaction vault, the egress gate, deadline rules with CFR citations, and a template letter for when no model is reachable. 256 tests, a Playwright UI test, and an independent audit-and-verify loop (three rounds plus verifier passes, all in `loop/`).
+- **A deterministic core** in TypeScript: 14 identifier kinds modelled on HIPAA Safe Harbor, a redaction vault, the egress gate, deadline rules with CFR citations, and a template letter for when no model is reachable. 263 tests, 9 Playwright UI checks, and an independent audit-and-verify loop (three rounds plus verifier passes, all in `loop/`).
 
 ## Measured results
 24 synthetic denial letters with 129 planted identifiers and 80 clinical facts. Expected answers were written before any run, and 8 letters were held out from rule development (the rules were never tuned on them).
@@ -69,6 +70,7 @@ The rules-only numbers are the floor for browsers without Gemini Nano. The misse
 - Deadlines: a letter can mention a fair-hearing window, the plan's own decision time and the patient's window. Overturn uses the earliest plausible patient window, so a misread usually errs toward an earlier deadline (see Known gaps in BENCHMARK-RESULTS.md).
 
 ## Accomplishments we're proud of
+- **English and Español.** Many people who get a denial read Spanish first. Overturn explains the denial, the arguments and the evidence in Spanish, while the appeal letter stays in English for the US insurer.
 - A privacy guarantee you can check yourself: the ledger, the gate and the side-by-side view.
 - Deadline arithmetic is always code: Gemini Nano only fills a missing date or window, and the card says which. When neither is known, Overturn says "not sure" instead of guessing.
 

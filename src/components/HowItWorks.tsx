@@ -50,7 +50,7 @@ export function HowItWorks() {
           <tbody>
             <tr>
               <td>Firebase AI Logic (hybrid)</td>
-              <td>Two inference modes, each where it fits: ONLY_ON_DEVICE for the raw letter, photos and "stay offline"; PREFER_IN_CLOUD for the redacted appeal. Every response's <code>inferenceSource</code> is logged in the privacy ledger.</td>
+              <td>Two inference modes, each where it fits: ONLY_ON_DEVICE for the raw letter, photos and "stay offline" (a PDF's text is read by pdf.js on the device, with no model); PREFER_IN_CLOUD for the redacted appeal. Every response's <code>inferenceSource</code> is logged in the privacy ledger.</td>
             </tr>
             <tr>
               <td>App Check</td>
