@@ -10,3 +10,4 @@
 - Round 6 (final): score 7.9 (+0.1) · J1–J10 fixed except J3 (escalated) · L1–L6 (S1) fixed in 45acda9, 4c2abb1 · 270 tests, 9 e2e, eval unchanged · outcome: STOP (max rounds) after verifier pass 3 and deploy
 - Round 6 close: verifier pass 3 rejected L3 v1; L3 v2 (ae92ff3) + v3 (5a1f50c) approved/applied; deployed 5a1f50c; live OK · final 7.9 · 272 tests, 9 e2e, eval unchanged · outcome: STOP (max rounds)
 - History rewrite (2026-11-26, person's "force-push OK"): main rewritten from 1114d00 (Claude identity, dates kept), 41803a4 folded into its fix (88e8030); final tree identical to before; hashes in loop/ updated; backup branch kept locally
+- Spanish-language letters (J3, person's go-ahead): 3 attempts, verifier passes 5-7 (reject, reject, approve) · eval identical · 285 tests, 9 e2e · deploy next

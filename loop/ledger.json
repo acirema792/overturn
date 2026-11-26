@@ -623,6 +623,27 @@
    "finding": "deploy",
    "action": "deployed 5a1f50c; live: PDF 0 off-origin requests, gate passes, Spanish flow with English letter, 0 page errors",
    "outcome": "success"
+  },
+  {
+   "round": 6,
+   "finding": "J3-ES",
+   "action": "attempt 1 (6b62b3c, 0aa73c4): additive Spanish rules + docs",
+   "outcome": "failure",
+   "note": "verifier pass 5: REJECTED (English \"Sr.\" changed; Spanish windows misread)"
+  },
+  {
+   "round": 6,
+   "finding": "J3-ES",
+   "action": "attempt 2 (3a58f5b, c967c58): Sr. scoped, plan timeline/third party skipped, sesenta (60), service dates, plan individual",
+   "outcome": "failure",
+   "note": "verifier pass 6: REJECTED (\"Usted o su m\u00e9dico\u2026\" window dropped)"
+  },
+  {
+   "round": 6,
+   "finding": "J3-ES",
+   "action": "attempt 3 (753a35c, f7aaac3): third-party skip scoped, recibir\u00e1 narrowed, recibimos-date skipped",
+   "outcome": "success",
+   "note": "verifier pass 7: APPROVED; eval identical, English unchanged except letters with Spanish words; no later-deadline misreads"
   }
  ]
 }
