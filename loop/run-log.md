@@ -11,3 +11,4 @@
 - Round 6 close: verifier pass 3 rejected L3 v1; L3 v2 (ae92ff3) + v3 (5a1f50c) approved/applied; deployed 5a1f50c; live OK · final 7.9 · 272 tests, 9 e2e, eval unchanged · outcome: STOP (max rounds)
 - History rewrite (2026-11-26, person's "force-push OK"): main rewritten from 1114d00 (Claude identity, dates kept), 41803a4 folded into its fix (88e8030); final tree identical to before; hashes in loop/ updated; backup branch kept locally
 - Spanish-language letters (J3, person's go-ahead): 3 attempts, verifier passes 5-7 (reject, reject, approve) · eval identical · 285 tests, 9 e2e · deploy next
+- 2026-11-26: repo was made private (Pages off, live site 404); the person made it public and re-enabled Pages; redeployed a3c33d1; live re-checked OK (English, Español, PDF 0 off-origin, gate, template). Cloud from this IP: App Check 403 as before (handled with a clear message).
