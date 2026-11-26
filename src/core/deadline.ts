@@ -198,11 +198,42 @@ export function findWindowDays(text: string): number | null {
       if (patient || !plan) candidates.push(n);
     }
   }
+  candidates.push(...findWindowDaysEs(sentences));
   return candidates.length ? Math.min(...candidates) : null;
+}
+
+// Spanish-language notices: "Tiene 60 días para apelar", "dentro de los 180 días
+// a partir de la fecha de este aviso". Same rules as English: appeal sentences
+// only, not a later process (fair hearing, external review) unless an appeal is
+// offered, not the plan's own timeline ("tomaremos una decisión en 30 días").
+const DIAS_ES = /\b(?:dentro\s+de(?:\s+los)?|tiene(?:s|n)?|plazo\s+de|hasta|en\s+un\s+plazo\s+de)\s+\(?(\d{2,3})\)?\s*d[íi]as\b|\b(\d{2,3})\s+d[íi]as\s+(?:calendario\s+|naturales\s+)?(?:a\s+partir|desde|despu[ée]s|contados)\b/gi;
+const APELAR_ES = /\b(?:apela|apelaci[óo]n|reconsideraci[óo]n|revisi[óo]n|queja|audiencia|solicitud|aviso|carta|decisi[óo]n)/i;
+const SIGUIENTE_NIVEL_ES = /\b(?:audiencia imparcial|audiencia estatal|revisi[óo]n externa|revisi[óo]n independiente|entidad de revisi[óo]n)\b/i;
+const PLAN_ES = /\b(?:tomaremos|decidiremos|responderemos|revisaremos|le (?:notificaremos|enviaremos|informaremos)|el plan (?:decidir[áa]|tomar[áa]|responder[áa])|se (?:tomar[áa]|enviar[áa]) una decisi[óo]n)\b/i;
+function findWindowDaysEs(sentences: string[]): number[] {
+  const out: number[] = [];
+  for (const sentence of sentences) {
+    if (!APELAR_ES.test(sentence)) continue;
+    for (const m of sentence.matchAll(DIAS_ES)) {
+      const n = Number(m[1] ?? m[2]);
+      if (!n || n < 10 || n > 400) continue;
+      const before = sentence.slice(0, m.index);
+      const breaks = [...before.matchAll(/[,;]|\b(?:si|y|pero|o)\b/gi)];
+      const clause = sentence.slice(breaks.length ? breaks[breaks.length - 1].index! : 0, m.index! + m[0].length + 80);
+      if (SIGUIENTE_NIVEL_ES.test(clause) && !/\bapel(?:ar|aci[óo]n)\b/i.test(clause.replace(SIGUIENTE_NIVEL_ES, ''))) continue;
+      if (PLAN_ES.test(clause)) continue;
+      out.push(n);
+    }
+  }
+  return out;
 }
 
 const MONTH_INDEX: Record<string, number> = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
+};
+
+const MESES_INDEX: Record<string, number> = {
+  enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6, julio: 7, agosto: 8, septiembre: 9, setiembre: 9, octubre: 10, noviembre: 11, diciembre: 12,
 };
 
 /** Normalise a date string the letter uses to ISO. */
@@ -221,6 +252,11 @@ export function toISODate(s: string): string | null {
     const iso = `${m[3]}-${String(MONTH_INDEX[m[1].toLowerCase()]).padStart(2, '0')}-${m[2].padStart(2, '0')}`;
     return parseISO(iso) ? iso : null;
   }
+  m = t.match(/^(\d{1,2})\s+de\s+([a-z]+)\s+(?:de\s+|del\s+)?(\d{4})$/i);
+  if (m && MESES_INDEX[m[2].toLowerCase()]) {
+    const iso = `${m[3]}-${String(MESES_INDEX[m[2].toLowerCase()]).padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+    return parseISO(iso) ? iso : null;
+  }
   m = t.match(/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?,?\s+(\d{4})$/);
   if (m && MONTH_INDEX[m[2].toLowerCase()]) {
     const iso = `${m[3]}-${String(MONTH_INDEX[m[2].toLowerCase()]).padStart(2, '0')}-${m[1].padStart(2, '0')}`;
@@ -230,17 +266,17 @@ export function toISODate(s: string): string | null {
 }
 
 const DATE_IN_TEXT =
-  /\b(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?,?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2})\b/g;
+  /\b(?:(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?,?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2}|\d{1,2}\s+de\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\s+(?:de\s+|del\s+)?\d{4})\b/g;
 
 // A date directly after a birth/service label is about the patient or the
 // care, never the notice. Only the label right before the date counts, so
 // "Customer Service   Date: 11/02/2026" keeps its notice date.
 const NOT_NOTICE_BEFORE =
-  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|(?<!(?:notice|determination|decision|this|is) )dated|expires?|expiration|renewal|enrolled|enrollment)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
+  /\b(?:birth|dob|d\.o\.b|born|services?|dos|admission|admitted|discharged?|treatments?|visits?|procedures?|surgery|received|presented|effective|coverage|period|since|through|thru|by|due|(?<!(?:notice|determination|decision|this|is) )dated|expires?|expiration|renewal|enrolled|enrollment|nacimiento|servicio|ingreso|alta|vence|vencimiento)\b\.?(?: dates?| on)?(?: \(dos\))?[\s:()|\-–]{0,4}$/i;
 // "10/01/2026 - 10/03/2026": the second date of a skipped range is skipped too.
 const RANGE_JOINER = /^\s*(?:-|–|to|through|thru|and|,)\s*$/i;
 const NOTICE_LABEL =
-  /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date\b(?!d)|date issued|issue date|\bissued\b(?: on)?|statement date|\bsent\b|(?:^|\s{2,}|\|\s*)date\s*:)\s*[:-]?\s*/i;
+  /(?:date of (?:this )?(?:notice|letter|determination|decision)|notice date|letter date\b(?!d)|date issued|issue date|\bissued\b(?: on)?|statement date|\bsent\b|(?:^|\s{2,}|\|\s*)date\s*:|fecha (?:del aviso|de la carta|de emisi[óo]n|de la (?:decisi[óo]n|determinaci[óo]n))|(?:^|\s{2,}|\|\s*)fecha\s*:)\s*[:-]?\s*/i;
 
 /** ISO dates on a line, from `from` onwards, skipping birth/service dates. */
 function noticeDatesIn(line: string, from = 0): string[] {
@@ -292,9 +328,9 @@ export function findNoticeDate(text: string): string | null {
 
 const PLAN_SIGNALS: Record<Exclude<PlanType, 'unknown'>, RegExp[]> = {
   medicare_advantage: [/medicare advantage/, /\bpart c\b/, /independent review entity/, /medicare (?:number|id)\b/, /\bmbi\b/, /integrated denial notice/, /notice of denial of (?:medical coverage|payment)/],
-  medicaid: [/medicaid/, /medi-cal/, /state fair hearing/, /\bchip\b/, /managed care organization/],
-  employer: [/\berisa\b/, /employer/, /group health plan/, /plan administrator/, /section 502\(a\)/, /summary plan description/, /employee (?:health|benefits?)/],
-  marketplace: [/marketplace/, /healthcare\.gov/, /affordable care act/, /individual (?:health )?plans?\b/, /covered california/],
+  medicaid: [/medicaid/, /medi-cal/, /state fair hearing/, /\bchip\b/, /managed care organization/, /audiencia imparcial estatal/],
+  employer: [/\berisa\b/, /employer/, /group health plan/, /plan administrator/, /section 502\(a\)/, /summary plan description/, /employee (?:health|benefits?)/, /empleador/, /plan (?:de salud )?(?:grupal|colectivo)/],
+  marketplace: [/marketplace/, /healthcare\.gov/, /affordable care act/, /individual (?:health )?plans?\b/, /covered california/, /mercado de seguros/, /planes? (?:de salud )?individual(?:es)?\b/],
 };
 
 /**

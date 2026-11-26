@@ -63,13 +63,13 @@ export const CATEGORY_PLAYBOOK: Record<DenialCategory, string[]> = {
 };
 
 const KEYWORDS: [DenialCategory, RegExp][] = [
-  ['step_therapy', /step therapy|try (?:and fail|another)|first[- ]line|formulary alternative/i],
-  ['experimental', /experimental|investigational|unproven/i],
-  ['prior_authorization', /prior (?:authori[sz]ation|approval)|pre-?authori[sz]ation|precertification|not authori[sz]ed in advance/i],
-  ['out_of_network', /out[- ]of[- ]network|non-?participating|not in (?:our|the plan's) network/i],
-  ['coding_or_billing', /coding|billed incorrectly|modifier|duplicate claim|invalid (?:procedure|diagnosis) code|bundl/i],
-  ['medical_necessity', /medical(?:ly)? necess|not necessary|clinical criteria|does not meet (?:our )?(?:coverage )?criteria|lower level of care|level of care is appropriate/i],
-  ['not_covered', /not a covered|excluded|exclusion|not covered under|benefit limit/i],
+  ['step_therapy', /step therapy|try (?:and fail|another)|first[- ]line|formulary alternative|terapia escalonada|probar (?:primero )?otro medicamento|primera l[íi]nea/i],
+  ['experimental', /experimental|investigational|unproven|en investigaci[óo]n|no probad[oa]/i],
+  ['prior_authorization', /prior (?:authori[sz]ation|approval)|pre-?authori[sz]ation|precertification|not authori[sz]ed in advance|autorizaci[óo]n previa|aprobaci[óo]n previa|preautorizaci[óo]n|precertificaci[óo]n/i],
+  ['out_of_network', /out[- ]of[- ]network|non-?participating|not in (?:our|the plan's) network|fuera de la red|no participante/i],
+  ['coding_or_billing', /coding|billed incorrectly|modifier|duplicate claim|invalid (?:procedure|diagnosis) code|bundl|codificaci[óo]n|facturad[oa] incorrectamente|reclamaci[óo]n duplicada/i],
+  ['medical_necessity', /medical(?:ly)? necess|not necessary|clinical criteria|does not meet (?:our )?(?:coverage )?criteria|lower level of care|level of care is appropriate|m[ée]dicamente necesari|no es necesari|criterios cl[íi]nicos|no cumple (?:con )?(?:nuestros |los )?criterios/i],
+  ['not_covered', /not a covered|excluded|exclusion|not covered under|benefit limit|no es un beneficio cubierto|no est[áa] cubiert|no cubiert|excluid[oa]|exclusi[óo]n|l[íi]mite de beneficios/i],
 ];
 
 export function classifyDenial(text: string): DenialCategory {

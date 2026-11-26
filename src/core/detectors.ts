@@ -37,6 +37,15 @@ const SOURCE_PRIORITY: Record<Span['source'], number> = { user: 4, 'on-device': 
 const MONTHS =
   'January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec';
 
+// Spanish-language notices (45 CFR 147.136(e) requires them on request in some counties).
+const MESES = 'enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre';
+// Spanish words that are not names after a salutation or a label ("Estimado afiliado").
+const NO_ES_NOMBRE = new Set(
+  ['afiliado', 'afiliada', 'miembro', 'paciente', 'cliente', 'asegurado', 'asegurada', 'beneficiario', 'beneficiaria',
+   'señor', 'señora', 'señorita', 'sr', 'sra', 'srta', 'dr', 'dra', 'don', 'doña', 'servicios', 'servicio', 'departamento', 'apelaciones', 'equipo', 'plan', 'salud', 'usuario', 'usuaria'],
+);
+const acceptNameEs = (v: string) => acceptName(v) && !v.split(/\s+/).some((w) => NO_ES_NOMBRE.has(w.toLowerCase()));
+
 const STREET_SUFFIX =
   'Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl|Terrace|Ter|Circle|Cir|Parkway|Pkwy|Highway|Hwy|Square|Sq|Trail|Trl';
 
@@ -209,6 +218,55 @@ const RULES: Rule[] = [
   { kind: 'PERSON', re: new RegExp(`\\b(?:Dear|DEAR)[ \\t]+${TITLE}(${NW}|${CW}),`, 'gu'), group: 1, accept: acceptName },
   // "Dear MS. GONZALEZ," — a capitals surname only with a title ("Dear AETNA," is not a person).
   { kind: 'PERSON', re: new RegExp(`\\b(?:Dear|DEAR)[ \\t]+(?:Mr|Mrs|Ms|Miss|Dr|MR|MRS|MS|DR)\\.?[ ]+(${CW}),`, 'gu'), group: 1, accept: acceptName },
+  // ---- Spanish-language letters (additive: Spanish words only) ----
+  // "1 de octubre de 2026", "15 de enero del 2027".
+  { kind: 'DATE', re: new RegExp(`\\b\\d{1,2}\\s+de\\s+(?:${MESES})\\s+(?:de\\s+|del\\s+)?\\d{4}\\b`, 'gi') },
+  // "Número de miembro: SOL987654321", "N.º de reclamo: 2026-55-1201", "ID de afiliado: ...".
+  {
+    kind: 'MEMBER_ID',
+    re: /\b(?:N[úu]mero|N[úu]m\.?|No\.?|N\.?º|ID)\s+de\s+(?:miembro|afiliad[oa]|socio|p[óo]liza|grupo|asegurad[oa]|beneficiari[oa]|Medicaid|Medicare)\s*[:#]?\s*(?=[A-Z0-9-]*\d)([A-Z0-9][A-Z0-9-]{3,}[A-Z0-9])\b/gi,
+    group: 1,
+    accept: (v) => !looksLikeCode(v.toUpperCase()) && /\d/.test(v),
+  },
+  {
+    kind: 'CLAIM_ID',
+    re: /\b(?:N[úu]mero|N[úu]m\.?|No\.?|N\.?º|ID)\s+de\s+(?:reclamo|reclamaci[óo]n|caso|referencia|autorizaci[óo]n|apelaci[óo]n|queja|seguimiento)\s*[:#]?\s*(?=[A-Z0-9-]*\d)([A-Z0-9][A-Z0-9-]{3,}[A-Z0-9])\b/gi,
+    group: 1,
+    accept: (v) => !looksLikeCode(v.toUpperCase()) && /\d/.test(v),
+  },
+  {
+    kind: 'ACCOUNT_ID',
+    re: /\b(?:N[úu]mero|N[úu]m\.?|No\.?|N\.?º)\s+de\s+(?:cuenta|expediente|historia cl[íi]nica|factura)\s*[:#]?\s*(?=[A-Z0-9-]*\d)([A-Z0-9][A-Z0-9-]{3,}[A-Z0-9])\b/gi,
+    group: 1,
+    accept: (v) => !looksLikeCode(v.toUpperCase()) && /\d/.test(v),
+  },
+  // Names after a Spanish salutation, with or without a title: "Estimada Sra. María José Gutiérrez Ramírez:".
+  {
+    kind: 'PERSON',
+    re: new RegExp(`(?<![\\p{L}])(?:Estimad[oa]s?|Apreciad[oa]s?|Querid[oa]s?|ESTIMAD[OA]S?)(?:[ \\t]+(?:Sr|Sra|Srta|Dr|Dra|SR|SRA|SRTA|DR|DRA)\\.?|[ \\t]+(?:señor|señora|señorita|doctor|doctora))?[ \\t]+(${NW}(?:${PART}[ ]${NW}){0,3})`, 'gu'),
+    group: 1,
+    accept: acceptNameEs,
+  },
+  // Spanish person labels: "Paciente: Ana Ruiz", "Nombre del afiliado: ...", "Asegurado: ...".
+  {
+    kind: 'PERSON',
+    re: new RegExp(`(?<![\\p{L}])(?:Paciente|Afiliad[oa]|Asegurad[oa]|Beneficiari[oa]|Miembro|Nombre(?: del (?:paciente|afiliad[oa]|asegurad[oa]|miembro|beneficiari[oa]))?|PACIENTE|AFILIAD[OA]|ASEGURAD[OA]|NOMBRE)[ \\t]*:[ \\t]+(${NW}(?:${PART}[ ]${NW}){1,3}|${CW}(?:[ ]${CW}){1,3})`, 'gu'),
+    group: 1,
+    accept: acceptNameEs,
+  },
+  // Spanish titles and relatives: "la Dra. Elena Paredes", "Sra. Gutiérrez", "su hijo, Mateo".
+  {
+    kind: 'PERSON',
+    re: new RegExp(`(?<![\\p{L}])(?:Sra|Srta|Dra|Sr)\\.[ ]+((?:(?:de|del|la|las|los|y)[ ])*${NW}(?:${PART}[ ]${NW}){0,3})`, 'gu'),
+    group: 1,
+    accept: acceptNameEs,
+  },
+  {
+    kind: 'PERSON',
+    re: new RegExp(`(?<![\\p{L}])(?:hij[oa]|espos[oa]|madre|padre|herman[oa]|c[óo]nyuge|pareja|niet[oa]|abuel[oa])[ \\t]*,?[ \\t]+(${NW}(?:${PART}[ ]${NW}){0,2})`, 'gu'),
+    group: 1,
+    accept: acceptNameEs,
+  },
 ];
 
 function labelOf(match: RegExpExecArray): string {
