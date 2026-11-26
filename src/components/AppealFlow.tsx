@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { DraftFailedError, EgressBlockedError, ledgerEntry, watchGeminiRequests, type DeviceAvailability, type Engine, type LedgerEntry } from '../ai/engine';
 import type { AppealResult } from '../ai/schemas';
 import { categoryLabel, categoryPlaybook } from '../core/categories';
-import { useLang, useT, type Key, type Lang } from '../i18n';
+import { useLang, useT, type Key } from '../i18n';
 import { checkEgress } from '../core/egressGate';
 import { rehydrate } from '../core/redact';
 import { templateAppeal } from '../core/template';
@@ -12,6 +12,7 @@ import { OriginalWithHighlights, RedactedText } from './Highlight';
 import { friendlyDraftError } from '../ai/errors';
 import { readPdfText } from '../pdf/readPdf';
 import { Ledger } from './Ledger';
+import { deadlineExplanation, externalReviewText } from '../deadlineText';
 
 const SAMPLES = [CASES[0], CASES[1], CASES[13]];
 
@@ -627,37 +628,6 @@ function sourceLabel(src: string, t: T): string {
   return src === 'letter text (code)' ? t('srcCode') : src === 'Gemini Nano' ? t('srcNano') : src === 'legal default' ? t('srcDefault') : t('srcNone');
 }
 
-const PLAN_RULE_ES: Record<string, string> = {
-  employer: 'Los planes de salud de empleadores (ERISA) deben dar al menos 180 días para apelar.',
-  marketplace: 'Los planes individuales y del Mercado de Seguros (ACA) deben dar 180 días para una apelación interna.',
-  medicare_advantage: 'Las solicitudes de reconsideración de Medicare Advantage vencen 65 días después del aviso.',
-  medicaid: 'Las apelaciones de Medicaid (atención administrada) vencen 60 días después de la decisión.',
-};
-
-/** The deadline sentence, built from the code's structured result (never machine-translated). */
-function deadlineExplanation(a: Analysis, lang: Lang): string {
-  const d = a.deadline;
-  if (lang === 'en') return d.explanation;
-  let base: string;
-  if (d.basis === 'stated-in-letter') base = `Tu carta dice que tienes ${d.windowDays} días para apelar.`;
-  else if (d.basis === 'default-rule')
-    base = `La carta no indica un plazo, así que usamos el mínimo legal: ${PLAN_RULE_ES[a.facts.planType] ?? ''} Confírmalo con tu plan.`;
-  else
-    base =
-      'No encontramos un plazo para apelar en la carta ni pudimos saber qué tipo de plan es. Llama al número de tu tarjeta del seguro y pregunta: "¿Cuál es mi fecha límite para apelar esta decisión?"';
-  return d.deadline ? base : `${base}${a.facts.noticeDate ? '' : ' Tampoco pudimos leer la fecha del aviso, así que no podemos calcular la fecha exacta.'}`;
-}
-
-const EXTERNAL_ES: Record<string, string> = {
-  employer: 'Si niegan tu apelación interna, normalmente puedes pedir una revisión externa independiente dentro de 4 meses.',
-  marketplace: 'Si niegan tu apelación interna, puedes pedir una revisión externa independiente dentro de 4 meses.',
-  medicare_advantage: 'Si el plan mantiene la negación, el caso se envía automáticamente a una Entidad de Revisión Independiente.',
-  medicaid: 'Si el plan mantiene la negación, puedes pedir una Audiencia Imparcial Estatal (normalmente dentro de 120 días).',
-  unknown: 'Si niegan tu apelación interna, pregunta a tu plan cómo pedir una revisión externa independiente.',
-};
-function externalReviewText(a: Analysis, lang: Lang): string {
-  return lang === 'es' ? (EXTERNAL_ES[a.facts.planType] ?? EXTERNAL_ES.unknown) : a.deadline.externalReview;
-}
 
 function printLetter(letter: string) {
   const w = window.open('', '_blank', 'width=800,height=900');
