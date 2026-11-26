@@ -171,6 +171,11 @@ try {
     assert.match(ledgerEs, /datos reemplazados por marcadores/);
     assert.ok(!/values replaced/.test(ledgerEs), 'English ledger note in Spanish mode');
     assert.match(await es.locator('footer').innerText(), /No es asesoría legal ni médica/);
+    // Switching language on the result screen says the explanation is in the other language.
+    await es.getByRole('button', { name: 'English' }).click();
+    await es.getByText('This explanation was written in Spanish').waitFor();
+    await es.getByRole('button', { name: 'Español' }).click();
+    assert.equal(await es.getByText('This explanation was written in Spanish').count(), 0);
     await es.reload();
     await es.getByText('Pega tu carta de negación').waitFor();
     await es.close();

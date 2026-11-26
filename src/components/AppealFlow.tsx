@@ -62,6 +62,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
   const [unknownPh, setUnknownPh] = useState<string[]>([]);
   const [extraLedger, setExtraLedger] = useState<LedgerEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [appealLang, setAppealLang] = useState(lang); // language the result was written in
   const [pdfPages, setPdfPages] = useState(0); // > 0: a PDF was cut at MAX_PDF_PAGES
   const [progress, setProgress] = useState<string>('');
   const [selection, setSelection] = useState('');
@@ -265,6 +266,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
   function finish(result: AppealResult) {
     if (!analysis) return;
     const r = rehydrate(result.appealLetter, analysis.redaction.vault);
+    setAppealLang(lang);
     setAppeal({
       ...result,
       plainExplanation: rehydrate(result.plainExplanation, analysis.redaction.vault).text,
@@ -540,6 +542,11 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
 
       {stage === 'result' && analysis && appeal && (
         <>
+          {appealLang !== lang && (
+            <p className="note" role="status">
+              {t('resultOtherLang')}
+            </p>
+          )}
           <section className="facts">
             <DeadlineCard analysis={analysis} />
             <div className="card fact wide">
