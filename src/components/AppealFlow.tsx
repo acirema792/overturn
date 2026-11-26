@@ -590,7 +590,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
               <div className="card">
                 <h3>{t('gatherEvidence')}</h3>
                 <ul className="checklist">
-                  {[...new Set([...appeal.evidenceToGather, ...categoryPlaybook(analysis.facts.category, lang)])].slice(0, 8).map((e, i) => (
+                  {[...new Set([...appeal.evidenceToGather, ...categoryPlaybook(analysis.facts.category, appealLang)])].slice(0, 8).map((e, i) => (
                     <li key={i}>
                       <label>
                         <input type="checkbox" /> {rehydrate(e, analysis.redaction.vault).text}
