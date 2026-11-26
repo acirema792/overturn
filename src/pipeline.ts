@@ -70,10 +70,21 @@ export function groundEntities(raw: string, entities: FoundEntity[]): FoundEntit
   return entities.filter((e) => hay.includes(e.text.toLowerCase().replace(/\s+/g, ' ').trim()));
 }
 
-/** The first procedure code in the letter ("CPT 72148"), so a rules-only appeal names what was denied. */
+/**
+ * The procedure code in the letter ("CPT 72148"), so a rules-only appeal names
+ * what was denied. Only when the letter has exactly one distinct code: with
+ * several (an EOB listing paid and denied lines) we can't tell which was denied,
+ * so the letter keeps the generic wording. A code inside a detected identifier
+ * ("Member ID: CPT 55555") is ignored.
+ */
 export function billedCode(raw: string): string {
-  const m = raw.match(/\b(CPT|HCPCS)(?:\s+code)?[\s:#]*([A-Z]\d{4}|\d{4}[0-9A-Z])\b/);
-  return m ? `${m[1]} ${m[2]}` : '';
+  const ids = detect(raw).map((d) => d.text);
+  const codes = new Set<string>();
+  for (const m of raw.matchAll(/\b(CPT|HCPCS)(?:\s+code)?[\s:#]*([A-Z]\d{4}|\d{4}[0-9A-Z])\b/g)) {
+    if (ids.some((id) => id.includes(m[2]))) continue;
+    codes.add(`${m[1]} ${m[2]}`);
+  }
+  return codes.size === 1 ? [...codes][0] : '';
 }
 
 function mergeFacts(raw: string, model?: FactsResult): Facts {

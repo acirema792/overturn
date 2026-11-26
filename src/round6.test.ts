@@ -12,6 +12,14 @@ describe('L3: a rules-only appeal names what was denied', () => {
     expect(billedCode('wheelchair, HCPCS code K0861, denied')).toBe('HCPCS K0861');
     expect(billedCode('No codes here, claim 2026-1014-55821')).toBe('');
   });
+  it('names no code when the letter lists more than one (we cannot tell which was denied)', () => {
+    expect(billedCode('Your office visit (CPT 99213) was paid. The lumbar MRI (CPT 72148) is denied.')).toBe('');
+    expect(billedCode('Approved: CPT 97110. Denied: HCPCS E0601.')).toBe('');
+    expect(billedCode('The MRI (CPT 72148) is denied. Appeal of CPT 72148 must be received within 180 days.')).toBe('CPT 72148');
+  });
+  it('ignores a "code" that is part of a detected identifier', () => {
+    expect(billedCode('Member ID: CPT 55555\nThe MRI was denied.')).toBe('');
+  });
   it('the template letter says "the service billed as CPT 72148" (and Spanish explains it in Spanish)', () => {
     const en = templateAppeal({ category: 'medical_necessity', serviceDenied: 'CPT 72148', insurer: 'Acme', vault: {}, urgent: false });
     expect(en.appealLetter).toMatch(/deny coverage for the service billed as CPT 72148\./);
