@@ -459,6 +459,27 @@
    "finding": "G12",
    "action": "approved by the person: CI runs lint and e2e (playwright chromium)",
    "outcome": "success"
+  },
+  {
+   "round": 5,
+   "finding": "R5-PDF",
+   "action": "ee9682f: open a PDF, text read on the device with pdf.js (lazy-loaded); unit test + e2e check with no off-origin request",
+   "outcome": "success",
+   "note": "committed locally; independent verifier pending"
+  },
+  {
+   "round": 5,
+   "finding": "R5-ES",
+   "action": "458572f + 87a6f19: English/Espa\u00f1ol UI; explanation in Spanish, appeal letter in English; gate passes for all 24 letters with the Spanish prompt; e2e check; nav wraps at 390px; gate memo depends on lang",
+   "outcome": "success",
+   "note": "committed locally; independent verifier pending"
+  },
+  {
+   "round": 5,
+   "finding": "R5-DOCS",
+   "action": "e96980e + d6769ee: architecture SVG, screenshots from the real build (rules-only), docs updated with PDF/Spanish, tests 263 + 9 e2e",
+   "outcome": "success",
+   "note": "committed locally; independent verifier pending"
   }
  ]
 }

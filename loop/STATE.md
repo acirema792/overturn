@@ -1,7 +1,6 @@
 # Audit loop state
 
 Round: 5 (resumed 2026-11-26 at the person's request). Target: above 7.3. Max rounds: 6. Freeze: 2026-11-29 14:00 PT.
-Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 
 ## Baseline tripwires (2026-11-20)
 - `npm test`: 22 passed
@@ -17,6 +16,7 @@ Target: 9.0 · Max rounds: 3 · Freeze: 2026-11-29 14:00 PT
 | 4 | 7.3 | 7.0 | 7.0 | 7.0 | 8.0 |
 
 ## Open findings
+- Round 5 (2026-11-26): PDF (ee9682f), Spanish UI (458572f, 87a6f19), diagram + screenshots (e96980e), docs (d6769ee). Tests 263, e2e 9, eval unchanged. Fresh round-5 auditor and a separate verifier running.
 - Verifier 7: 101248a APPROVED, 9c628ac APPROVED, 41803a4 REJECTED for history only (build fails at that single commit because one line landed in 9c628ac; code correct; main builds), 3169ae5 ESCALATED (run-log/CLAIMS live-evidence wording). Follow-ups for N1–N4 + the wording: this commit set, tests 256, eval unchanged.
 - Needs the person: demo video, Gemini Nano benchmark run, Blaze plan, repo About box, Devpost submit, delete the debug token after Dec 16.
 
