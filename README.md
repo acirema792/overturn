@@ -16,7 +16,9 @@ writes the appeal. The real details are filled back in on the device.
 
 ![Overturn architecture: the letter is read and de-identified on the device, a code gate checks the outgoing text, only de-identified text reaches Gemini in the cloud, and the real details are put back on the device](docs/architecture.svg)
 
-| Your letter, with the identifiers found | What leaves vs. what stays |
+<sub>Redaction isn't perfect: on held-out letters, rules alone leave some names in running text (7/34 identifiers, [BENCHMARK-RESULTS.md](BENCHMARK-RESULTS.md)). That is why Gemini Nano reads the letter first and you review the outgoing text before anything is sent.</sub>
+
+| Your letter (a synthetic sample) | What leaves vs. what stays |
 |---|---|
 | ![The input screen with a synthetic sample letter loaded](docs/img/1-input.png) | ![Side-by-side review: the letter on the left, the de-identified text the cloud will see on the right, and the passed egress check](docs/img/2-review.png) |
 | **The deadline, computed by code** | **Privacy ledger** |
