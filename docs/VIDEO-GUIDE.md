@@ -116,6 +116,13 @@ Times are targets. **Bold** = what you click. *Highlight* = point the cursor at 
 - Say: *"Offline, the same SDK drafts the appeal with Gemini Nano. Nothing leaves."*
 - Turn Wi-Fi back on.
 
+### Scene 8e (optional, use instead of 8d if short on time) · 10 s · PDF and Español
+- **Start a new letter** → **Open a PDF** → pick a PDF of a sample letter (print one of the samples to PDF
+  beforehand). The text appears in the box: *"A PDF is read right here with pdf.js; nothing is uploaded."*
+- Click **Español** in the top bar: the whole screen switches. Say: *"And it works in Spanish, for the many
+  patients who read Spanish first. The appeal letter stays in English for the insurer."*
+- Click **English** again before scene 9.
+
 ### Scene 9 · 2:35–2:50 · The proof
 - Switch to the **Benchmark** tab (already run in A2). *Highlight* the stat tiles: identifiers that
   would reach the cloud, clinical facts kept, deadlines correct.
