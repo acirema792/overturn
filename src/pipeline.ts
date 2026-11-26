@@ -114,6 +114,7 @@ export function finishAnalysis(base: Omit<Analysis, 'redaction' | 'deadline' | '
     geminiRequests: 0,
     ms: Math.round(performance.now() - t0),
     note: `${Object.keys(redaction.vault).length} values replaced with placeholders`,
+    noteEs: `${Object.keys(redaction.vault).length} datos reemplazados por marcadores`,
   });
   return { ...base, redaction, deadline, suspects, ledger: [...base.ledger.filter((e) => e.where !== 'code'), codeEntry] };
 }

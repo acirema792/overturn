@@ -158,7 +158,7 @@ try {
     await es.getByRole('button', { name: 'Español' }).click();
     await es.getByText('Pega tu carta de negación').waitFor();
     assert.equal(await es.evaluate(() => document.documentElement.lang), 'es');
-    await es.getByRole('button', { name: /bariatric/ }).click();
+    await es.getByRole('button', { name: /bariátrica/ }).click();
     await es.getByRole('button', { name: 'Ocultar mis datos en este dispositivo' }).click();
     await es.getByText('Revisa lo que sale de tu dispositivo').waitFor();
     await es.getByRole('button', { name: /carta modelo/ }).click();
@@ -166,6 +166,11 @@ try {
     const letter = await es.getByLabel('Carta de apelación').inputValue();
     assert.match(letter, /I am writing to appeal/, 'the letter to the insurer must stay in English');
     assert.match(await es.locator('main').innerText(), /La carta está en inglés/);
+    // No English ledger note or footer in Spanish mode.
+    const ledgerEs = await es.locator('.ledger').innerText();
+    assert.match(ledgerEs, /datos reemplazados por marcadores/);
+    assert.ok(!/values replaced/.test(ledgerEs), 'English ledger note in Spanish mode');
+    assert.match(await es.locator('footer').innerText(), /No es asesoría legal ni médica/);
     await es.reload();
     await es.getByText('Pega tu carta de negación').waitFor();
     await es.close();

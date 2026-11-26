@@ -68,7 +68,7 @@ export default function App() {
     <LangContext.Provider value={lang}>
       {choice.engine?.kind === 'simulated' && (
         <div className="sim-banner" role="note">
-          SIMULATED ENGINE: no AI model is running. For UI testing only; nothing here is a real result.
+          {t('simBanner')}
         </div>
       )}
       <header className="top">
@@ -114,7 +114,7 @@ export default function App() {
             </span>
           )}
           {choice.engine?.appCheck === 'off' && (
-            <span className="pill pill-wait" title="Firebase AI Logic requires App Check; cloud requests will be rejected">
+            <span className="pill pill-wait" title={t('appCheckOffTitle')}>
               {t('appCheckOff')}
             </span>
           )}
@@ -124,10 +124,10 @@ export default function App() {
         {!choice.engine ? (
           <div className="flow">
             <section className="card">
-              <h2>Setup needed</h2>
+              <h2>{t('setupNeeded')}</h2>
               <p>{choice.reason}</p>
               <p>
-                To look around without a model, open <a href="?engine=sim">the simulated UI</a>.
+                {t('setupSimPre')} <a href="?engine=sim">{t('setupSimLink')}</a>.
               </p>
             </section>
             <HowItWorks />
@@ -148,8 +148,8 @@ export default function App() {
       </main>
       <footer>
         <span>
-          Built with Firebase AI Logic hybrid inference · App Check: {choice.engine?.appCheck ?? 'n/a'} ·{' '}
-          <a href="https://github.com/acirema792/overturn">Source (Apache-2.0)</a> · Not legal or medical advice · Sample letters are synthetic
+          {t('footBuilt')} · App Check: {choice.engine?.appCheck ?? 'n/a'} · <a href="https://github.com/acirema792/overturn">{t('footSource')}</a> ·{' '}
+          {t('footNotAdvice')} · {t('footSynthetic')}
         </span>
       </footer>
     </LangContext.Provider>

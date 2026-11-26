@@ -48,7 +48,7 @@ try {
   const es = await browser.newPage({ viewport: { width: 1280, height: 860 }, deviceScaleFactor: 2, colorScheme: 'light' });
   await es.goto(BASE);
   await es.getByRole('button', { name: 'Español' }).click();
-  await es.getByRole('button', { name: /MRI denied/ }).click();
+  await es.getByRole('button', { name: /resonancia/ }).click();
   await es.getByRole('button', { name: /Ocultar mis datos/ }).first().click();
   await es.getByText('Revisa lo que sale de tu dispositivo').waitFor();
   await es.evaluate(() => window.scrollTo(0, 0));

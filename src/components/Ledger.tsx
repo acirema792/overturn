@@ -40,7 +40,7 @@ export function Ledger({ entries }: { entries: LedgerEntry[] }) {
               <tr key={e.id}>
                 <td>
                   {stepName(lang, e.step)}
-                  {e.note && <div className="muted small">{e.note}</div>}
+                  {e.note && <div className="muted small">{lang === 'es' && e.noteEs ? e.noteEs : e.note}</div>}
                 </td>
                 <td>
                   <span className={`where where-${e.where}`}>{t(WHERE_LABEL[e.where])}</span>

@@ -400,6 +400,12 @@ export class FirebaseEngine implements Engine {
             : attempts.length > 1
               ? `The cloud model was busy; ${attempts.length} attempts (${attempts.join(', ')}), each sending the same de-identified prompt.`
               : undefined,
+        noteEs:
+          onDevice && !opts.preferDevice
+            ? `La solicitud a la nube falló, así que el SDK usó Gemini Nano. El texto anonimizado de ${gate.bytes.toLocaleString('es-US')} bytes se envió antes y pudo llegar al servidor, así que se cuenta como enviado.`
+            : attempts.length > 1
+              ? `El modelo en la nube estaba ocupado; ${attempts.length} intentos (${attempts.join(', ')}), cada uno con el mismo texto anonimizado.`
+              : undefined,
       }),
     };
   }

@@ -7,6 +7,15 @@ export type Lang = 'en' | 'es';
 
 const EN = {
   // header / nav / footer
+  simBanner: 'SIMULATED ENGINE: no AI model is running. For UI testing only; nothing here is a real result.',
+  setupNeeded: 'Setup needed',
+  setupSimPre: 'To look around without a model, open',
+  setupSimLink: 'the simulated UI',
+  appCheckOffTitle: 'Firebase AI Logic requires App Check; cloud requests will be rejected',
+  footBuilt: 'Built with Firebase AI Logic hybrid inference',
+  footSource: 'Source (Apache-2.0)',
+  footNotAdvice: 'Not legal or medical advice',
+  footSynthetic: 'Sample letters are synthetic',
   tagline: 'Appeal a health insurance denial. Your identity stays on your device.',
   navAppeal: 'Appeal',
   navHow: 'How it works',
@@ -66,7 +75,9 @@ const EN = {
   errPdfInvalid: 'This file doesn’t look like a valid PDF (it may be damaged). Paste the letter text instead.',
   pdfTruncated: 'This PDF has {n} pages; only the first {max} were read. Check that the denial and its appeal instructions are in the text above, or paste the missing part.',
   errPhoto: 'Couldn’t read the photo on this device: {msg}. You can paste or type the letter instead.',
-  errBlocked: '{msg} Hide them on the left, then try again.',
+  errBlocked: 'Blocked: the outgoing text still contains {n} identifier(s). Hide them on the left, then try again.',
+  blockedNote: 'Blocked: the outgoing text still contains {n} identifier(s).',
+  nanoPrepareFailed: 'Gemini Nano couldn’t be prepared: {err}; rules only',
   templateInstead: '{msg} Here is a template letter instead; nothing was guessed.',
   // review
   whyNo: 'Why they said no',
@@ -157,6 +168,15 @@ const EN = {
 export type Key = keyof typeof EN;
 
 const ES: Record<Key, string> = {
+  simBanner: 'MOTOR SIMULADO: no se está ejecutando ningún modelo de IA. Solo para probar la interfaz; nada de esto es un resultado real.',
+  setupNeeded: 'Falta configurar',
+  setupSimPre: 'Para explorar sin un modelo, abre',
+  setupSimLink: 'la interfaz simulada',
+  appCheckOffTitle: 'Firebase AI Logic requiere App Check; las solicitudes a la nube serán rechazadas',
+  footBuilt: 'Hecho con la inferencia híbrida de Firebase AI Logic',
+  footSource: 'Código fuente (Apache-2.0)',
+  footNotAdvice: 'No es asesoría legal ni médica',
+  footSynthetic: 'Las cartas de ejemplo son ficticias',
   tagline: 'Apela una negación de tu seguro médico. Tu identidad se queda en tu dispositivo.',
   navAppeal: 'Apelar',
   navHow: 'Cómo funciona',
@@ -212,7 +232,9 @@ const ES: Record<Key, string> = {
   errPdfInvalid: 'Este archivo no parece un PDF válido (puede estar dañado). Pega el texto de la carta.',
   pdfTruncated: 'Este PDF tiene {n} páginas; solo se leyeron las primeras {max}. Revisa que la negación y las instrucciones para apelar estén en el texto de arriba, o pega la parte que falta.',
   errPhoto: 'No se pudo leer la foto en este dispositivo: {msg}. Puedes pegar o escribir la carta.',
-  errBlocked: '{msg} Ocúltalos a la izquierda y vuelve a intentarlo.',
+  errBlocked: 'Bloqueado: el texto que saldría todavía contiene {n} dato(s) identificable(s). Ocúltalos a la izquierda y vuelve a intentarlo.',
+  blockedNote: 'Bloqueado: el texto que saldría todavía contiene {n} dato(s) identificable(s).',
+  nanoPrepareFailed: 'No se pudo preparar Gemini Nano: {err}; solo reglas',
   templateInstead: '{msg} Aquí tienes una carta modelo; no se inventó nada.',
   whyNo: 'Por qué dijeron que no',
   source: 'Fuente: {source}',

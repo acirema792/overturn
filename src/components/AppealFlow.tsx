@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { DraftFailedError, EgressBlockedError, ledgerEntry, watchGeminiRequests, type DeviceAvailability, type Engine, type LedgerEntry } from '../ai/engine';
 import type { AppealResult } from '../ai/schemas';
 import { categoryLabel, categoryPlaybook } from '../core/categories';
-import { useLang, useT, type Key } from '../i18n';
+import { translate, useLang, useT, type Key } from '../i18n';
 import { checkEgress } from '../core/egressGate';
 import { rehydrate } from '../core/redact';
 import { templateAppeal } from '../core/template';
@@ -15,6 +15,12 @@ import { Ledger } from './Ledger';
 import { deadlineExplanation, externalReviewText } from '../deadlineText';
 
 const SAMPLES = [CASES[0], CASES[1], CASES[13]];
+// Sample titles in Spanish (the sample letters themselves are in English, like US denial letters).
+const SAMPLE_TITLE_ES: Record<string, string> = {
+  C01: 'Plan de empleador: resonancia magnética negada por no ser médicamente necesaria (carta en inglés)',
+  C02: 'Plan del Mercado: medicamento especializado que exige terapia escalonada (carta en inglés)',
+  C14: 'Plan de empleador, cirugía bariátrica: carta larga con muchos nombres (carta en inglés)',
+};
 
 type Stage = 'input' | 'reading' | 'review' | 'drafting' | 'result';
 
@@ -105,7 +111,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
       const withNano = useDevice && !prepareError;
       setProgress(withNano ? t('progNanoReading') : t('progRulesReading'));
       const result = await analyse(engine, raw, withNano, lang);
-      const a = prepareError ? { ...result, deviceError: `Gemini Nano couldn't be prepared (${prepareError}); rules only` } : result;
+      const a = prepareError ? { ...result, deviceError: t('nanoPrepareFailed', { err: prepareError }) } : result;
       setAnalysis(a);
       setStage('review');
     } catch (e) {
@@ -136,7 +142,8 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
             bytesOut: 0,
             geminiRequests: requests,
             ms: Math.round(performance.now() - t0),
-            note: `pdf.js on this device; ${pdf.pages} page${pdf.pages === 1 ? '' : 's'}${pdf.truncated ? ' (first 20 read)' : ''}. The file was not uploaded.`,
+            note: `pdf.js on this device; ${pdf.pages} page${pdf.pages === 1 ? '' : 's'}${pdf.truncated ? ` (first ${MAX_PDF_PAGES} read)` : ''}. The file was not uploaded.`,
+            noteEs: `pdf.js en este dispositivo; ${pdf.pages} página${pdf.pages === 1 ? '' : 's'}${pdf.truncated ? ` (se leyeron las primeras ${MAX_PDF_PAGES})` : ''}. El archivo no se subió.`,
           }),
         ]);
       }
@@ -211,8 +218,8 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
     } catch (e) {
       if (run !== runRef.current) return; // cancelled by "Start over"
       if (e instanceof EgressBlockedError) {
-        setExtraLedger((l) => [...l, ledgerEntry({ step: 'Write the appeal', where: 'blocked', bytesOut: 0, geminiRequests: 0, ms: 0, note: e.message })]);
-        setError(t('errBlocked', { msg: e.message }));
+        setExtraLedger((l) => [...l, ledgerEntry({ step: 'Write the appeal', where: 'blocked', bytesOut: 0, geminiRequests: 0, ms: 0, note: e.message, noteEs: translate('es', 'blockedNote', { n: e.findings.length }) })]);
+        setError(t('errBlocked', { n: e.findings.length }));
         setStage('review');
       } else {
         if (e instanceof DraftFailedError && e.attemptedBytes > 0) {
@@ -226,6 +233,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
               geminiRequests: e.geminiRequests,
               ms: e.ms,
               note: 'The de-identified prompt was sent, but the request failed; the template letter was used instead.',
+              noteEs: 'Se envió el texto anonimizado, pero la solicitud falló; se usó la carta modelo.',
             }),
           ]);
         }
@@ -323,7 +331,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                   setExtraLedger([]); // a new letter: drop any earlier photo row
                 }}
               >
-                {s.title}
+                {lang === 'es' ? (SAMPLE_TITLE_ES[s.id] ?? s.title) : s.title}
               </button>
             ))}
           </div>

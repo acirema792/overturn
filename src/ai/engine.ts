@@ -20,6 +20,8 @@ export interface LedgerEntry {
   ms: number;
   model?: string;
   note?: string;
+  /** The same note in Spanish, shown when the UI is in Spanish. */
+  noteEs?: string;
 }
 
 export interface CloudRequest {
