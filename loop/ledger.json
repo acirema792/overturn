@@ -561,6 +561,48 @@
    "finding": "J1",
    "action": "deployed 0abdab8 to GitHub Pages; live check: PDF read with 0 off-origin requests, gate passes, PDF ledger row, Spanish flow with English letter, 0 page errors",
    "outcome": "success"
+  },
+  {
+   "round": 6,
+   "finding": "L1",
+   "action": "09db281 reading rows first in the ledger",
+   "outcome": "success",
+   "note": "verifier pass 3 pending"
+  },
+  {
+   "round": 6,
+   "finding": "L2",
+   "action": "09db281 fill-in-blanks note",
+   "outcome": "success",
+   "note": "verifier pass 3 pending"
+  },
+  {
+   "round": 6,
+   "finding": "L3",
+   "action": "09db281 rules-only serviceDenied = first CPT/HCPCS code",
+   "outcome": "success",
+   "note": "verifier pass 3 pending"
+  },
+  {
+   "round": 6,
+   "finding": "L4",
+   "action": "09db281 photo error period",
+   "outcome": "success",
+   "note": "verifier pass 3 pending"
+  },
+  {
+   "round": 6,
+   "finding": "L6",
+   "action": "09db281 visible photo-disabled hint",
+   "outcome": "success",
+   "note": "verifier pass 3 pending"
+  },
+  {
+   "round": 6,
+   "finding": "L5",
+   "action": "0759d3e counts 270 + 9 e2e; six rounds",
+   "outcome": "success",
+   "note": "verifier pass 3 pending"
   }
  ]
 }
