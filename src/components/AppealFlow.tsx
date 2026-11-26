@@ -89,7 +89,9 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
     return checkEgress(req.prompt, analysis.redaction.vault, req.checkText);
   }, [analysis, lang]);
 
-  const ledger = [...(analysis?.ledger ?? []), ...extraLedger];
+  // Reading a photo or PDF happens before hiding the details: list it first.
+  const isReading = (e: LedgerEntry) => e.step === 'Read the photo' || e.step === 'Read the PDF';
+  const ledger = [...extraLedger.filter(isReading), ...(analysis?.ledger ?? []), ...extraLedger.filter((e) => !isReading(e))];
 
   async function read(raw: string, useDevice: boolean) {
     setError(null);
@@ -172,7 +174,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
       setExtraLedger([entry]);
       setStage('input');
     } catch (e) {
-      setError(t('errPhoto', { msg: e instanceof Error ? e.message : String(e) }));
+      setError(t('errPhoto', { msg: (e instanceof Error ? e.message : String(e)).replace(/[.\s]+$/, '') }));
       setStage('input');
     } finally {
       setProgress('');
@@ -391,6 +393,7 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
             </label>
             {text.trim().length > 0 && text.trim().length < 40 && <span className="muted small">{t('tooShort')}</span>}
           </div>
+          {device !== 'available' && <p className="muted small">{t('photoNeedsNano')}.</p>}
           {lang === 'es' && <p className="note">{t('englishLettersNote')}</p>}
           {pdfPages > 0 && extraLedger.some((e) => e.step === 'Read the PDF') && (
             <p className="note" role="status">
@@ -565,6 +568,11 @@ export function AppealFlow({ engine, device, onDeviceChange }: { engine: Engine;
                 <div className="alert small">
                   {t('unknownPh', { list: unknownPh.join(', ') })}
                 </div>
+              )}
+              {letter.includes('____') && (
+                <p className="note" role="status">
+                  {t('fillBlanks')}
+                </p>
               )}
               <textarea className="letter-edit" value={letter} onChange={(e) => setLetter(e.target.value)} rows={24} aria-label={t('appealLetterAria')} />
               <div className="actions">

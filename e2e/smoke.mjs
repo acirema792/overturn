@@ -84,6 +84,8 @@ try {
     assert.ok(await page.getByRole('button', { name: /Stay offline/ }).isDisabled());
     await page.getByRole('button', { name: /template letter/ }).click();
     await page.getByText('Your appeal letter').waitFor();
+    // Without Gemini Nano the template has blanks; the app says to fill them in.
+    await page.getByText(/Fill in every ____ before you send it/).waitFor();
     const ledger = await page.locator('.ledger').innerText();
     assert.ok(!ledger.includes('PREFER_IN_CLOUD'), 'a cloud step appears in the ledger');
     assert.match(ledger, /No part of your letter has left this device/);
@@ -141,6 +143,9 @@ try {
     await page.getByRole('button', { name: /Hide my details/ }).click();
     await page.getByText('Check what leaves your device').waitFor();
     assert.match(await page.locator('.ledger').innerText(), /Read the PDF/);
+    // Reading came first, so its row is listed before hiding the details.
+    const rows = await page.locator('.ledger tbody tr').allInnerTexts();
+    assert.match(rows[0], /Read the PDF/, `first ledger row: ${rows[0]}`);
     // A PDF longer than the page cap says so instead of silently dropping pages.
     const longMaker = await browser.newPage();
     await longMaker.setContent(Array.from({ length: 22 }, (_, i) => `<p style="page-break-after:always">Page ${i + 1} of a synthetic letter.</p>`).join(''));

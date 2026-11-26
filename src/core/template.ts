@@ -79,7 +79,8 @@ export function templateAppeal(t: TemplateInput): AppealResult {
   const patient = t.patient ?? '____';
   const member = firstOf(t.vault, 'MEMBER_ID') ?? '____';
   const claim = firstOf(t.vault, 'CLAIM_ID') ?? firstOf(t.vault, 'ACCOUNT_ID') ?? '____';
-  const service = t.serviceDenied || 'the service described in your notice';
+  const codeOnly = /^(CPT|HCPCS) [0-9A-Z]{5}$/.test(t.serviceDenied);
+  const service = codeOnly ? `the service billed as ${t.serviceDenied}` : t.serviceDenied || 'the service described in your notice';
   const insurer = t.insurer || '____ (insurance company name)';
   const reason = CATEGORY_LABEL[t.category].toLowerCase();
 
@@ -107,7 +108,7 @@ ${patient}
 ____ (signature)    Date: ____`;
 
   if (t.lang === 'es') {
-    const servicio = t.serviceDenied || 'el servicio descrito en tu aviso';
+    const servicio = codeOnly ? `el servicio facturado como ${t.serviceDenied}` : t.serviceDenied || 'el servicio descrito en tu aviso';
     return {
       plainExplanation: `Tu plan negó ${servicio}. El motivo es: ${CATEGORY_LABEL_ES[t.category]}. Tienes derecho a apelar y a pedir los documentos que usó el plan. La carta de abajo está en inglés porque va dirigida a tu aseguradora.`,
       strongestArguments: [

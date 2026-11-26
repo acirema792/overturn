@@ -70,6 +70,12 @@ export function groundEntities(raw: string, entities: FoundEntity[]): FoundEntit
   return entities.filter((e) => hay.includes(e.text.toLowerCase().replace(/\s+/g, ' ').trim()));
 }
 
+/** The first procedure code in the letter ("CPT 72148"), so a rules-only appeal names what was denied. */
+export function billedCode(raw: string): string {
+  const m = raw.match(/\b(CPT|HCPCS)(?:\s+code)?[\s:#]*([A-Z]\d{4}|\d{4}[0-9A-Z])\b/);
+  return m ? `${m[1]} ${m[2]}` : '';
+}
+
 function mergeFacts(raw: string, model?: FactsResult): Facts {
   const regexDate = findNoticeDate(raw);
   const modelDate = model && parseISO(model.noticeDate) ? model.noticeDate : null;
@@ -83,7 +89,7 @@ function mergeFacts(raw: string, model?: FactsResult): Facts {
   return {
     insurer: model?.insurer || insurerFromLetter(raw, detect(raw).filter((d) => d.kind === 'PERSON').map((d) => d.text)),
     insurerFromModel: Boolean(model?.insurer),
-    serviceDenied: model?.serviceDenied ?? '',
+    serviceDenied: model?.serviceDenied || billedCode(raw),
     reasonInPlainWords: model?.reasonInPlainWords ?? '',
     category: model?.denialCategory ?? rulesCategory,
     categorySource: model ? 'Gemini Nano' : 'letter text (code)',
