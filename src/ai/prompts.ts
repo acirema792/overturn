@@ -14,13 +14,13 @@ ${letter}
 """`;
 
 /** On-device only. */
-export const factsPrompt = (letter: string) => `You read a US health insurance denial letter on the user's own computer.
+export const factsPrompt = (letter: string, lang: 'en' | 'es' = 'en') => `You read a US health insurance denial letter on the user's own computer.
 Extract the facts as JSON.
 - planType: "employer" for job-based / ERISA / group plans, "marketplace" for HealthCare.gov / ACA individual plans, "medicare_advantage", "medicaid", otherwise "unknown".
 - denialCategory: the main reason for the denial.
 - noticeDate: the date printed on the notice, as YYYY-MM-DD; empty if none.
 - appealWindowDays: the number of days the letter gives to appeal; 0 if the letter does not say.
-- reasonInPlainWords: explain the reason to a worried patient in one or two short sentences, without any names or ID numbers.
+- reasonInPlainWords: explain the reason to a worried patient in one or two short sentences, without any names or ID numbers${lang === 'es' ? ', written in Spanish' : ''}.
 
 LETTER:
 """
@@ -40,6 +40,8 @@ export interface AppealContext {
   urgent: boolean;
   /** "[PERSON_1]: patient" lines, from the on-device model's role labels. */
   roles: string[];
+  /** Language of the explanation for the patient; the letter itself stays English. */
+  lang?: 'en' | 'es';
 }
 
 const PLAN_LABEL: Record<PlanType, string> = {
@@ -65,7 +67,7 @@ Rules:
    Addresses, phone numbers and emails in a letterhead or a "call us" line belong to the insurer, not the patient: never use them as the patient's own contact details (write ____ instead).
 3. Base every argument on what the letter says and on how US appeals work. Do not promise an outcome.
 4. Write the appeal letter in the patient's voice, formal and firm, under 400 words. Reference the claim or ID placeholders in a "Re:" line. Ask for a full and fair review, and ask for a free copy of the claim file and the clinical criteria used.
-5. Use plain English a stressed patient understands.
+5. Use plain English a stressed patient understands.${c.lang === 'es' ? '\n6. Write plainExplanation, strongestArguments, evidenceToGather and questionsForDoctor in simple, clear Spanish. Write appealLetter in English, because it goes to a US insurer.' : ''}
 
 What the device already knows:
 - Plan: ${PLAN_LABEL[c.planType]}.

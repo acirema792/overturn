@@ -78,3 +78,56 @@ export function classifyDenial(text: string): DenialCategory {
   for (const [cat, re] of KEYWORDS) if (re.test(t)) return cat;
   return 'other';
 }
+
+export const CATEGORY_LABEL_ES: Record<DenialCategory, string> = {
+  medical_necessity: 'No es médicamente necesario',
+  prior_authorization: 'Sin autorización previa',
+  out_of_network: 'Fuera de la red',
+  experimental: 'Experimental o en investigación',
+  not_covered: 'No es un beneficio cubierto',
+  coding_or_billing: 'Error de códigos o facturación',
+  step_therapy: 'Terapia escalonada / probar otro medicamento primero',
+  other: 'Otro motivo',
+};
+
+export const CATEGORY_PLAYBOOK_ES: Record<DenialCategory, string[]> = {
+  medical_necessity: [
+    'Una carta de necesidad médica de tu médico que responda punto por punto a los criterios del plan',
+    'Notas clínicas con tus síntomas, cuánto tiempo llevan y los tratamientos ya probados',
+    'La política clínica del plan para este servicio (pídela: tienes derecho a una copia gratis)',
+    'Guías publicadas que respalden el tratamiento',
+  ],
+  prior_authorization: [
+    'Prueba de que tu proveedor pidió la autorización, o de por qué fue una emergencia',
+    'Cualquier número de referencia de llamadas con el plan',
+    'Una solicitud de autorización retroactiva de tu proveedor',
+  ],
+  out_of_network: [
+    'Prueba de que ningún proveedor de la red podía atenderte en un tiempo o distancia razonables',
+    'Si fue una emergencia o no pudiste elegir proveedor (protecciones de la Ley No Surprises)',
+    'Cualquier referido de un médico de la red',
+  ],
+  experimental: [
+    'Estudios revisados por pares o aprobación de la FDA que muestren que el tratamiento es estándar',
+    'Una carta de tu médico sobre por qué las opciones estándar fallaron o no te sirven',
+  ],
+  not_covered: [
+    'La sección exacta del documento del plan que usó la aseguradora (pide el Resumen de la Descripción del Plan)',
+    'Cualquier ley estatal que obligue a cubrir el servicio',
+  ],
+  coding_or_billing: [
+    'Una factura detallada con los códigos de procedimiento (CPT) y diagnóstico (ICD-10)',
+    'Una reclamación corregida de la oficina de facturación de tu proveedor',
+  ],
+  step_therapy: [
+    'Registros de los medicamentos que ya probaste, con fechas y por qué fallaron o causaron efectos secundarios',
+    'Una solicitud de excepción a la terapia escalonada de tu médico',
+  ],
+  other: [
+    'Una copia de tu expediente de reclamación y de las reglas del plan usadas en la decisión (gratis si la pides)',
+    'Una nota de tu proveedor que respalde el servicio',
+  ],
+};
+
+export const categoryLabel = (c: DenialCategory, lang: 'en' | 'es' = 'en') => (lang === 'es' ? CATEGORY_LABEL_ES[c] : CATEGORY_LABEL[c]);
+export const categoryPlaybook = (c: DenialCategory, lang: 'en' | 'es' = 'en') => (lang === 'es' ? CATEGORY_PLAYBOOK_ES[c] : CATEGORY_PLAYBOOK[c]);

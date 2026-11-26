@@ -282,8 +282,8 @@ export class FirebaseEngine implements Engine {
     return this.onDevice<EntityResult>('Find personal details', this.entityModel, entityPrompt(letter), parseJson);
   }
 
-  readFacts(letter: string) {
-    return this.onDevice<FactsResult>('Read the denial', this.factsModel, factsPrompt(letter), parseJson);
+  readFacts(letter: string, lang: 'en' | 'es' = 'en') {
+    return this.onDevice<FactsResult>('Read the denial', this.factsModel, factsPrompt(letter, lang), parseJson);
   }
 
   async draftAppeal(

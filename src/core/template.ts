@@ -2,7 +2,7 @@
 // nor the cloud is reachable, so the patient always leaves with something they
 // can send. It uses the same placeholders, filled in locally.
 
-import { CATEGORY_LABEL, CATEGORY_PLAYBOOK, type DenialCategory } from './categories';
+import { CATEGORY_LABEL, CATEGORY_LABEL_ES, CATEGORY_PLAYBOOK, CATEGORY_PLAYBOOK_ES, type DenialCategory } from './categories';
 import type { AppealResult } from '../ai/schemas';
 
 export interface TemplateInput {
@@ -13,6 +13,8 @@ export interface TemplateInput {
   /** Placeholder of the patient, if known. */
   patient?: string;
   urgent: boolean;
+  /** Language of the explanation for the patient; the letter itself stays English. */
+  lang?: 'en' | 'es';
 }
 
 /**
@@ -103,6 +105,23 @@ Please reverse the denial and approve coverage. If you uphold it, please explain
 Sincerely,
 ${patient}
 ____ (signature)    Date: ____`;
+
+  if (t.lang === 'es') {
+    const servicio = t.serviceDenied || 'el servicio descrito en tu aviso';
+    return {
+      plainExplanation: `Tu plan negó ${servicio}. El motivo es: ${CATEGORY_LABEL_ES[t.category]}. Tienes derecho a apelar y a pedir los documentos que usó el plan. La carta de abajo está en inglés porque va dirigida a tu aseguradora.`,
+      strongestArguments: [
+        'Tu médico recomendó esta atención para tu condición.',
+        'Tienes derecho a una revisión completa y justa y a ver los criterios que se usaron.',
+      ],
+      evidenceToGather: CATEGORY_PLAYBOOK_ES[t.category],
+      questionsForDoctor: [
+        '¿Puede escribir una carta de necesidad médica que responda a los criterios del plan?',
+        '¿Puede enviar mis notas clínicas y resultados de pruebas para este tratamiento?',
+      ],
+      appealLetter: letter,
+    };
+  }
 
   return {
     plainExplanation: `Your plan denied ${service}. The reason category is: ${CATEGORY_LABEL[t.category]}. You have the right to appeal, and you can ask for the documents the plan used.`,

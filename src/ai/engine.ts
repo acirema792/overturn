@@ -67,7 +67,7 @@ export interface Engine {
   prepareDevice(onProgress?: (fraction: number) => void): Promise<void>;
   transcribeImage(file: File): Promise<{ text: string; entry: LedgerEntry }>;
   findEntities(letter: string): Promise<{ result: EntityResult; entry: LedgerEntry }>;
-  readFacts(letter: string): Promise<{ result: FactsResult; entry: LedgerEntry }>;
+  readFacts(letter: string, lang?: 'en' | 'es'): Promise<{ result: FactsResult; entry: LedgerEntry }>;
   /** Runs the egress gate first; throws EgressBlockedError if it fails. */
   draftAppeal(
     req: CloudRequest,

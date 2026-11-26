@@ -118,7 +118,7 @@ export function finishAnalysis(base: Omit<Analysis, 'redaction' | 'deadline' | '
   return { ...base, redaction, deadline, suspects, ledger: [...base.ledger.filter((e) => e.where !== 'code'), codeEntry] };
 }
 
-export async function analyse(engine: Engine, raw: string, useDevice: boolean): Promise<Analysis> {
+export async function analyse(engine: Engine, raw: string, useDevice: boolean, lang: 'en' | 'es' = 'en'): Promise<Analysis> {
   const ledger: LedgerEntry[] = [];
   let modelEntities: FoundEntity[] = [];
   let modelFacts: FactsResult | undefined;
@@ -132,7 +132,7 @@ export async function analyse(engine: Engine, raw: string, useDevice: boolean): 
       ledger.push(e.entry);
       modelEntities = groundEntities(raw, entitiesFromModel(e.result));
       for (const p of e.result.people) roles[p.name.toLowerCase().trim()] = p.role;
-      const f = await engine.readFacts(raw);
+      const f = await engine.readFacts(raw, lang);
       ledger.push(f.entry);
       modelFacts = f.result;
       deviceRan = true;
@@ -200,8 +200,9 @@ export function applyVault(text: string, vault: Record<string, string>): string 
   return out;
 }
 
-export function buildAppealPrompt(a: Analysis): string {
+export function buildAppealPrompt(a: Analysis, lang: 'en' | 'es' = 'en'): string {
   return appealPrompt({
+    lang,
     redactedLetter: a.redaction.redacted,
     category: a.facts.category,
     planType: a.facts.planType,
@@ -219,9 +220,9 @@ export function buildAppealPrompt(a: Analysis): string {
  * searches for names and IDs (the redacted letter, the model-written service
  * description and the role lines), as opposed to Overturn's fixed wording.
  */
-export function buildAppealRequest(a: Analysis): { prompt: string; checkText: string } {
+export function buildAppealRequest(a: Analysis, lang: 'en' | 'es' = 'en'): { prompt: string; checkText: string } {
   return {
-    prompt: buildAppealPrompt(a),
+    prompt: buildAppealPrompt(a, lang),
     checkText: [a.redaction.redacted, applyVault(a.facts.serviceDenied, a.redaction.vault), ...roleLines(a)].join('\n'),
   };
 }
