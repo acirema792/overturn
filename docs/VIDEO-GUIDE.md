@@ -44,6 +44,34 @@ honestly). Do a dry run first; if the cloud answers within ~10 s, record right a
 
 ---
 
+## Plan B: your computer can't run Gemini Nano
+
+Many computers can't (for example Intel Macs: Chrome reports the hardware as not eligible). **Never fake the
+Nano steps** (no simulated engine, no edited footage). Two honest options:
+
+1. **Best:** record scenes 4 and 8d on an eligible computer for 15 minutes (an Apple Silicon Mac, or a
+   Windows/Linux PC with a GPU with more than 4 GB of video memory, or 16 GB of RAM), then edit them in.
+2. **Otherwise:** record the whole video on your computer and turn the missing model into a strength.
+   Replace these scenes:
+
+**Scene 4B · 0:35–0:55 · No Nano here, and nothing leaks anyway**
+- *Highlight* the header pill **"Gemini Nano not available in this browser"**.
+- **Click** the MRI sample → **Hide my details on this device**. *Highlight* the network panel: **no
+  `generateContent` row**.
+- Say: *"This laptop can't run Gemini Nano. In Firebase AI Logic 13.4, even ONLY_ON_DEVICE requests go to
+  the cloud when the on-device model is missing, so Overturn checks first and fails closed: the raw letter
+  never leaves. Code hides the identity here instead. On a laptop with Nano, Gemini Nano reads the letter
+  first."*
+- Optional, 3 seconds: show `src/ai/firebaseEngine.ts` around the `deviceAvailability() === 'unavailable'`
+  check (the guard), or FEEDBACK.md section 1.
+
+**Scene 8d:** skip it ("Stay offline" needs Nano). Use **Scene 8e (PDF and Español)** instead.
+
+**Scene 9:** on the Benchmark tab click **Run rules only** (the Nano button is disabled without Nano) and say
+*"rules only, the floor for computers without Nano"*.
+
+Everything else (the deadline, what leaves the device, the cloud appeal, the ledger) works the same.
+
 ## Part B. The script, scene by scene
 
 Times are targets. **Bold** = what you click. *Highlight* = point the cursor at it and pause 1–2 s
